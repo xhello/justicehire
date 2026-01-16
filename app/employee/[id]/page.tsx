@@ -133,7 +133,7 @@ export default async function EmployeeProfilePage({
                 As Expected: {employee.ratings.DELIVERED_AS_EXPECTED}
               </p>
               <p className="text-red-600">
-                Poor: {employee.ratings.GOT_NOTHING_NICE_TO_SAY}
+                Nothing nice to say: {employee.ratings.GOT_NOTHING_NICE_TO_SAY}
               </p>
             </div>
           </div>
@@ -246,7 +246,7 @@ function ReviewForm({
                 defaultChecked={defaultRating === 'GOT_NOTHING_NICE_TO_SAY'}
                 className="mr-2"
               />
-              <span className="text-red-600">Poor</span>
+              <span className="text-red-600">Nothing nice to say</span>
             </label>
           </div>
         </div>

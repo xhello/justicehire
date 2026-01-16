@@ -266,7 +266,7 @@ async function EmployeeCard({
             As Expected: {ratings.ratings.DELIVERED_AS_EXPECTED}
           </p>
           <p className="text-red-600">
-            Poor: {ratings.ratings.GOT_NOTHING_NICE_TO_SAY}
+            Nothing nice to say: {ratings.ratings.GOT_NOTHING_NICE_TO_SAY}
           </p>
         </div>
       </div>
