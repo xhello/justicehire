@@ -7,9 +7,10 @@ export async function searchResults(filters: {
   city?: string
   category?: string
 }) {
-  const category = filters.category?.toLowerCase()
+  try {
+    const category = filters.category?.toLowerCase()
 
-  if (category === 'business') {
+    if (category === 'business') {
     // Fetch businesses
     const where: any = {}
     if (filters.state) where.state = filters.state
@@ -42,10 +43,16 @@ export async function searchResults(filters: {
     const allBusinesses = await prisma.businesses.findMany({})
     
     // Get all employer profiles to map business IDs
-    const { supabaseAdmin } = await import('@/lib/supabase')
-    const { data: employerProfiles } = await supabaseAdmin
-      .from('EmployerProfile')
-      .select('userId, businessId')
+    let employerProfiles: any[] = []
+    try {
+      const { supabaseAdmin } = await import('@/lib/supabase')
+      const { data } = await supabaseAdmin
+        .from('EmployerProfile')
+        .select('userId, businessId')
+      employerProfiles = data || []
+    } catch (err) {
+      console.error('Error fetching employer profiles:', err)
+    }
     
     const userIdToBusinessId = new Map<string, string>()
     employerProfiles?.forEach((profile: any) => {
@@ -212,5 +219,9 @@ export async function searchResults(filters: {
     
     businessesWithCounts.sort((a: any, b: any) => a.name.localeCompare(b.name))
     return businessesWithCounts
+  }
+  } catch (err) {
+    console.error('Error in searchResults:', err)
+    return []
   }
 }
