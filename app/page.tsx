@@ -97,8 +97,8 @@ export default async function Home({
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <BusinessFilters
             citiesByState={citiesByState}
-            selectedState={params.state}
-            selectedCity={params.city}
+            selectedState={state}
+            selectedCity={city}
             selectedCategory={params.category}
           />
         </div>
