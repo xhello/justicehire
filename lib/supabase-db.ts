@@ -1,5 +1,7 @@
 // Supabase database adapter - replaces static database
-import { supabaseAdmin } from './supabase'
+import { getSupabaseAdmin } from './supabase'
+
+const supabaseAdmin = () => getSupabaseAdmin()
 
 // Types matching Prisma schema
 export interface SupabaseUser {
@@ -75,7 +77,7 @@ export interface SupabaseEmployerProfile {
 export const supabaseDb = {
   users: {
     findUnique: async (where: { id?: string; email?: string }): Promise<SupabaseUser | null> => {
-      let query = supabaseAdmin.from('User').select('*')
+      let query = supabaseAdmin().from('User').select('*')
       
       if (where.id) {
         query = query.eq('id', where.id)
@@ -91,7 +93,7 @@ export const supabaseDb = {
       
       // Fetch employer profile if exists
       if (data.role === 'EMPLOYER') {
-        const { data: profile } = await supabaseAdmin
+        const { data: profile } = await supabaseAdmin()
           .from('EmployerProfile')
           .select(`
             businessId,
@@ -122,7 +124,7 @@ export const supabaseDb = {
     },
     
     findMany: async (where?: any): Promise<SupabaseUser[]> => {
-      let query = supabaseAdmin.from('User').select('*')
+      let query = supabaseAdmin().from('User').select('*')
       
       if (where?.role) {
         query = query.eq('role', where.role)
@@ -144,7 +146,7 @@ export const supabaseDb = {
     },
     
     create: async (data: Omit<SupabaseUser, 'id' | 'createdAt' | 'updatedAt' | 'employerProfile'> & { employerProfile?: { businessId: string } }): Promise<SupabaseUser> => {
-      const { data: user, error } = await supabaseAdmin
+      const { data: user, error } = await supabaseAdmin()
         .from('User')
         .insert({
           role: data.role,
@@ -165,7 +167,7 @@ export const supabaseDb = {
       
       // Create employer profile if needed
       if (data.role === 'EMPLOYER' && data.employerProfile?.businessId) {
-        const { error: profileError } = await supabaseAdmin
+        const { error: profileError } = await supabaseAdmin()
           .from('EmployerProfile')
           .insert({
             userId: user.id,
@@ -174,7 +176,7 @@ export const supabaseDb = {
         
         if (profileError) {
           // Rollback user creation if profile creation fails
-          await supabaseAdmin.from('User').delete().eq('id', user.id)
+          await supabaseAdmin().from('User').delete().eq('id', user.id)
           throw new Error(`Failed to create employer profile: ${profileError.message}`)
         }
       }
@@ -188,7 +190,7 @@ export const supabaseDb = {
     },
     
     update: async (where: { id?: string; email?: string }, data: Partial<SupabaseUser>): Promise<SupabaseUser> => {
-      let query = supabaseAdmin.from('User').update({
+      let query = supabaseAdmin().from('User').update({
         ...data,
         updatedAt: new Date().toISOString(),
       })
@@ -211,7 +213,7 @@ export const supabaseDb = {
   
   businesses: {
     findUnique: async (where: { id?: string; placeId?: string }): Promise<SupabaseBusiness | null> => {
-      let query = supabaseAdmin.from('Business').select('*')
+      let query = supabaseAdmin().from('Business').select('*')
       
       if (where.id) {
         query = query.eq('id', where.id)
@@ -229,7 +231,7 @@ export const supabaseDb = {
     },
     
     findMany: async (where?: any): Promise<SupabaseBusiness[]> => {
-      let query = supabaseAdmin.from('Business').select('*')
+      let query = supabaseAdmin().from('Business').select('*')
       
       if (where?.state) {
         query = query.eq('state', where.state)
@@ -249,7 +251,7 @@ export const supabaseDb = {
     },
     
     create: async (data: Omit<SupabaseBusiness, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupabaseBusiness> => {
-      const { data: business, error } = await supabaseAdmin
+      const { data: business, error } = await supabaseAdmin()
         .from('Business')
         .insert({
           placeId: data.placeId,
@@ -271,7 +273,7 @@ export const supabaseDb = {
   
   reviews: {
     findMany: async (where?: any): Promise<SupabaseReview[]> => {
-      let query = supabaseAdmin.from('Review').select('*')
+      let query = supabaseAdmin().from('Review').select('*')
       
       if (where?.targetUserId) {
         query = query.eq('targetUserId', where.targetUserId)
@@ -297,7 +299,7 @@ export const supabaseDb = {
     },
     
     findFirst: async (where?: any): Promise<SupabaseReview | null> => {
-      let query = supabaseAdmin.from('Review').select('*')
+      let query = supabaseAdmin().from('Review').select('*')
       
       if (where?.reviewerId) {
         query = query.eq('reviewerId', where.reviewerId)
@@ -327,7 +329,7 @@ export const supabaseDb = {
     },
     
     create: async (data: Omit<SupabaseReview, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupabaseReview> => {
-      const { data: review, error } = await supabaseAdmin
+      const { data: review, error } = await supabaseAdmin()
         .from('Review')
         .insert({
           reviewerId: data.reviewerId,
@@ -358,7 +360,7 @@ export const supabaseDb = {
       if (data.starRating !== undefined) updateData.starRating = data.starRating
       if (data.message !== undefined) updateData.message = data.message
       
-      let query = supabaseAdmin.from('Review').update(updateData)
+      let query = supabaseAdmin().from('Review').update(updateData)
       
       if ('id' in where) {
         query = query.eq('id', where.id)
@@ -383,7 +385,7 @@ export const supabaseDb = {
     },
     
     deleteMany: async (where?: any): Promise<void> => {
-      let query = supabaseAdmin.from('Review').delete()
+      let query = supabaseAdmin().from('Review').delete()
       
       if (where?.reviewerId) {
         query = query.eq('reviewerId', where.reviewerId)
@@ -408,7 +410,7 @@ export const supabaseDb = {
   
   otps: {
     create: async (data: SupabaseOtp): Promise<void> => {
-      const { error } = await supabaseAdmin.from('Otp').insert({
+      const { error } = await supabaseAdmin().from('Otp').insert({
         email: data.email,
         hash: data.hash,
         expiresAt: data.expiresAt,
@@ -418,7 +420,7 @@ export const supabaseDb = {
     },
     
     findFirst: async (where: { email: string }): Promise<SupabaseOtp | null> => {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin()
         .from('Otp')
         .select('*')
         .eq('email', where.email)
@@ -432,11 +434,11 @@ export const supabaseDb = {
     },
     
     delete: async (where: { email: string }): Promise<void> => {
-      await supabaseAdmin.from('Otp').delete().eq('email', where.email)
+      await supabaseAdmin().from('Otp').delete().eq('email', where.email)
     },
     
     deleteMany: async (where: { email: string }): Promise<void> => {
-      await supabaseAdmin.from('Otp').delete().eq('email', where.email)
+      await supabaseAdmin().from('Otp').delete().eq('email', where.email)
     },
   },
 }

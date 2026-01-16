@@ -91,7 +91,8 @@ export async function getBusinessDetails(businessId: string) {
   const allReviews = await prisma.reviews.findMany({ businessId })
 
   // Get all employer profiles for this business
-  const { supabaseAdmin } = await import('@/lib/supabase')
+  const { getSupabaseAdmin } = await import('@/lib/supabase')
+  const supabaseAdmin = getSupabaseAdmin()
   const { data: employerProfiles } = await supabaseAdmin
     .from('EmployerProfile')
     .select('userId, businessId')
