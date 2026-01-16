@@ -323,7 +323,10 @@ async function main() {
 
       for (let j = 0; j < reviewers.length; j++) {
         const reviewerId = reviewers[j]
-        const starRating = 3 + Math.floor(Math.random() * 3) // 3-5 stars
+        // Generate random ratings for the three new fields (1-5 stars)
+        const payCompetitive = 2 + Math.floor(Math.random() * 4) // 2-5 stars
+        const workload = 2 + Math.floor(Math.random() * 4) // 2-5 stars
+        const flexibility = 2 + Math.floor(Math.random() * 4) // 2-5 stars
         const message = businessReviewMessages[(i * numReviews + j) % businessReviewMessages.length]
 
         // Check if review already exists
@@ -337,7 +340,7 @@ async function main() {
           .single()
 
         if (!existing) {
-          // Try to insert with starRating and message, fallback if columns don't exist
+          // Try to insert with new rating fields
           const { error } = await supabaseAdmin
             .from('Review')
             .insert({
@@ -346,19 +349,27 @@ async function main() {
               targetUserId: null,
               businessId: business.id,
               rating: null,
-              starRating,
-              message,
+              payCompetitive,
+              workload,
+              flexibility,
+              message: message || null,
             })
 
           if (error) {
             // If columns don't exist, skip for now (user needs to run migration)
-            if (error.message.includes('message') || error.message.includes('starRating')) {
-              console.log(`  ⚠️  Skipping business review - please run supabase-add-business-reviews.sql migration first`)
+            if (error.message.includes('payCompetitive') || error.message.includes('workload') || error.message.includes('flexibility')) {
+              console.log(`  ⚠️  Skipping business review - please run supabase-add-business-rating-fields.sql migration first`)
             } else {
               console.error(`  Error creating business review:`, error.message)
             }
           } else {
-            businessReviews.push({ business: business.name, starRating, message })
+            businessReviews.push({ 
+              business: business.name, 
+              payCompetitive, 
+              workload, 
+              flexibility, 
+              message 
+            })
           }
         }
       }
