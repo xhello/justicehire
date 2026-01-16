@@ -10,33 +10,34 @@ export default async function Home({
 }: {
   searchParams: Promise<{ state?: string; city?: string; category?: string }>
 }) {
-  const params = await searchParams
-  let user = null
-  let results: any[] = []
-  let citiesByState: Record<string, string[]> = {}
-  
   try {
-    user = await getCurrentUser()
-  } catch (err) {
-    console.error('Error getting current user:', err)
-  }
-  
-  try {
-    results = await searchResults({
-      state: params.state,
-      city: params.city,
-      category: params.category,
-    })
-  } catch (err) {
-    console.error('Error getting search results:', err)
-  }
-  
-  try {
-    // Get cities grouped by state for the filter component
-    citiesByState = await getCitiesByState()
-  } catch (err) {
-    console.error('Error getting cities by state:', err)
-  }
+    const params = await searchParams
+    let user = null
+    let results: any[] = []
+    let citiesByState: Record<string, string[]> = {}
+    
+    try {
+      user = await getCurrentUser()
+    } catch (err) {
+      console.error('Error getting current user:', err)
+    }
+    
+    try {
+      results = await searchResults({
+        state: params.state,
+        city: params.city,
+        category: params.category,
+      })
+    } catch (err) {
+      console.error('Error getting search results:', err)
+    }
+    
+    try {
+      // Get cities grouped by state for the filter component
+      citiesByState = await getCitiesByState()
+    } catch (err) {
+      console.error('Error getting cities by state:', err)
+    }
 
   return (
     <div className="min-h-screen bg-gray-50">
