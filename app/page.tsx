@@ -230,5 +230,19 @@ export default async function Home({
         </div>
       </main>
     </div>
-  )
+    )
+  } catch (error: any) {
+    console.error('Error rendering home page:', error)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Page</h1>
+          <p className="text-gray-700 mb-4">{error?.message || 'An unexpected error occurred'}</p>
+          <Link href="/test" className="text-blue-600 hover:text-blue-700">
+            Go to Test Page
+          </Link>
+        </div>
+      </div>
+    )
+  }
 }
