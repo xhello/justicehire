@@ -50,6 +50,9 @@ export interface SupabaseReview {
   businessId: string
   rating: 'OUTSTANDING' | 'DELIVERED_AS_EXPECTED' | 'GOT_NOTHING_NICE_TO_SAY' | null
   starRating: number | null
+  payCompetitive: number | null
+  workload: number | null
+  flexibility: number | null
   message: string | null
   createdAt: string
   updatedAt?: string | null
@@ -387,6 +390,9 @@ export const supabaseDb = {
             businessId: data.businessId,
             rating: data.rating || null,
             starRating: data.starRating || null,
+            payCompetitive: data.payCompetitive || null,
+            workload: data.workload || null,
+            flexibility: data.flexibility || null,
             message: data.message || null,
           })
           .select()
@@ -410,8 +416,11 @@ export const supabaseDb = {
           ...data,
           updatedAt: new Date().toISOString(),
         }
-        // Ensure starRating and message are included if provided
+        // Ensure rating fields are included if provided
         if (data.starRating !== undefined) updateData.starRating = data.starRating
+        if (data.payCompetitive !== undefined) updateData.payCompetitive = data.payCompetitive
+        if (data.workload !== undefined) updateData.workload = data.workload
+        if (data.flexibility !== undefined) updateData.flexibility = data.flexibility
         if (data.message !== undefined) updateData.message = data.message
         
         let query = supabaseAdmin.from('Review').update(updateData)

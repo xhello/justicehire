@@ -7,8 +7,10 @@ import { revalidatePath } from 'next/cache'
 
 const createBusinessReviewSchema = z.object({
   businessId: z.string(),
-  starRating: z.number().min(1).max(5),
-  message: z.string().min(1).max(1000),
+  payCompetitive: z.number().min(1).max(5),
+  workload: z.number().min(1).max(5),
+  flexibility: z.number().min(1).max(5),
+  message: z.string().optional(),
 })
 
 export async function createBusinessReview(formData: FormData): Promise<void> {
@@ -20,8 +22,10 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
 
   const data = {
     businessId: formData.get('businessId') as string,
-    starRating: parseInt(formData.get('starRating') as string),
-    message: formData.get('message') as string,
+    payCompetitive: parseInt(formData.get('payCompetitive') as string),
+    workload: parseInt(formData.get('workload') as string),
+    flexibility: parseInt(formData.get('flexibility') as string),
+    message: (formData.get('message') as string) || undefined,
   }
 
   let validated
@@ -53,8 +57,10 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
         await prisma.reviews.update({
           where: { id: existingReview.id },
           data: {
-            starRating: validated.starRating,
-            message: validated.message,
+            payCompetitive: validated.payCompetitive,
+            workload: validated.workload,
+            flexibility: validated.flexibility,
+            message: validated.message || null,
           },
         })
       } else {
@@ -71,8 +77,10 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
           targetUserId: null,
           businessId: validated.businessId,
           rating: null,
-          starRating: validated.starRating,
-          message: validated.message,
+          payCompetitive: validated.payCompetitive,
+          workload: validated.workload,
+          flexibility: validated.flexibility,
+          message: validated.message || null,
         })
       }
     } catch (error) {
@@ -89,8 +97,10 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
         targetUserId: null,
         businessId: validated.businessId,
         rating: null,
-        starRating: validated.starRating,
-        message: validated.message,
+        payCompetitive: validated.payCompetitive,
+        workload: validated.workload,
+        flexibility: validated.flexibility,
+        message: validated.message || null,
       })
     }
   } else {
@@ -101,8 +111,10 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
       targetUserId: null,
       businessId: validated.businessId,
       rating: null,
-      starRating: validated.starRating,
-      message: validated.message,
+      payCompetitive: validated.payCompetitive,
+      workload: validated.workload,
+      flexibility: validated.flexibility,
+      message: validated.message || null,
     })
   }
 
