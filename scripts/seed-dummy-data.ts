@@ -4,22 +4,31 @@ import { readFileSync } from 'fs'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
-// Manually load .env.local
-const envPath = resolve(process.cwd(), '.env.local')
-const envFile = readFileSync(envPath, 'utf-8')
-envFile.split('\n').forEach(line => {
-  const [key, ...valueParts] = line.split('=')
-  if (key && valueParts.length > 0) {
-    const value = valueParts.join('=').trim()
-    if (value && !key.startsWith('#')) {
-      process.env[key.trim()] = value.replace(/^["']|["']$/g, '')
-    }
+// Manually load .env.local or .env
+try {
+  let envPath = resolve(process.cwd(), '.env.local')
+  try {
+    readFileSync(envPath, 'utf-8')
+  } catch {
+    envPath = resolve(process.cwd(), '.env')
   }
-})
+  const envFile = readFileSync(envPath, 'utf-8')
+  envFile.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=')
+    if (key && valueParts.length > 0) {
+      const value = valueParts.join('=').trim()
+      if (value && !key.startsWith('#')) {
+        process.env[key.trim()] = value.replace(/^["']|["']$/g, '')
+      }
+    }
+  })
+} catch (error) {
+  console.log('No .env.local or .env file found, using environment variables or hardcoded values')
+}
 
-// Create Supabase admin client directly
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Create Supabase admin client directly (with hardcoded fallbacks)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hrynlmbegmdvmeeuhpdc.supabase.co'
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_r87zjoGJmDU5UFIVr853dQ_HGfQpAIY'
 
 if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing Supabase environment variables')
@@ -299,8 +308,17 @@ async function main() {
     }
     console.log(`  ✓ Created OTPs for ${allEmails.length} users`)
 
-    // Create business reviews (star ratings with messages)
+    // Create business reviews (with new rating fields)
     console.log('Creating business reviews...')
+    
+    // Delete existing business reviews first to recreate with new fields
+    console.log('  Deleting existing business reviews...')
+    await supabaseAdmin
+      .from('Review')
+      .delete()
+      .eq('targetType', 'BUSINESS')
+      .is('targetUserId', null)
+    
     const businessReviewMessages = [
       'Great place to work! The management is very supportive and the work environment is positive.',
       'Excellent business with fair treatment of employees. Highly recommend!',
