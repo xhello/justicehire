@@ -5,6 +5,9 @@ import { getCurrentUser } from '@/lib/auth'
 import BusinessFilters from './business/BusinessFilters'
 import BusinessImage from './business/BusinessImage'
 
+// Force dynamic rendering since we use searchParams
+export const dynamic = 'force-dynamic'
+
 export default async function Home({
   searchParams,
 }: {
