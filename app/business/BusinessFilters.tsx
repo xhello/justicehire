@@ -60,7 +60,7 @@ export default function BusinessFilters({
         <select
           id="state"
           name="state"
-          value={state}
+          value={state || 'CA'}
           onChange={(e) => {
             setState(e.target.value)
             setCity('') // Clear city when state changes
@@ -83,16 +83,13 @@ export default function BusinessFilters({
           disabled={!state}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
         >
-          <option value="">All Cities</option>
-          {filteredCities.map((cityName: string) => (
+          <option value="Crescent City">Crescent City</option>
+          {filteredCities.filter((c: string) => c !== 'Crescent City').map((cityName: string) => (
             <option key={cityName} value={cityName}>
               {cityName}
             </option>
           ))}
         </select>
-        {!state && (
-          <p className="mt-1 text-xs text-gray-500">Select a state first</p>
-        )}
       </div>
 
       <div>

@@ -15,7 +15,7 @@ export default async function Home({
 }) {
   try {
     const params = await searchParams
-    // Default to CA and Crescent City if not specified
+    // Default to California, Crescent City if no params
     const state = params.state || 'CA'
     const city = params.city || 'Crescent City'
     let user = null
@@ -97,8 +97,8 @@ export default async function Home({
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <BusinessFilters
             citiesByState={citiesByState}
-            selectedState={state}
-            selectedCity={city}
+            selectedState={params.state}
+            selectedCity={params.city}
             selectedCategory={params.category}
           />
         </div>
