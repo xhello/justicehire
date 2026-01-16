@@ -15,6 +15,9 @@ export default async function Home({
 }) {
   try {
     const params = await searchParams
+    // Default to CA and Crescent City if not specified
+    const state = params.state || 'CA'
+    const city = params.city || 'Crescent City'
     let user = null
     let results: any[] = []
     let citiesByState: Record<string, string[]> = {}
@@ -27,8 +30,8 @@ export default async function Home({
     
     try {
       results = await searchResults({
-        state: params.state,
-        city: params.city,
+        state: state,
+        city: city,
         category: params.category,
       })
     } catch (err) {
@@ -94,8 +97,8 @@ export default async function Home({
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <BusinessFilters
             citiesByState={citiesByState}
-            selectedState={params.state}
-            selectedCity={params.city}
+            selectedState={state}
+            selectedCity={city}
             selectedCategory={params.category}
           />
         </div>

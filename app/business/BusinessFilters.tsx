@@ -17,8 +17,8 @@ export default function BusinessFilters({
   selectedCategory,
 }: BusinessFiltersProps) {
   const router = useRouter()
-  const [state, setState] = useState(selectedState || '')
-  const [city, setCity] = useState(selectedCity || '')
+  const [state, setState] = useState(selectedState || 'CA')
+  const [city, setCity] = useState(selectedCity || 'Crescent City')
   const [category, setCategory] = useState(selectedCategory || '')
   const [filteredCities, setFilteredCities] = useState<string[]>([])
 
@@ -67,9 +67,7 @@ export default function BusinessFilters({
           }}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="">All States</option>
           <option value="CA">California</option>
-          <option value="OR">Oregon</option>
         </select>
       </div>
 
