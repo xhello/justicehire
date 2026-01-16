@@ -147,7 +147,16 @@ export default async function BusinessDetailPage({
             {businessReviews.length === 0 ? (
               <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
             ) : (
-              businessReviews.map((review: any) => (
+              businessReviews.map((review: any) => {
+                // Debug: log review data to see what fields are present
+                console.log('Review data:', {
+                  id: review.id,
+                  payCompetitive: review.payCompetitive,
+                  workload: review.workload,
+                  flexibility: review.flexibility,
+                  message: review.message
+                })
+                return (
                 <div key={review.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
@@ -175,39 +184,39 @@ export default async function BusinessDetailPage({
                   
                   {/* Display three ratings */}
                   <div className="mt-3 space-y-2">
-                    {review.payCompetitive && (
+                    {review.payCompetitive != null ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-700 min-w-[140px]">Pay Competitive:</span>
                         <div className="flex text-yellow-400">
                           {[1, 2, 3, 4, 5].map((star: number) => (
-                            <span key={star}>{star <= review.payCompetitive! ? '★' : '☆'}</span>
+                            <span key={star}>{star <= (review.payCompetitive || 0) ? '★' : '☆'}</span>
                           ))}
                         </div>
                         <span className="text-sm text-gray-600">({review.payCompetitive}/5)</span>
                       </div>
-                    )}
-                    {review.workload && (
+                    ) : null}
+                    {review.workload != null ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-700 min-w-[140px]">Workload:</span>
                         <div className="flex text-yellow-400">
                           {[1, 2, 3, 4, 5].map((star: number) => (
-                            <span key={star}>{star <= review.workload! ? '★' : '☆'}</span>
+                            <span key={star}>{star <= (review.workload || 0) ? '★' : '☆'}</span>
                           ))}
                         </div>
                         <span className="text-sm text-gray-600">({review.workload}/5)</span>
                       </div>
-                    )}
-                    {review.flexibility && (
+                    ) : null}
+                    {review.flexibility != null ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-700 min-w-[140px]">Flexibility:</span>
                         <div className="flex text-yellow-400">
                           {[1, 2, 3, 4, 5].map((star: number) => (
-                            <span key={star}>{star <= review.flexibility! ? '★' : '☆'}</span>
+                            <span key={star}>{star <= (review.flexibility || 0) ? '★' : '☆'}</span>
                           ))}
                         </div>
                         <span className="text-sm text-gray-600">({review.flexibility}/5)</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                   
                   {review.message && (
@@ -220,7 +229,8 @@ export default async function BusinessDetailPage({
                     {new Date(review.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>
