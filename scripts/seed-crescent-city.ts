@@ -81,6 +81,7 @@ async function main() {
           city: 'Crescent City',
           state: 'CA',
           category: 'Restaurant',
+          photoUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop',
         },
         {
           placeId: 'crescent-city-2',
@@ -89,6 +90,7 @@ async function main() {
           city: 'Crescent City',
           state: 'CA',
           category: 'Restaurant',
+          photoUrl: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=400&fit=crop',
         },
         {
           placeId: 'crescent-city-3',
@@ -97,6 +99,7 @@ async function main() {
           city: 'Crescent City',
           state: 'CA',
           category: 'Hotel',
+          photoUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=400&fit=crop',
         },
         {
           placeId: 'crescent-city-4',
@@ -105,6 +108,7 @@ async function main() {
           city: 'Crescent City',
           state: 'CA',
           category: 'Brewery',
+          photoUrl: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=400&fit=crop',
         },
         {
           placeId: 'crescent-city-5',
@@ -113,6 +117,7 @@ async function main() {
           city: 'Crescent City',
           state: 'CA',
           category: 'Restaurant',
+          photoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=400&fit=crop',
         },
       ]
 
@@ -135,6 +140,26 @@ async function main() {
     }
 
     console.log(`  ✓ Found/Created ${businesses.length} businesses in Crescent City, CA`)
+
+    // Update businesses with photo URLs if they don't have them
+    console.log('\nUpdating business photos...')
+    const businessPhotos: Record<string, string> = {
+      'Good Harvest Cafe': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=400&fit=crop',
+      'Oceanview Grill': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=400&fit=crop',
+      'Crescent City Hotel': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=400&fit=crop',
+      'Harbor Brewery': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=400&h=400&fit=crop',
+      'Coastal Diner': 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=400&fit=crop',
+    }
+
+    for (const business of businesses) {
+      if (!business.photoUrl && businessPhotos[business.name]) {
+        await supabaseAdmin
+          .from('Business')
+          .update({ photoUrl: businessPhotos[business.name] })
+          .eq('id', business.id)
+        console.log(`  ✓ Updated photo for ${business.name}`)
+      }
+    }
 
     // Create employees (shared across all businesses)
     console.log('\nCreating employees...')
