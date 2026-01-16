@@ -10,17 +10,39 @@ export default async function Home({
 }: {
   searchParams: Promise<{ state?: string; city?: string; category?: string }>
 }) {
+  let params, user, results, citiesByState
+  
   try {
-    const params = await searchParams
-    const user = await getCurrentUser().catch(() => null)
-    const results = await searchResults({
+    params = await searchParams
+  } catch (err) {
+    params = { state: undefined, city: undefined, category: undefined }
+  }
+  
+  try {
+    user = await getCurrentUser()
+  } catch (err) {
+    console.error('Error getting current user:', err)
+    user = null
+  }
+  
+  try {
+    results = await searchResults({
       state: params.state,
       city: params.city,
       category: params.category,
-    }).catch(() => [])
-    
-    // Get cities grouped by state for the filter component
-    const citiesByState = await getCitiesByState().catch(() => ({}))
+    })
+  } catch (err) {
+    console.error('Error getting search results:', err)
+    results = []
+  }
+  
+  // Get cities grouped by state for the filter component
+  try {
+    citiesByState = await getCitiesByState()
+  } catch (err) {
+    console.error('Error getting cities by state:', err)
+    citiesByState = {}
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -213,16 +235,5 @@ export default async function Home({
         </div>
       </main>
     </div>
-    )
-  } catch (err) {
-    console.error('Error rendering home page:', err)
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
-          <p className="text-gray-600">Please try again later.</p>
-        </div>
-      </div>
-    )
-  }
+  )
 }

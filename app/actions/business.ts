@@ -65,11 +65,13 @@ export async function getCitiesByState() {
     const citiesByState: Record<string, string[]> = {}
     
     allBusinesses.forEach((business: any) => {
-      if (!citiesByState[business.state]) {
-        citiesByState[business.state] = []
-      }
-      if (!citiesByState[business.state].includes(business.city)) {
-        citiesByState[business.state].push(business.city)
+      if (business.state && business.city) {
+        if (!citiesByState[business.state]) {
+          citiesByState[business.state] = []
+        }
+        if (!citiesByState[business.state].includes(business.city)) {
+          citiesByState[business.state].push(business.city)
+        }
       }
     })
     
@@ -96,17 +98,11 @@ export async function getBusinessDetails(businessId: string) {
   const allReviews = await prisma.reviews.findMany({ businessId })
 
   // Get all employer profiles for this business
-  let employerProfiles: any[] = []
-  try {
-    const { supabaseAdmin } = await import('@/lib/supabase')
-    const { data } = await supabaseAdmin
-      .from('EmployerProfile')
-      .select('userId, businessId')
-      .eq('businessId', businessId)
-    employerProfiles = data || []
-  } catch (err) {
-    console.error('Error fetching employer profiles:', err)
-  }
+  const { supabaseAdmin } = await import('@/lib/supabase')
+  const { data: employerProfiles } = await supabaseAdmin
+    .from('EmployerProfile')
+    .select('userId, businessId')
+    .eq('businessId', businessId)
   
   if (!employerProfiles || employerProfiles.length === 0) {
     return {
