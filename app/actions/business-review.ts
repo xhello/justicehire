@@ -11,11 +11,11 @@ const createBusinessReviewSchema = z.object({
   message: z.string().min(1).max(1000),
 })
 
-export async function createBusinessReview(formData: FormData) {
+export async function createBusinessReview(formData: FormData): Promise<void> {
   const user = await getCurrentUser()
 
   if (!user || !user.verified) {
-    return { error: 'You must be verified to leave reviews' }
+    return
   }
 
   const data = {
@@ -24,13 +24,18 @@ export async function createBusinessReview(formData: FormData) {
     message: formData.get('message') as string,
   }
 
-  const validated = createBusinessReviewSchema.parse(data)
+  let validated
+  try {
+    validated = createBusinessReviewSchema.parse(data)
+  } catch {
+    return
+  }
 
   // Check if business exists
   const business = await prisma.businesses.findUnique({ id: validated.businessId })
 
   if (!business) {
-    return { error: 'Business not found' }
+    return
   }
 
   // Check for existing review
@@ -102,8 +107,6 @@ export async function createBusinessReview(formData: FormData) {
   }
 
   revalidatePath(`/business/${validated.businessId}`)
-
-  return { success: true }
 }
 
 export async function getBusinessReviews(businessId: string) {
@@ -114,7 +117,7 @@ export async function getBusinessReviews(businessId: string) {
 
   // Get reviewer information
   const reviewsWithUsers = await Promise.all(
-    reviews.map(async (review) => {
+    reviews.map(async (review: any) => {
       const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
       return {
         ...review,

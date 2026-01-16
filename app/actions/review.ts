@@ -13,11 +13,11 @@ const createReviewSchema = z.object({
   rating: z.enum(['OUTSTANDING', 'DELIVERED_AS_EXPECTED', 'GOT_NOTHING_NICE_TO_SAY']),
 })
 
-export async function createReview(formData: FormData) {
+export async function createReview(formData: FormData): Promise<void> {
   const user = await getCurrentUser()
 
   if (!user || !user.verified) {
-    return { error: 'You must be verified to leave reviews' }
+    return
   }
 
   const data = {
@@ -27,25 +27,30 @@ export async function createReview(formData: FormData) {
     rating: formData.get('rating') as string,
   }
 
-  const validated = createReviewSchema.parse(data)
+  let validated
+  try {
+    validated = createReviewSchema.parse(data)
+  } catch {
+    return
+  }
 
   // Check if target user exists
   const targetUser = await prisma.users.findUnique({ id: validated.targetUserId })
 
   if (!targetUser) {
-    return { error: 'Target user not found' }
+    return
   }
 
   // Check if business exists
   const business = await prisma.businesses.findUnique({ id: validated.businessId })
 
   if (!business) {
-    return { error: 'Business not found' }
+    return
   }
 
   // Prevent self-review
   if (user.id === validated.targetUserId) {
-    return { error: 'You cannot review yourself' }
+    return
   }
 
   // Check for existing review (any time, not just 30 days)
@@ -109,8 +114,6 @@ export async function createReview(formData: FormData) {
   revalidatePath(`/business/${validated.businessId}`)
   revalidatePath(`/employee/${validated.targetUserId}`)
   revalidatePath(`/employer/${validated.targetUserId}`)
-
-  return { success: true }
 }
 
 export async function getAggregatedRatings(userId: string) {
@@ -124,8 +127,10 @@ export async function getAggregatedRatings(userId: string) {
     GOT_NOTHING_NICE_TO_SAY: 0,
   }
 
-  reviews.forEach((review) => {
-    ratings[review.rating]++
+  reviews.forEach((review: any) => {
+    if (review.rating && review.rating in ratings) {
+      ratings[review.rating as keyof typeof ratings]++
+    }
   })
 
   return {

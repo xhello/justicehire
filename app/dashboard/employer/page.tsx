@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import { getAggregatedRatings } from '@/app/actions/review'
-import { staticUsers } from '@/lib/static-data'
 import BusinessFilter from './BusinessFilter'
 import StateCityFilter from './StateCityFilter'
 
@@ -32,18 +31,18 @@ export default async function EmployerDashboard({
   const allBusinesses = await prisma.businesses.findMany({})
   
   // Get unique states and cities from all businesses
-  const uniqueStates = [...new Set(allBusinesses.map((b) => b.state))].sort()
+  const uniqueStates = [...new Set<string>(allBusinesses.map((b: any) => b.state as string))].sort()
   const uniqueCities = params.state
-    ? [...new Set(allBusinesses.filter((b) => b.state === params.state).map((b) => b.city))].sort()
-    : [...new Set(allBusinesses.map((b) => b.city))].sort()
+    ? [...new Set<string>(allBusinesses.filter((b: any) => b.state === params.state).map((b: any) => b.city as string))].sort()
+    : [...new Set<string>(allBusinesses.map((b: any) => b.city as string))].sort()
 
   // Filter businesses based on selected state and city
   let filteredBusinesses = allBusinesses
   if (params.state) {
-    filteredBusinesses = filteredBusinesses.filter((b) => b.state === params.state)
+    filteredBusinesses = filteredBusinesses.filter((b: any) => b.state === params.state)
   }
   if (params.city) {
-    filteredBusinesses = filteredBusinesses.filter((b) => b.city === params.city)
+    filteredBusinesses = filteredBusinesses.filter((b: any) => b.city === params.city)
   }
 
   // Get all reviews
@@ -51,7 +50,7 @@ export default async function EmployerDashboard({
   
   // Filter reviews by selected filters
   // If no filters are selected, show all employees who reviewed any business
-  const relevantReviews = allReviews.filter((review) => {
+  const relevantReviews = allReviews.filter((review: any) => {
     // If businessId filter is specified, only include reviews for that business
     if (params.businessId) {
       return review.businessId === params.businessId
@@ -59,7 +58,7 @@ export default async function EmployerDashboard({
     
     // If state or city filters are specified, filter by those
     if (params.state || params.city) {
-      const business = filteredBusinesses.find((b) => b.id === review.businessId)
+      const business = filteredBusinesses.find((b: any) => b.id === review.businessId)
       return !!business
     }
     
@@ -68,19 +67,22 @@ export default async function EmployerDashboard({
   })
 
   // Get unique employee IDs who reviewed businesses in the area
-  const employeeIds = [...new Set(relevantReviews.map((r) => r.reviewerId))]
+  const employeeIds = [...new Set<string>(relevantReviews.map((r: any) => r.reviewerId as string))]
+  
+  // Get all users
+  const allUsers = await prisma.users.findMany({})
   
   // Get employee users with their review information
   const employeesWithReviews = employeeIds
-    .map((employeeId) => {
-      const employee = staticUsers.find((u) => u.id === employeeId && u.role === 'EMPLOYEE')
+    .map((employeeId: string) => {
+      const employee = allUsers.find((u: any) => u.id === employeeId && u.role === 'EMPLOYEE')
       if (!employee) return null
       
       // Get businesses this employee reviewed
-      const employeeReviews = relevantReviews.filter((r) => r.reviewerId === employeeId)
-      const reviewedBusinessIds = [...new Set(employeeReviews.map((r) => r.businessId))]
+      const employeeReviews = relevantReviews.filter((r: any) => r.reviewerId === employeeId)
+      const reviewedBusinessIds = Array.from(new Set<string>(employeeReviews.map((r: any) => r.businessId as string)))
       const reviewedBusinesses = reviewedBusinessIds
-        .map((bid) => allBusinesses.find((b) => b.id === bid))
+        .map((bid: string) => allBusinesses.find((b: any) => b.id === bid))
         .filter(Boolean)
       
       return {
@@ -89,8 +91,8 @@ export default async function EmployerDashboard({
         reviewCount: employeeReviews.length,
       }
     })
-    .filter(Boolean) as Array<{
-      employee: typeof staticUsers[0]
+    .filter((e: any) => e !== null) as Array<{
+      employee: any
       reviewedBusinesses: any[]
       reviewCount: number
     }>
@@ -179,7 +181,7 @@ export default async function EmployerDashboard({
                 Business (optional)
               </label>
               <BusinessFilter
-                businesses={filteredBusinesses.map((b) => ({ id: b.id, name: b.name }))}
+                businesses={filteredBusinesses.map((b: any) => ({ id: b.id, name: b.name }))}
                 currentBusinessId={params.businessId}
               />
             </div>
@@ -195,7 +197,7 @@ export default async function EmployerDashboard({
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {employeesWithReviews.map(({ employee, reviewedBusinesses, reviewCount }) => (
+              {employeesWithReviews.map(({ employee, reviewedBusinesses, reviewCount }: any) => (
                 <EmployeeCard
                   key={employee.id}
                   employeeId={employee.id}

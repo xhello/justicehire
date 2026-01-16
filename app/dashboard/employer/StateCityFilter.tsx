@@ -44,7 +44,7 @@ export default function StateCityFilter({
       disabled={disabled}
     >
       <option value="">All {type === 'state' ? 'States' : 'Cities'}</option>
-      {options.map((option) => (
+      {options.map((option: string) => (
         <option key={option} value={option}>
           {option}
         </option>

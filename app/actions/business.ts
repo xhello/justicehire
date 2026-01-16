@@ -27,8 +27,8 @@ export async function listBusinesses(filters: {
   const reviews = await prisma.reviews.findMany({})
   
   // Add review counts
-  const businessesWithCounts = businesses.map((business) => {
-    const reviewCount = reviews.filter((r) => r.businessId === business.id).length
+  const businessesWithCounts = businesses.map((business: any) => {
+    const reviewCount = reviews.filter((r: any) => r.businessId === business.id).length
     return {
       ...business,
       _count: {
@@ -38,7 +38,7 @@ export async function listBusinesses(filters: {
   })
   
   // Sort by name
-  businessesWithCounts.sort((a, b) => a.name.localeCompare(b.name))
+  businessesWithCounts.sort((a: any, b: any) => a.name.localeCompare(b.name))
   
   return businessesWithCounts
 }
@@ -46,10 +46,10 @@ export async function listBusinesses(filters: {
 export async function getUniqueCities(state?: string) {
   const allBusinesses = await prisma.businesses.findMany({})
   
-  let cities = allBusinesses.map((b) => b.city)
+  let cities = allBusinesses.map((b: any) => b.city)
   
   if (state) {
-    cities = allBusinesses.filter((b) => b.state === state).map((b) => b.city)
+    cities = allBusinesses.filter((b: any) => b.state === state).map((b: any) => b.city)
   }
   
   // Get unique cities and sort
@@ -63,7 +63,7 @@ export async function getCitiesByState() {
   
   const citiesByState: Record<string, string[]> = {}
   
-  allBusinesses.forEach((business) => {
+  allBusinesses.forEach((business: any) => {
     if (!citiesByState[business.state]) {
       citiesByState[business.state] = []
     }
@@ -73,7 +73,7 @@ export async function getCitiesByState() {
   })
   
   // Sort cities in each state
-  Object.keys(citiesByState).forEach((state) => {
+  Object.keys(citiesByState).forEach((state: string) => {
     citiesByState[state].sort()
   })
   
@@ -108,15 +108,15 @@ export async function getBusinessDetails(businessId: string) {
   }
 
   // Get all users who are employers for this business
-  const employerUserIds = employerProfiles.map((p) => p.userId)
+  const employerUserIds = employerProfiles.map((p: any) => p.userId)
   const allUsers = await prisma.users.findMany({})
   const employerUsers = allUsers.filter(
-    (u) => u.role === 'EMPLOYER' && employerUserIds.includes(u.id)
+    (u: any) => u.role === 'EMPLOYER' && employerUserIds.includes(u.id)
   )
 
   // Get aggregated ratings for each employer
   const employers = await Promise.all(
-    employerUsers.map(async (user) => {
+    employerUsers.map(async (user: any) => {
       const reviews = await prisma.reviews.findMany({
         targetUserId: user.id,
         targetType: 'EMPLOYER',
@@ -129,8 +129,10 @@ export async function getBusinessDetails(businessId: string) {
         GOT_NOTHING_NICE_TO_SAY: 0,
       }
 
-      reviews.forEach((review) => {
-        ratings[review.rating]++
+      reviews.forEach((review: any) => {
+        if (review.rating && review.rating in ratings) {
+          ratings[review.rating as keyof typeof ratings]++
+        }
       })
 
       return {

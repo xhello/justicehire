@@ -87,7 +87,7 @@ export default async function Home({
             <p className="text-gray-700">No results found.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {results.map((item) => {
+              {results.map((item: any) => {
                 if (item.type === 'business') {
                   return (
                     <Link

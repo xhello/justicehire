@@ -20,7 +20,7 @@ export default async function BusinessDetailPage({
   
   // Calculate average star rating
   const starRatings = businessReviews
-    .map((r) => r.starRating)
+    .map((r: any) => r.starRating)
     .filter((r): r is number => r !== null)
   const averageRating = starRatings.length > 0
     ? (starRatings.reduce((sum, r) => sum + r, 0) / starRatings.length).toFixed(1)
@@ -105,7 +105,7 @@ export default async function BusinessDetailPage({
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-gray-900">{averageRating}</span>
                     <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star) => (
+                      {[1, 2, 3, 4, 5].map((star: number) => (
                         <span
                           key={star}
                           className={star <= Math.round(parseFloat(averageRating)) ? 'text-yellow-400' : 'text-gray-300'}
@@ -147,7 +147,7 @@ export default async function BusinessDetailPage({
             {businessReviews.length === 0 ? (
               <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
             ) : (
-              businessReviews.map((review) => (
+              businessReviews.map((review: any) => (
                 <div key={review.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
@@ -173,7 +173,7 @@ export default async function BusinessDetailPage({
                     </div>
                     {review.starRating && (
                       <div className="flex text-yellow-400">
-                        {[1, 2, 3, 4, 5].map((star) => (
+                        {[1, 2, 3, 4, 5].map((star: number) => (
                           <span key={star}>{star <= review.starRating! ? '★' : '☆'}</span>
                         ))}
                       </div>
@@ -197,7 +197,7 @@ export default async function BusinessDetailPage({
             <p className="text-gray-700">No employers registered for this business.</p>
           ) : (
             <div className="space-y-6">
-              {business.employers.map((employer) => (
+              {business.employers.map((employer: any) => (
                 <EmployerCard
                   key={employer.id}
                   employer={employer}

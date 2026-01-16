@@ -245,7 +245,7 @@ export const supabaseDb = {
       
       if (error || !data) return []
       
-      return data as SupabaseBusiness
+      return data as SupabaseBusiness[]
     },
     
     create: async (data: Omit<SupabaseBusiness, 'id' | 'createdAt' | 'updatedAt'>): Promise<SupabaseBusiness> => {

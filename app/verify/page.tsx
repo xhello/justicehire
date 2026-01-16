@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { verifyEmailOtp, requestEmailOtp } from '../actions/auth'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function VerifyPage() {
+function VerifyForm() {
   const [otp, setOtp] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -125,5 +125,13 @@ export default function VerifyPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <VerifyForm />
+    </Suspense>
   )
 }

@@ -36,7 +36,7 @@ export default function BusinessFilter({
       disabled={disabled}
     >
       <option value="">All Businesses</option>
-      {businesses.map((business) => (
+      {businesses.map((business: any) => (
         <option key={business.id} value={business.id}>
           {business.name}
         </option>

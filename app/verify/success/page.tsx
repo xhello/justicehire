@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function VerifySuccessPage() {
+function VerifySuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const role = searchParams.get('role')
@@ -80,5 +80,13 @@ export default function VerifySuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifySuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <VerifySuccessContent />
+    </Suspense>
   )
 }

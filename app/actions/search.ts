@@ -18,8 +18,8 @@ export async function searchResults(filters: {
     const businesses = await prisma.businesses.findMany(where)
     const reviews = await prisma.reviews.findMany({})
     
-    const businessesWithCounts = businesses.map((business) => {
-      const reviewCount = reviews.filter((r) => r.businessId === business.id).length
+    const businessesWithCounts = businesses.map((business: any) => {
+      const reviewCount = reviews.filter((r: any) => r.businessId === business.id).length
       return {
         ...business,
         type: 'business' as const,
@@ -29,7 +29,7 @@ export async function searchResults(filters: {
       }
     })
     
-    businessesWithCounts.sort((a, b) => a.name.localeCompare(b.name))
+    businessesWithCounts.sort((a: any, b: any) => a.name.localeCompare(b.name))
     return businessesWithCounts
   } else if (category === 'employer') {
     // Fetch employers
@@ -48,28 +48,28 @@ export async function searchResults(filters: {
       .select('userId, businessId')
     
     const userIdToBusinessId = new Map<string, string>()
-    employerProfiles?.forEach((profile) => {
+    employerProfiles?.forEach((profile: any) => {
       userIdToBusinessId.set(profile.userId, profile.businessId)
     })
 
     const employersWithData = await Promise.all(
-      employers.map(async (employer) => {
+      employers.map(async (employer: any) => {
         // Get business name from employer profile
         let businessName: string | null = null
         const businessId = userIdToBusinessId.get(employer.id)
         if (businessId) {
-          const business = allBusinesses.find((b) => b.id === businessId)
+          const business = allBusinesses.find((b: any) => b.id === businessId)
           businessName = business?.name || null
         }
 
         // Get reviews received as employer
         const reviewsReceived = allReviews.filter(
-          (r) => r.targetUserId === employer.id && r.targetType === 'EMPLOYER'
+          (r: any) => r.targetUserId === employer.id && r.targetType === 'EMPLOYER'
         )
 
         // Get reviews written by employer
         const reviewsWritten = allReviews.filter(
-          (r) => r.reviewerId === employer.id
+          (r: any) => r.reviewerId === employer.id
         )
 
         const ratings = {
@@ -78,9 +78,9 @@ export async function searchResults(filters: {
           GOT_NOTHING_NICE_TO_SAY: 0,
         }
 
-        reviewsReceived.forEach((review) => {
-          if (review.rating) {
-            ratings[review.rating]++
+        reviewsReceived.forEach((review: any) => {
+          if (review.rating && review.rating in ratings) {
+            ratings[review.rating as keyof typeof ratings]++
           }
         })
 
@@ -103,7 +103,7 @@ export async function searchResults(filters: {
       })
     )
 
-    employersWithData.sort((a, b) => 
+    employersWithData.sort((a: any, b: any) => 
       `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
     )
     return employersWithData
@@ -117,26 +117,26 @@ export async function searchResults(filters: {
     // Pre-filter businesses by state/city if specified
     let filteredBusinessIds = new Set<string>()
     if (filters.state || filters.city) {
-      const filteredBusinesses = allBusinesses.filter((b) => {
+      const filteredBusinesses = allBusinesses.filter((b: any) => {
         const matchesState = !filters.state || b.state === filters.state
         const matchesCity = !filters.city || b.city === filters.city
         return matchesState && matchesCity
       })
-      filteredBusinessIds = new Set(filteredBusinesses.map((b) => b.id))
+      filteredBusinessIds = new Set(filteredBusinesses.map((b: any) => b.id))
     }
 
     const employeesWithData = await Promise.all(
-      allEmployees.map(async (employee) => {
+      allEmployees.map(async (employee: any) => {
         // Get businesses this employee has reviewed
-        const reviewedBusinessIds = new Set(
+        const reviewedBusinessIds = new Set<string>(
           allReviews
-            .filter((r) => r.reviewerId === employee.id)
-            .map((r) => r.businessId)
+            .filter((r: any) => r.reviewerId === employee.id)
+            .map((r: any) => r.businessId as string)
         )
 
         // Filter by state/city if specified
         if (filters.state || filters.city) {
-          const hasReviewedFilteredBusiness = Array.from(reviewedBusinessIds).some((id) =>
+          const hasReviewedFilteredBusiness = Array.from(reviewedBusinessIds).some((id: string) =>
             filteredBusinessIds.has(id)
           )
           if (!hasReviewedFilteredBusiness) {
@@ -146,7 +146,7 @@ export async function searchResults(filters: {
 
         // Get reviews received as employee
         const reviews = allReviews.filter(
-          (r) => r.targetUserId === employee.id && r.targetType === 'EMPLOYEE'
+          (r: any) => r.targetUserId === employee.id && r.targetType === 'EMPLOYEE'
         )
 
         const ratings = {
@@ -155,13 +155,15 @@ export async function searchResults(filters: {
           GOT_NOTHING_NICE_TO_SAY: 0,
         }
 
-        reviews.forEach((review) => {
-          ratings[review.rating]++
+        reviews.forEach((review: any) => {
+          if (review.rating && review.rating in ratings) {
+            ratings[review.rating as keyof typeof ratings]++
+          }
         })
 
         // Get reviews written by employee
         const reviewsWritten = allReviews.filter(
-          (r) => r.reviewerId === employee.id
+          (r: any) => r.reviewerId === employee.id
         )
 
         return {
@@ -182,9 +184,9 @@ export async function searchResults(filters: {
     )
 
     // Filter out nulls
-    const filteredEmployees = employeesWithData.filter((e) => e !== null) as any[]
+    const filteredEmployees = employeesWithData.filter((e: any) => e !== null) as any[]
 
-    filteredEmployees.sort((a, b) =>
+    filteredEmployees.sort((a: any, b: any) =>
       `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
     )
     return filteredEmployees
@@ -197,8 +199,8 @@ export async function searchResults(filters: {
     const businesses = await prisma.businesses.findMany(where)
     const reviews = await prisma.reviews.findMany({})
     
-    const businessesWithCounts = businesses.map((business) => {
-      const reviewCount = reviews.filter((r) => r.businessId === business.id).length
+    const businessesWithCounts = businesses.map((business: any) => {
+      const reviewCount = reviews.filter((r: any) => r.businessId === business.id).length
       return {
         ...business,
         type: 'business' as const,
@@ -208,7 +210,7 @@ export async function searchResults(filters: {
       }
     })
     
-    businessesWithCounts.sort((a, b) => a.name.localeCompare(b.name))
+    businessesWithCounts.sort((a: any, b: any) => a.name.localeCompare(b.name))
     return businessesWithCounts
   }
 }

@@ -14,7 +14,7 @@ export default function StarRating({ name, defaultValue, required }: StarRatingP
 
   return (
     <div className="flex gap-2">
-      {[1, 2, 3, 4, 5].map((star) => (
+      {[1, 2, 3, 4, 5].map((star: number) => (
         <label key={star} className="cursor-pointer">
           <input
             type="radio"
