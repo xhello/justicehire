@@ -42,8 +42,7 @@ export async function searchResults(filters: {
     const allBusinesses = await prisma.businesses.findMany({})
     
     // Get all employer profiles to map business IDs
-    const { getSupabaseAdmin } = await import('@/lib/supabase')
-    const supabaseAdmin = getSupabaseAdmin()
+    const { supabaseAdmin } = await import('@/lib/supabase')
     const { data: employerProfiles } = await supabaseAdmin
       .from('EmployerProfile')
       .select('userId, businessId')
