@@ -10,16 +10,17 @@ export default async function Home({
 }: {
   searchParams: Promise<{ state?: string; city?: string; category?: string }>
 }) {
-  const params = await searchParams
-  const user = await getCurrentUser()
-  const results = await searchResults({
-    state: params.state,
-    city: params.city,
-    category: params.category,
-  })
-  
-  // Get cities grouped by state for the filter component
-  const citiesByState = await getCitiesByState()
+  try {
+    const params = await searchParams
+    const user = await getCurrentUser().catch(() => null)
+    const results = await searchResults({
+      state: params.state,
+      city: params.city,
+      category: params.category,
+    }).catch(() => [])
+    
+    // Get cities grouped by state for the filter component
+    const citiesByState = await getCitiesByState().catch(() => ({}))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -212,5 +213,16 @@ export default async function Home({
         </div>
       </main>
     </div>
-  )
+    )
+  } catch (err) {
+    console.error('Error rendering home page:', err)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+          <p className="text-gray-600">Please try again later.</p>
+        </div>
+      </div>
+    )
+  }
 }
