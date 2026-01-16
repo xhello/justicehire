@@ -104,19 +104,6 @@ export default async function EmployeeProfilePage({
               <p className="text-lg text-gray-700">Employee</p>
             </div>
           </div>
-
-          {employee.socialUrl && (
-            <div className="mb-4">
-              <a
-                href={employee.socialUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700"
-              >
-                {employee.socialUrl}
-              </a>
-            </div>
-          )}
         </div>
 
         <div className="bg-white rounded-lg shadow p-6 mb-8">
