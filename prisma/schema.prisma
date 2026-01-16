@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  EMPLOYEE
+  EMPLOYER
+}
+
+enum BusinessCategory {
+  Hotel
+  Motel
+  Restaurant
+  Cafe
+  Bar
+  Resort
+  Casino
+  FoodTruck
+  Catering
+  Brewery
+}
+
+enum ReviewRating {
+  OUTSTANDING
+  DELIVERED_AS_EXPECTED
+  GOT_NOTHING_NICE_TO_SAY
+}
+
+enum ReviewTargetType {
+  EMPLOYEE
+  EMPLOYER
+}
+
+model User {
+  id            String          @id @default(cuid())
+  role          UserRole
+  verified      Boolean         @default(false)
+  firstName     String
+  lastName      String
+  email         String          @unique
+  socialUrl     String?         // instagramOrFacebookUrl for employees
+  photoUrl      String?
+  state         String?         // CA or OR for employers
+  city          String?         // For employers
+  position      String?         // owner, manager, supervisor on duty
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relations
+  employerProfile EmployerProfile?
+  reviewsGiven   Review[]       @relation("Reviewer")
+  reviewsReceived Review[]      @relation("Target")
+  
+  @@index([email])
+  @@index([role])
+}
+
+model Business {
+  id            String          @id @default(cuid())
+  placeId       String          @unique
+  name          String
+  address       String
+  state         String          // CA or OR
+  city          String
+  category      BusinessCategory
+  photoUrl      String?         // Business photo/logo from Google Places
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  // Relations
+  employerProfiles EmployerProfile[]
+  reviews          Review[]
+  
+  @@index([state, city])
+  @@index([category])
+}
+
+model EmployerProfile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  businessId  String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  @@index([businessId])
+}
+
+model Review {
+  id            String            @id @default(cuid())
+  reviewerId    String            // FK to User (reviewer)
+  targetType    ReviewTargetType
+  targetUserId  String            // FK to User (target)
+  businessId    String            // FK to Business
+  rating        ReviewRating
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  // Relations
+  reviewer      User              @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  target        User              @relation("Target", fields: [targetUserId], references: [id], onDelete: Cascade)
+  business      Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  
+  @@index([reviewerId, targetUserId, businessId])
+  @@index([targetUserId])
+  @@index([businessId])
+  @@index([targetType])
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  hash      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([email])
+  @@index([expiresAt])
+}
