@@ -17,8 +17,8 @@ export default function BusinessFilters({
   selectedCategory,
 }: BusinessFiltersProps) {
   const router = useRouter()
-  const [state, setState] = useState(selectedState || 'CA')
-  const [city, setCity] = useState(selectedCity || 'Crescent City')
+  const [state, setState] = useState(selectedState || '')
+  const [city, setCity] = useState(selectedCity || '')
   const [category, setCategory] = useState(selectedCategory || '')
   const [filteredCities, setFilteredCities] = useState<string[]>([])
 
@@ -60,14 +60,16 @@ export default function BusinessFilters({
         <select
           id="state"
           name="state"
-          value={state || 'CA'}
+          value={state}
           onChange={(e) => {
             setState(e.target.value)
             setCity('') // Clear city when state changes
           }}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
+          <option value="">All States</option>
           <option value="CA">California</option>
+          <option value="OR">Oregon</option>
         </select>
       </div>
 
@@ -83,13 +85,16 @@ export default function BusinessFilters({
           disabled={!state}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
         >
-          <option value="Crescent City">Crescent City</option>
-          {filteredCities.filter((c: string) => c !== 'Crescent City').map((cityName: string) => (
+          <option value="">All Cities</option>
+          {filteredCities.map((cityName: string) => (
             <option key={cityName} value={cityName}>
               {cityName}
             </option>
           ))}
         </select>
+        {!state && (
+          <p className="mt-1 text-xs text-gray-500">Select a state first</p>
+        )}
       </div>
 
       <div>

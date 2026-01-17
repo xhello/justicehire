@@ -10,7 +10,6 @@
     "db:seed": "tsx scripts/seed-supabase.ts",
     "db:seed-dummy": "tsx scripts/seed-dummy-data.ts",
     "db:seed-businesses": "tsx scripts/seed-more-businesses.ts",
-    "db:seed-crescent-city": "tsx scripts/seed-crescent-city-data.ts",
     "db:fetch-google": "tsx scripts/fetch-businesses-google.ts",
     "db:update-photos": "tsx scripts/update-business-photos.ts"
   },

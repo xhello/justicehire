@@ -52,12 +52,25 @@ export default async function EmployerProfilePage({
             <Link href="/" className="text-2xl font-bold text-blue-600">
               Justice Hire
             </Link>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               {user ? (
                 <Link
                   href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
+                  {user.photoUrl ? (
+                    <img
+                      src={user.photoUrl}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="w-8 h-8 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </span>
+                    </div>
+                  )}
                   Dashboard
                 </Link>
               ) : (
@@ -88,10 +101,10 @@ export default async function EmployerProfilePage({
               <img
                 src={employer.photoUrl}
                 alt={`${employer.firstName} ${employer.lastName}`}
-                className="w-24 h-24 rounded-full object-cover"
+                className="w-24 h-24 rounded-lg object-cover"
               />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
                 <span className="text-gray-500 text-3xl">
                   {employer.firstName[0]}{employer.lastName[0]}
                 </span>

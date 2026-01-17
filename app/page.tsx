@@ -15,9 +15,6 @@ export default async function Home({
 }) {
   try {
     const params = await searchParams
-    // Default to California, Crescent City if no params
-    const state = params.state || 'CA'
-    const city = params.city || 'Crescent City'
     let user = null
     let results: any[] = []
     let citiesByState: Record<string, string[]> = {}
@@ -30,8 +27,8 @@ export default async function Home({
     
     try {
       results = await searchResults({
-        state: state,
-        city: city,
+        state: params.state,
+        city: params.city,
         category: params.category,
       })
     } catch (err) {
@@ -53,12 +50,25 @@ export default async function Home({
             <Link href="/" className="text-2xl font-bold text-blue-600">
               Justice Hire
             </Link>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               {user ? (
                 <Link
                   href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
+                  {user.photoUrl ? (
+                    <img
+                      src={user.photoUrl}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="w-8 h-8 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </span>
+                    </div>
+                  )}
                   Dashboard
                 </Link>
               ) : (
@@ -97,8 +107,8 @@ export default async function Home({
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <BusinessFilters
             citiesByState={citiesByState}
-            selectedState={state}
-            selectedCity={city}
+            selectedState={params.state}
+            selectedCity={params.city}
             selectedCategory={params.category}
           />
         </div>
@@ -137,9 +147,24 @@ export default async function Home({
                       <div className="p-2 flex-1 min-w-0">
                         <h4 className="font-semibold text-lg truncate">{item.name}</h4>
                         <p className="text-sm text-gray-700">{item.city}, {item.state}</p>
-                        <p className="text-sm text-gray-600 mt-2">
-                          {item._count.reviews} reviews
-                        </p>
+                        {item.avgRatings && (item.avgRatings.payCompetitive || item.avgRatings.workload || item.avgRatings.flexibility) ? (
+                          <div className="text-xs text-gray-600 mt-2 space-y-1">
+                            {item.avgRatings.payCompetitive && (
+                              <p>Pay: {item.avgRatings.payCompetitive} ⭐</p>
+                            )}
+                            {item.avgRatings.workload && (
+                              <p>Workload: {item.avgRatings.workload} ⭐</p>
+                            )}
+                            {item.avgRatings.flexibility && (
+                              <p>Schedule: {item.avgRatings.flexibility} ⭐</p>
+                            )}
+                            <p className="text-gray-500">{item._count.reviews} {item._count.reviews === 1 ? 'review' : 'reviews'}</p>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-600 mt-2">
+                            {item._count.reviews === 0 ? 'No reviews yet' : `${item._count.reviews} ${item._count.reviews === 1 ? 'review' : 'reviews'}`}
+                          </p>
+                        )}
                       </div>
                     </Link>
                   )
@@ -152,7 +177,7 @@ export default async function Home({
                     >
                       <div className="p-2 flex-shrink-0">
                         {item.photoUrl ? (
-                          <div className="w-24 h-24 bg-gray-200 overflow-hidden rounded-full">
+                          <div className="w-24 h-24 bg-gray-200 overflow-hidden rounded-lg">
                             <BusinessImage
                               src={item.photoUrl}
                               alt={`${item.firstName} ${item.lastName}`}
@@ -160,7 +185,7 @@ export default async function Home({
                             />
                           </div>
                         ) : (
-                          <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
+                          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
                             <span className="text-gray-400 text-2xl">
                               {item.firstName[0]}{item.lastName[0]}
                             </span>
@@ -199,7 +224,7 @@ export default async function Home({
                     >
                       <div className="p-2 flex-shrink-0">
                         {item.photoUrl ? (
-                          <div className="w-24 h-24 bg-gray-200 overflow-hidden rounded-full">
+                          <div className="w-24 h-24 bg-gray-200 overflow-hidden rounded-lg">
                             <BusinessImage
                               src={item.photoUrl}
                               alt={`${item.firstName} ${item.lastName}`}
@@ -207,7 +232,7 @@ export default async function Home({
                             />
                           </div>
                         ) : (
-                          <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
+                          <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
                             <span className="text-gray-400 text-2xl">
                               {item.firstName[0]}{item.lastName[0]}
                             </span>

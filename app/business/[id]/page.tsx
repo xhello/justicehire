@@ -18,13 +18,29 @@ export default async function BusinessDetailPage({
   const business = await getBusinessDetails(id)
   const businessReviews = await getBusinessReviews(id)
   
-  // Calculate average star rating
-  const starRatings = businessReviews
-    .map((r: any) => r.starRating)
-    .filter((r): r is number => r !== null)
-  const averageRating = starRatings.length > 0
-    ? (starRatings.reduce((sum, r) => sum + r, 0) / starRatings.length).toFixed(1)
+  // Calculate average ratings for the three fields
+  const payCompetitiveValues = businessReviews
+    .map((r: any) => r.payCompetitive)
+    .filter((v: any): v is number => typeof v === 'number' && v > 0)
+  const workloadValues = businessReviews
+    .map((r: any) => r.workload)
+    .filter((v: any): v is number => typeof v === 'number' && v > 0)
+  const flexibilityValues = businessReviews
+    .map((r: any) => r.flexibility)
+    .filter((v: any): v is number => typeof v === 'number' && v > 0)
+  
+  const avgPayCompetitive = payCompetitiveValues.length > 0
+    ? (payCompetitiveValues.reduce((sum, v) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
     : null
+  const avgWorkload = workloadValues.length > 0
+    ? (workloadValues.reduce((sum, v) => sum + v, 0) / workloadValues.length).toFixed(1)
+    : null
+  const avgFlexibility = flexibilityValues.length > 0
+    ? (flexibilityValues.reduce((sum, v) => sum + v, 0) / flexibilityValues.length).toFixed(1)
+    : null
+  
+  const hasRatings = avgPayCompetitive || avgWorkload || avgFlexibility
+  const reviewCount = businessReviews.length
 
   if (!business) {
     return (
@@ -47,12 +63,25 @@ export default async function BusinessDetailPage({
             <Link href="/" className="text-2xl font-bold text-blue-600">
               Justice Hire
             </Link>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               {user ? (
                 <Link
                   href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
                 >
+                  {user.photoUrl ? (
+                    <img
+                      src={user.photoUrl}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      className="w-8 h-8 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">
+                        {user.firstName[0]}{user.lastName[0]}
+                      </span>
+                    </div>
+                  )}
                   Dashboard
                 </Link>
               ) : (
@@ -100,26 +129,52 @@ export default async function BusinessDetailPage({
               <p className="text-sm text-gray-600">
                 {business.city}, {business.state} • {business.category}
               </p>
-              <div className="flex items-center gap-4 mt-2">
-                {averageRating && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-gray-900">{averageRating}</span>
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((star: number) => (
-                        <span
-                          key={star}
-                          className={star <= Math.round(parseFloat(averageRating)) ? 'text-yellow-400' : 'text-gray-300'}
-                        >
-                          ★
-                        </span>
-                      ))}
+              <div className="mt-2">
+                {hasRatings ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-4 flex-wrap">
+                      {avgPayCompetitive && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700">Pay:</span>
+                          <span className="text-lg font-bold text-gray-900">{avgPayCompetitive}</span>
+                          <div className="flex text-yellow-400">
+                            {[1, 2, 3, 4, 5].map((star: number) => (
+                              <span key={star}>{star <= Math.round(parseFloat(avgPayCompetitive)) ? '★' : '☆'}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {avgWorkload && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700">Workload amount:</span>
+                          <span className="text-lg font-bold text-gray-900">{avgWorkload}</span>
+                          <div className="flex text-yellow-400">
+                            {[1, 2, 3, 4, 5].map((star: number) => (
+                              <span key={star}>{star <= Math.round(parseFloat(avgWorkload)) ? '★' : '☆'}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {avgFlexibility && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700">Schedule flexibility:</span>
+                          <span className="text-lg font-bold text-gray-900">{avgFlexibility}</span>
+                          <div className="flex text-yellow-400">
+                            {[1, 2, 3, 4, 5].map((star: number) => (
+                              <span key={star}>{star <= Math.round(parseFloat(avgFlexibility)) ? '★' : '☆'}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-sm text-gray-600">
-                      ({starRatings.length} {starRatings.length === 1 ? 'review' : 'reviews'})
-                    </span>
+                    <p className="text-sm text-gray-600">
+                      Based on {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Rating scale: ⭐ 1 | Dissatisfied → ⭐ 5 | Satisfied
+                    </p>
                   </div>
-                )}
-                {!averageRating && (
+                ) : (
                   <p className="text-sm text-gray-600">No reviews yet</p>
                 )}
               </div>
@@ -148,14 +203,18 @@ export default async function BusinessDetailPage({
               <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
             ) : (
               businessReviews.map((review: any) => {
-                // Debug: log review data to see what fields are present
-                console.log('Review data:', {
-                  id: review.id,
-                  payCompetitive: review.payCompetitive,
-                  workload: review.workload,
-                  flexibility: review.flexibility,
-                  message: review.message
-                })
+                // Debug: Log review data
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Review data:', {
+                    id: review.id,
+                    targetType: review.targetType,
+                    payCompetitive: review.payCompetitive,
+                    workload: review.workload,
+                    flexibility: review.flexibility,
+                    hasFields: !!(review.payCompetitive || review.workload || review.flexibility)
+                  })
+                }
+                
                 return (
                 <div key={review.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
@@ -164,10 +223,10 @@ export default async function BusinessDetailPage({
                         <img
                           src={review.reviewer.photoUrl}
                           alt={`${review.reviewer.firstName} ${review.reviewer.lastName}`}
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="w-10 h-10 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
                           <span className="text-gray-500 text-sm">
                             {review.reviewer?.firstName[0]}{review.reviewer?.lastName[0]}
                           </span>
@@ -182,41 +241,47 @@ export default async function BusinessDetailPage({
                     </div>
                   </div>
                   
-                  {/* Display three ratings */}
+                  {/* Display three ratings - always show for business reviews, even if not rated */}
                   <div className="mt-3 space-y-2">
-                    {review.payCompetitive != null ? (
+                    {review.payCompetitive ? (
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-700 min-w-[140px]">Pay Competitive:</span>
                         <div className="flex text-yellow-400">
                           {[1, 2, 3, 4, 5].map((star: number) => (
-                            <span key={star}>{star <= (review.payCompetitive || 0) ? '★' : '☆'}</span>
+                            <span key={star}>{star <= review.payCompetitive! ? '★' : '☆'}</span>
                           ))}
                         </div>
                         <span className="text-sm text-gray-600">({review.payCompetitive}/5)</span>
                       </div>
-                    ) : null}
-                    {review.workload != null ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-700 min-w-[140px]">Workload:</span>
-                        <div className="flex text-yellow-400">
-                          {[1, 2, 3, 4, 5].map((star: number) => (
-                            <span key={star}>{star <= (review.workload || 0) ? '★' : '☆'}</span>
-                          ))}
+                    ) : (
+                      <div className="text-xs text-gray-500">Pay Competitive: Not rated</div>
+                    )}
+                      {review.workload ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700 min-w-[160px]">Workload amount:</span>
+                          <div className="flex text-yellow-400">
+                            {[1, 2, 3, 4, 5].map((star: number) => (
+                              <span key={star}>{star <= review.workload! ? '★' : '☆'}</span>
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600">({review.workload}/5)</span>
                         </div>
-                        <span className="text-sm text-gray-600">({review.workload}/5)</span>
-                      </div>
-                    ) : null}
-                    {review.flexibility != null ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-700 min-w-[140px]">Flexibility:</span>
-                        <div className="flex text-yellow-400">
-                          {[1, 2, 3, 4, 5].map((star: number) => (
-                            <span key={star}>{star <= (review.flexibility || 0) ? '★' : '☆'}</span>
-                          ))}
+                      ) : (
+                        <div className="text-xs text-gray-500">Workload amount: Not rated</div>
+                      )}
+                      {review.flexibility ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700 min-w-[160px]">Schedule flexibility:</span>
+                          <div className="flex text-yellow-400">
+                            {[1, 2, 3, 4, 5].map((star: number) => (
+                              <span key={star}>{star <= review.flexibility! ? '★' : '☆'}</span>
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600">({review.flexibility}/5)</span>
                         </div>
-                        <span className="text-sm text-gray-600">({review.flexibility}/5)</span>
-                      </div>
-                    ) : null}
+                      ) : (
+                        <div className="text-xs text-gray-500">Schedule flexibility: Not rated</div>
+                      )}
                   </div>
                   
                   {review.message && (
@@ -289,10 +354,10 @@ async function EmployerCard({
             <img
               src={employer.user.photoUrl}
               alt={`${employer.user.firstName} ${employer.user.lastName}`}
-              className="w-16 h-16 rounded-full object-cover"
+              className="w-16 h-16 rounded-lg object-cover"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
               <span className="text-gray-500 text-xl">
                 {employer.user.firstName[0]}{employer.user.lastName[0]}
               </span>
@@ -433,26 +498,41 @@ async function BusinessReviewForm({ businessId, user }: { businessId: string; us
       
       <div className="space-y-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Pay Competitive (1-5 stars)
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Pay Competitiveness
           </label>
-          <p className="text-xs text-gray-500 mb-2">How competitive is the pay compared to similar positions?</p>
+          <p className="text-xs text-gray-600 mb-2">
+            How competitive do you feel your pay is compared to similar jobs?
+          </p>
+          <p className="text-xs text-gray-500 mb-2">
+            (1 = Dissatisfied, 5 = Satisfied)
+          </p>
           <StarRating name="payCompetitive" defaultValue={existingReview?.payCompetitive || null} required />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Workload (1-5 stars)
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Workload amount
           </label>
-          <p className="text-xs text-gray-500 mb-2">How manageable is the workload? (1 = Overwhelming, 5 = Very manageable)</p>
+          <p className="text-xs text-gray-600 mb-2">
+            How manageable is your workload?
+          </p>
+          <p className="text-xs text-gray-500 mb-2">
+            (1 = Dissatisfied, 5 = Satisfied)
+          </p>
           <StarRating name="workload" defaultValue={existingReview?.workload || null} required />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Flexibility (1-5 stars)
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Schedule flexibility
           </label>
-          <p className="text-xs text-gray-500 mb-2">How flexible is the schedule and work arrangements? (1 = Very rigid, 5 = Very flexible)</p>
+          <p className="text-xs text-gray-600 mb-2">
+            How satisfied are you with your schedule flexibility?
+          </p>
+          <p className="text-xs text-gray-500 mb-2">
+            (1 = Dissatisfied, 5 = Satisfied)
+          </p>
           <StarRating name="flexibility" defaultValue={existingReview?.flexibility || null} required />
         </div>
       </div>

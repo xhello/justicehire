@@ -127,6 +127,12 @@ export async function getBusinessReviews(businessId: string) {
     targetType: 'BUSINESS',
   })
 
+  // Debug: Log first review to see what fields are present
+  if (reviews.length > 0) {
+    console.log('DEBUG: First review fields:', Object.keys(reviews[0]))
+    console.log('DEBUG: First review data:', JSON.stringify(reviews[0], null, 2))
+  }
+
   // Get reviewer information
   const reviewsWithUsers = await Promise.all(
     reviews.map(async (review: any) => {
