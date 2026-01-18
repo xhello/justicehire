@@ -13,8 +13,12 @@ const signupEmployeeSchema = z.object({
   lastName: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
   phoneNumber: z.string().min(1, 'Phone number is required'),
   photoUrl: z.string().min(1, 'Photo is required'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 })
 
 const signupEmployerSchema = z.object({
@@ -22,11 +26,15 @@ const signupEmployerSchema = z.object({
   lastName: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
   state: z.enum(['CA', 'OR']),
   city: z.string().min(1),
   businessId: z.string().min(1),
   position: z.enum(['owner', 'manager', 'supervisor on duty']),
   photoUrl: z.string().min(1, 'Photo is required'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 })
 
 export async function signupEmployee(formData: FormData) {
@@ -76,6 +84,7 @@ export async function signupEmployer(formData: FormData) {
     lastName: formData.get('lastName') as string,
     email: formData.get('email') as string,
     password: formData.get('password') as string,
+    confirmPassword: formData.get('confirmPassword') as string,
     state: formData.get('state') as string,
     city: formData.get('city') as string,
     businessId: formData.get('businessId') as string,

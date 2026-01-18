@@ -54,6 +54,16 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
 
     const formData = new FormData(e.currentTarget)
     
+    // Check if passwords match
+    const password = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
+    
     // Use cropped image if available, otherwise show error
     if (croppedImage) {
       formData.set('photoUrl', croppedImage)
@@ -224,6 +234,21 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="mt-1 text-xs text-gray-500">Password must be at least 8 characters</p>
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                minLength={8}
+                placeholder="Re-enter your password"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
 
             {role === 'EMPLOYEE' && (
