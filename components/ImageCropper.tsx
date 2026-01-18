@@ -10,43 +10,44 @@ interface ImageCropperProps {
 }
 
 export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio = 1 }: ImageCropperProps) {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [scale, setScale] = useState(1)
-  const [isDragging, setIsDragging] = useState(false)
+  // Frame position (the crop area that moves over the image)
+  const [framePosition, setFramePosition] = useState({ x: 0, y: 0 })
+  const [imageScale, setImageScale] = useState(1)
+  const [isDraggingFrame, setIsDraggingFrame] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const imageRef = useRef<HTMLImageElement>(null)
+  const frameSizeRef = useRef<number>(300) // Default frame size
 
   useEffect(() => {
-    // Center the image initially - ensure square container
+    // Initialize image scale and frame position
     if (imageRef.current && containerRef.current) {
       const img = imageRef.current
       const container = containerRef.current
       
-      // Wait for image to load
       const handleImageLoad = () => {
-        // Get actual container dimensions (should be square due to aspect-square class)
         const containerRect = container.getBoundingClientRect()
-        const containerSize = Math.min(containerRect.width, containerRect.height)
+        const containerWidth = containerRect.width
+        const containerHeight = containerRect.height
         
-        // Calculate initial position to center
+        // Calculate scale to fit image in container (contain mode)
         const imgWidth = img.naturalWidth
         const imgHeight = img.naturalHeight
         
-        // Calculate scale to fill the square container (cover mode)
-        // Use the larger scale to ensure the image covers the entire square
-        const scaleX = containerSize / imgWidth
-        const scaleY = containerSize / imgHeight
-        const initialScale = Math.max(scaleX, scaleY) * 1.1 // Start slightly zoomed in to ensure coverage
+        const scaleX = containerWidth / imgWidth
+        const scaleY = containerHeight / imgHeight
+        const initialScale = Math.min(scaleX, scaleY) * 0.9 // Slightly smaller to show full image
         
-        setScale(initialScale)
+        setImageScale(initialScale)
         
-        // Center position - image top-left corner position
-        const scaledWidth = imgWidth * initialScale
-        const scaledHeight = imgHeight * initialScale
-        setPosition({
-          x: (containerSize - scaledWidth) / 2,
-          y: (containerSize - scaledHeight) / 2,
+        // Set frame size to be a percentage of container (square)
+        const containerSize = Math.min(containerWidth, containerHeight)
+        frameSizeRef.current = containerSize * 0.7 // Frame is 70% of container
+        
+        // Center the frame initially
+        setFramePosition({
+          x: (containerWidth - frameSizeRef.current) / 2,
+          y: (containerHeight - frameSizeRef.current) / 2,
         })
       }
       
@@ -58,7 +59,8 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     }
   }, [imageSrc])
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleFrameMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (!containerRef.current) return
     
     const container = containerRef.current
@@ -66,15 +68,15 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     const containerX = e.clientX - rect.left
     const containerY = e.clientY - rect.top
     
-    setIsDragging(true)
+    setIsDraggingFrame(true)
     setDragStart({
-      x: containerX - position.x,
-      y: containerY - position.y,
+      x: containerX - framePosition.x,
+      y: containerY - framePosition.y,
     })
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !containerRef.current || !imageRef.current) return
+    if (!isDraggingFrame || !containerRef.current) return
     
     const container = containerRef.current
     const rect = container.getBoundingClientRect()
@@ -84,60 +86,31 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     const newX = containerX - dragStart.x
     const newY = containerY - dragStart.y
     
-    const containerSize = Math.min(container.clientWidth, container.clientHeight)
-    const img = imageRef.current
-    const imgWidth = img.naturalWidth * scale
-    const imgHeight = img.naturalHeight * scale
+    const containerWidth = rect.width
+    const containerHeight = rect.height
+    const frameSize = frameSizeRef.current
     
-    // Constrain movement within bounds
-    const maxX = 0
-    const minX = containerSize - imgWidth
-    const maxY = 0
-    const minY = containerSize - imgHeight
+    // Constrain frame within container bounds
+    const maxX = containerWidth - frameSize
+    const maxY = containerHeight - frameSize
     
-    setPosition({
-      x: Math.max(minX, Math.min(maxX, newX)),
-      y: Math.max(minY, Math.min(maxY, newY)),
+    setFramePosition({
+      x: Math.max(0, Math.min(maxX, newX)),
+      y: Math.max(0, Math.min(maxY, newY)),
     })
   }
 
   const handleMouseUp = () => {
-    setIsDragging(false)
+    setIsDraggingFrame(false)
   }
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault()
     if (!containerRef.current || !imageRef.current) return
     
-    const container = containerRef.current
-    const rect = container.getBoundingClientRect()
-    const containerSize = Math.min(container.clientWidth, container.clientHeight)
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
-    
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    const newScale = Math.max(0.5, Math.min(3, scale * delta))
-    
-    const img = imageRef.current
-    const imgWidth = img.naturalWidth * newScale
-    const imgHeight = img.naturalHeight * newScale
-    
-    // Adjust position to zoom towards mouse position
-    const scaleRatio = newScale / scale
-    const newX = mouseX - (mouseX - position.x) * scaleRatio
-    const newY = mouseY - (mouseY - position.y) * scaleRatio
-    
-    // Constrain within bounds
-    const maxX = 0
-    const minX = containerSize - imgWidth
-    const maxY = 0
-    const minY = containerSize - imgHeight
-    
-    setScale(newScale)
-    setPosition({
-      x: Math.max(minX, Math.min(maxX, newX)),
-      y: Math.max(minY, Math.min(maxY, newY)),
-    })
+    const delta = e.deltaY > 0 ? 0.95 : 1.05
+    const newScale = Math.max(0.5, Math.min(3, imageScale * delta))
+    setImageScale(newScale)
   }
 
   const handleCrop = () => {
@@ -147,88 +120,64 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     
-    const container = containerRef.current
-    const containerRect = container.getBoundingClientRect()
-    // Get actual rendered container size (should be square)
-    const containerSize = Math.min(containerRect.width, containerRect.height)
-    
-    // Set canvas size to square (1:1 aspect ratio)
-    canvas.width = containerSize
-    canvas.height = containerSize
-    
     const img = imageRef.current
+    const frameSize = frameSizeRef.current
     
-    // The image is displayed with:
-    // - transform: translate(position.x, position.y) scale(scale)
-    // - transform-origin: 0 0
-    // This means the image's top-left corner is at (position.x, position.y) in container coordinates
+    // Canvas size matches frame size (square)
+    canvas.width = frameSize
+    canvas.height = frameSize
     
-    // The container shows from (0, 0) to (containerSize, containerSize)
-    // We need to map this to the original image coordinates
+    // Calculate what part of the original image is inside the frame
+    const containerRect = containerRef.current.getBoundingClientRect()
+    const containerWidth = containerRect.width
+    const containerHeight = containerRect.height
     
-    // Container coordinate (0, 0) maps to image coordinate (-position.x / scale, -position.y / scale)
-    // Container coordinate (containerSize, containerSize) maps to image coordinate ((containerSize - position.x) / scale, (containerSize - position.y) / scale)
+    // Image is centered and scaled
+    const scaledImgWidth = img.naturalWidth * imageScale
+    const scaledImgHeight = img.naturalHeight * imageScale
     
-    // Calculate source rectangle in original image coordinates
-    const sourceX = Math.max(0, -position.x / scale)
-    const sourceY = Math.max(0, -position.y / scale)
-    const sourceWidth = (containerSize - Math.max(0, position.x) + Math.max(0, -position.x)) / scale
-    const sourceHeight = (containerSize - Math.max(0, position.y) + Math.max(0, -position.y)) / scale
+    // Image position (centered)
+    const imgX = (containerWidth - scaledImgWidth) / 2
+    const imgY = (containerHeight - scaledImgHeight) / 2
+    
+    // Frame position relative to container
+    const frameX = framePosition.x
+    const frameY = framePosition.y
+    
+    // Calculate what part of the scaled image is inside the frame
+    const relativeX = frameX - imgX
+    const relativeY = frameY - imgY
+    
+    // Convert to original image coordinates
+    const sourceX = Math.max(0, relativeX / imageScale)
+    const sourceY = Math.max(0, relativeY / imageScale)
+    const sourceSize = frameSize / imageScale
     
     // Ensure we don't go beyond image bounds
-    const actualSourceWidth = Math.min(sourceWidth, img.naturalWidth - sourceX)
-    const actualSourceHeight = Math.min(sourceHeight, img.naturalHeight - sourceY)
-    
-    // Use square crop - use the smaller dimension to ensure square output
-    const sourceSize = Math.min(actualSourceWidth, actualSourceHeight)
-    
-    // Calculate destination offset if image doesn't fill container
-    const destOffsetX = position.x < 0 ? 0 : (containerSize - (sourceSize * scale)) / 2
-    const destOffsetY = position.y < 0 ? 0 : (containerSize - (sourceSize * scale)) / 2
+    const actualSourceX = Math.min(sourceX, img.naturalWidth - sourceSize)
+    const actualSourceY = Math.min(sourceY, img.naturalHeight - sourceSize)
+    const actualSourceSize = Math.min(sourceSize, img.naturalWidth - actualSourceX, img.naturalHeight - actualSourceY)
     
     // Clear canvas with white background
     ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, containerSize, containerSize)
+    ctx.fillRect(0, 0, frameSize, frameSize)
     
-    // Draw the cropped square portion
-    // If image extends beyond container, we crop from the center of what's visible
-    const finalSourceX = position.x < 0 ? sourceX : Math.max(0, sourceX - (sourceWidth - sourceSize) / 2)
-    const finalSourceY = position.y < 0 ? sourceY : Math.max(0, sourceY - (sourceHeight - sourceSize) / 2)
-    
+    // Draw the cropped portion
     ctx.drawImage(
       img,
-      finalSourceX,
-      finalSourceY,
-      sourceSize,
-      sourceSize,
-      destOffsetX,
-      destOffsetY,
-      containerSize - (destOffsetX * 2),
-      containerSize - (destOffsetY * 2)
+      actualSourceX,
+      actualSourceY,
+      actualSourceSize,
+      actualSourceSize,
+      0,
+      0,
+      frameSize,
+      frameSize
     )
     
     // Convert to base64
     const croppedImage = canvas.toDataURL('image/jpeg', 0.9)
     onCrop(croppedImage)
-  }
-
-  const centerImage = () => {
-    if (!containerRef.current || !imageRef.current) return
-    
-    const container = containerRef.current
-    const containerRect = container.getBoundingClientRect()
-    const containerSize = Math.min(containerRect.width, containerRect.height)
-    
-    const img = imageRef.current
-    const imgWidth = img.naturalWidth * scale
-    const imgHeight = img.naturalHeight * scale
-    
-    // Center the image in the square container
-    // Position is the top-left corner of the image
-    setPosition({
-      x: (containerSize - imgWidth) / 2,
-      y: (containerSize - imgHeight) / 2,
-    })
   }
 
   return (
@@ -238,77 +187,124 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
         
         <div
           ref={containerRef}
-          className="relative w-full aspect-square max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden cursor-move border-2 border-gray-300"
-          onMouseDown={handleMouseDown}
+          className="relative w-full aspect-square max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-300"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
         >
+          {/* Image - scaled and centered */}
           <img
             ref={imageRef}
             src={imageSrc}
             alt="Preview"
             className="absolute select-none"
             style={{
-              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-              transformOrigin: '0 0',
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, -50%) scale(${imageScale})`,
+              transformOrigin: 'center center',
+              maxWidth: 'none',
             }}
             draggable={false}
           />
+          
+          {/* Crop Frame Overlay - movable square frame */}
+          <div
+            className="absolute border-4 border-blue-500 bg-blue-500 bg-opacity-20 cursor-move"
+            style={{
+              left: `${framePosition.x}px`,
+              top: `${framePosition.y}px`,
+              width: `${frameSizeRef.current}px`,
+              height: `${frameSizeRef.current}px`,
+            }}
+            onMouseDown={handleFrameMouseDown}
+          >
+            {/* Corner handles for visual feedback */}
+            <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 border border-white"></div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 border border-white"></div>
+            <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-blue-500 border border-white"></div>
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-blue-500 border border-white"></div>
+          </div>
+          
+          {/* Dark overlay outside frame - using 4 rectangles for better performance */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Top overlay */}
+            <div
+              className="absolute bg-black bg-opacity-50"
+              style={{
+                left: 0,
+                top: 0,
+                right: 0,
+                height: `${framePosition.y}px`,
+              }}
+            ></div>
+            {/* Bottom overlay */}
+            <div
+              className="absolute bg-black bg-opacity-50"
+              style={{
+                left: 0,
+                bottom: 0,
+                right: 0,
+                height: `calc(100% - ${framePosition.y + frameSizeRef.current}px)`,
+              }}
+            ></div>
+            {/* Left overlay */}
+            <div
+              className="absolute bg-black bg-opacity-50"
+              style={{
+                left: 0,
+                top: `${framePosition.y}px`,
+                width: `${framePosition.x}px`,
+                height: `${frameSizeRef.current}px`,
+              }}
+            ></div>
+            {/* Right overlay */}
+            <div
+              className="absolute bg-black bg-opacity-50"
+              style={{
+                right: 0,
+                top: `${framePosition.y}px`,
+                width: `calc(100% - ${framePosition.x + frameSizeRef.current}px)`,
+                height: `${frameSizeRef.current}px`,
+              }}
+            ></div>
+          </div>
         </div>
         
         <div className="mt-4 space-y-2">
           <p className="text-sm text-gray-600 text-center">
-            Drag to reposition • Scroll to zoom • Crop area is square (1:1)
+            Drag the blue frame to select area • Scroll to zoom image • Frame is square (1:1)
           </p>
           
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => {
-                if (!containerRef.current || !imageRef.current) return
-                const container = containerRef.current
-                const containerSize = Math.min(container.clientWidth, container.clientHeight)
-                const newScale = Math.max(0.5, scale - 0.1)
-                const img = imageRef.current
-                const imgWidth = img.naturalWidth * newScale
-                const imgHeight = img.naturalHeight * newScale
-                setScale(newScale)
-                // Re-center after zoom
-                setPosition({
-                  x: (containerSize - imgWidth) / 2,
-                  y: (containerSize - imgHeight) / 2,
-                })
-              }}
+              onClick={() => setImageScale(Math.max(0.5, imageScale - 0.1))}
               className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
             >
               Zoom Out
             </button>
             <button
               type="button"
-              onClick={centerImage}
+              onClick={() => {
+                if (!containerRef.current) return
+                const containerRect = containerRef.current.getBoundingClientRect()
+                const containerWidth = containerRect.width
+                const containerHeight = containerRect.height
+                const frameSize = frameSizeRef.current
+                setFramePosition({
+                  x: (containerWidth - frameSize) / 2,
+                  y: (containerHeight - frameSize) / 2,
+                })
+              }}
               className="flex-1 px-4 py-2 bg-blue-200 text-blue-700 rounded-md hover:bg-blue-300 text-sm font-medium"
             >
-              Center
+              Center Frame
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (!containerRef.current || !imageRef.current) return
-                const container = containerRef.current
-                const containerSize = Math.min(container.clientWidth, container.clientHeight)
-                const newScale = Math.min(3, scale + 0.1)
-                const img = imageRef.current
-                const imgWidth = img.naturalWidth * newScale
-                const imgHeight = img.naturalHeight * newScale
-                setScale(newScale)
-                // Re-center after zoom
-                setPosition({
-                  x: (containerSize - imgWidth) / 2,
-                  y: (containerSize - imgHeight) / 2,
-                })
-              }}
+              onClick={() => setImageScale(Math.min(3, imageScale + 0.1))}
               className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
             >
               Zoom In
