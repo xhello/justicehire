@@ -237,11 +237,11 @@ export async function forgotPassword(formData: FormData) {
     return { success: true }
   }
 
-  // Create password reset token
-  const token = await createPasswordResetToken(user.id)
-
-  // Send password reset email
   try {
+    // Create password reset token
+    const token = await createPasswordResetToken(user.id)
+
+    // Send password reset email
     const resend = new Resend('re_9yQ4yVuX_MT1MTmhBbSsB2m6soEBmVxXQ')
     // Use VERCEL_URL in production, localhost in development
     const baseUrl = process.env.VERCEL_URL 
@@ -267,12 +267,14 @@ export async function forgotPassword(formData: FormData) {
         </div>
       `,
     })
-  } catch (error) {
+    
+    return { success: true }
+  } catch (error: any) {
     console.error('Failed to send password reset email:', error)
-    // Still return success to not reveal if user exists
+    console.error('Error details:', error?.message, error?.stack)
+    // Return error so user knows something went wrong
+    return { error: `Failed to send reset email: ${error?.message || 'Please try again later.'}` }
   }
-
-  return { success: true }
 }
 
 export async function resetPassword(formData: FormData) {

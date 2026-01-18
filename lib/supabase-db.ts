@@ -66,6 +66,14 @@ export interface SupabaseOtp {
   createdAt: string
 }
 
+export interface SupabasePasswordResetToken {
+  id: string
+  userId: string
+  token: string
+  expiresAt: string
+  createdAt: string
+}
+
 export interface SupabaseEmployerProfile {
   id: string
   userId: string
@@ -529,6 +537,59 @@ export const supabaseDb = {
         await supabaseAdmin.from('Otp').delete().eq('email', where.email)
       } catch (err) {
         console.error('Error deleting OTPs:', err)
+        // Don't throw - allow deleteMany to fail silently
+      }
+    },
+  },
+  
+  passwordResetTokens: {
+    create: async (data: Omit<SupabasePasswordResetToken, 'id' | 'createdAt'>): Promise<void> => {
+      try {
+        const { error } = await supabaseAdmin.from('PasswordResetToken').insert({
+          userId: data.userId,
+          token: data.token,
+          expiresAt: data.expiresAt,
+        })
+        
+        if (error) throw new Error(`Failed to create password reset token: ${error.message}`)
+      } catch (err) {
+        console.error('Error creating password reset token:', err)
+        throw err
+      }
+    },
+    
+    findFirst: async (where: { token: string }): Promise<SupabasePasswordResetToken | null> => {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('PasswordResetToken')
+          .select('*')
+          .eq('token', where.token)
+          .limit(1)
+          .single()
+        
+        if (error || !data) return null
+        
+        return data as SupabasePasswordResetToken
+      } catch (err) {
+        console.error('Error querying PasswordResetToken table:', err)
+        return null
+      }
+    },
+    
+    delete: async (where: { token: string }): Promise<void> => {
+      try {
+        await supabaseAdmin.from('PasswordResetToken').delete().eq('token', where.token)
+      } catch (err) {
+        console.error('Error deleting password reset token:', err)
+        // Don't throw - allow delete to fail silently
+      }
+    },
+    
+    deleteMany: async (where: { userId: string }): Promise<void> => {
+      try {
+        await supabaseAdmin.from('PasswordResetToken').delete().eq('userId', where.userId)
+      } catch (err) {
+        console.error('Error deleting password reset tokens:', err)
         // Don't throw - allow deleteMany to fail silently
       }
     },

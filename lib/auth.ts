@@ -50,21 +50,26 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 // Password reset token functions
 export async function createPasswordResetToken(userId: string): Promise<string> {
-  // Generate random token
-  const token = crypto.randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
-  
-  // Delete old tokens for this user
-  await prisma.passwordResetTokens.deleteMany({ userId })
-  
-  // Create new token
-  await prisma.passwordResetTokens.create({
-    userId,
-    token,
-    expiresAt: expiresAt.toISOString(),
-  })
-  
-  return token
+  try {
+    // Generate random token
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
+    
+    // Delete old tokens for this user
+    await prisma.passwordResetTokens.deleteMany({ userId })
+    
+    // Create new token
+    await prisma.passwordResetTokens.create({
+      userId,
+      token,
+      expiresAt: expiresAt.toISOString(),
+    })
+    
+    return token
+  } catch (error: any) {
+    console.error('Error creating password reset token:', error)
+    throw new Error(`Failed to create password reset token: ${error?.message || 'Unknown error'}`)
+  }
 }
 
 export async function verifyPasswordResetToken(token: string): Promise<string | null> {
