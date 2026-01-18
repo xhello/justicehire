@@ -129,8 +129,10 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
         if (result?.error) {
           setError(result.error)
           setLoading(false)
+        } else if (result?.success && result?.redirect) {
+          // Redirect to dashboard on success
+          router.push(result.redirect)
         }
-        // If successful, signup action will redirect to dashboard
       } catch (err: any) {
         // NEXT_REDIRECT is a special error thrown by Next.js redirect() function
         // We should ignore it as it's the expected behavior for redirects
