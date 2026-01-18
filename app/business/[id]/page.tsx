@@ -22,7 +22,25 @@ export default async function BusinessDetailPage({
   const business = await getBusinessDetails(id)
   const allReviews = await getBusinessReviews(id)
   
-  // Separate reviews by type
+  // Get employer user IDs connected to this business
+  const connectedEmployerIds = new Set<string>(
+    business?.employers?.map((e: any) => e.userId) || []
+  )
+  
+  // Filter reviews for Business Reviews tab:
+  // 1. Business reviews (targetType === 'BUSINESS')
+  // 2. Employer reviews for employers connected to this business
+  const businessReviewsTab = allReviews.filter((r: any) => {
+    if (r.targetType === 'BUSINESS') {
+      return true
+    }
+    if (r.targetType === 'EMPLOYER' && r.targetUserId) {
+      return connectedEmployerIds.has(r.targetUserId)
+    }
+    return false
+  })
+  
+  // Separate reviews by type (for stats calculation)
   const businessReviews = allReviews.filter((r: any) => r.targetType === 'BUSINESS')
   const employerReviews = allReviews.filter((r: any) => r.targetType === 'EMPLOYER')
   const employeeReviews = allReviews.filter((r: any) => r.targetType === 'EMPLOYEE')
@@ -211,10 +229,10 @@ export default async function BusinessDetailPage({
                   ) : null}
 
                   <div className="mt-6 space-y-4">
-                    {allReviews.length === 0 ? (
+                    {businessReviewsTab.length === 0 ? (
                       <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
                     ) : (
-                      allReviews.map((review: any) => {
+                      businessReviewsTab.map((review: any) => {
                         const getRatingLabel = (rating: string | null) => {
                           if (!rating) return null
                           switch (rating) {
