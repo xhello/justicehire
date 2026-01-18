@@ -126,11 +126,13 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           result = await signupEmployer(formData)
         }
 
-        if (result?.error) {
+        if (result && 'error' in result) {
           setError(result.error)
           setLoading(false)
+        } else if (result && 'success' in result && result.success && 'redirect' in result) {
+          // Redirect to dashboard on success
+          router.push(result.redirect)
         }
-        // If successful, signup action will redirect to dashboard
       } catch (err) {
         console.error('Signup error:', err)
         setError('An error occurred. Please try again. If the issue persists, try using a smaller photo.')
