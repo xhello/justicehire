@@ -27,14 +27,14 @@ export default async function BusinessDetailPage({
   const employerReviews = allReviews.filter((r: any) => r.targetType === 'EMPLOYER')
   const employeeReviews = allReviews.filter((r: any) => r.targetType === 'EMPLOYEE')
   
-  // Calculate average ratings for the three fields (from all review types)
-  const payCompetitiveValues = allReviews
+  // Calculate average ratings for the three fields (from business reviews only for stats)
+  const payCompetitiveValues = businessReviews
     .map((r: any) => r.payCompetitive)
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
-  const workloadValues = allReviews
+  const workloadValues = businessReviews
     .map((r: any) => r.workload)
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
-  const flexibilityValues = allReviews
+  const flexibilityValues = businessReviews
     .map((r: any) => r.flexibility)
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
   
@@ -49,7 +49,8 @@ export default async function BusinessDetailPage({
     : null
   
   const hasRatings = avgPayCompetitive || avgWorkload || avgFlexibility
-  const reviewCount = allReviews.length
+  // Review count should only consider business reviews
+  const reviewCount = businessReviews.length
 
   if (!business) {
     return (
