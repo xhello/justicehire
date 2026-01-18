@@ -3,7 +3,7 @@ import { getUserProfile } from '@/app/actions/review'
 import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createReview } from '@/app/actions/review'
+import { createReviewAction } from '@/app/actions/review'
 import { prisma } from '@/lib/prisma'
 import SuccessBanner from '@/components/SuccessBanner'
 
@@ -62,8 +62,8 @@ export default async function EmployeeProfilePage({
         r.targetType === 'BUSINESS' && r.targetUserId === null
       )
       
-      const reviewerBusinessIds = new Set(reviewerBusinessReviews.map((r: any) => r.businessId))
-      const targetBusinessIds = new Set(targetBusinessReviews.map((r: any) => r.businessId))
+      const reviewerBusinessIds = new Set<string>(reviewerBusinessReviews.map((r: any) => r.businessId as string))
+      const targetBusinessIds = new Set<string>(targetBusinessReviews.map((r: any) => r.businessId as string))
       
       // Find common business
       const commonBusinessId = Array.from(reviewerBusinessIds).find((bid: string) => 
@@ -314,7 +314,7 @@ function ReviewForm({
   const defaultMessage = existingReview?.message || ''
 
   return (
-    <form action={createReview}>
+    <form action={createReviewAction}>
       <input type="hidden" name="targetUserId" value={targetUserId} />
       <input type="hidden" name="businessId" value={businessId} />
       <input type="hidden" name="targetType" value={targetType} />

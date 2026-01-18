@@ -171,6 +171,11 @@ export async function createReview(
   }
 }
 
+// Wrapper for direct form action usage (without useFormState)
+export async function createReviewAction(formData: FormData): Promise<void> {
+  await createReview(null, formData)
+}
+
 export async function getAggregatedRatings(userId: string) {
   const reviews = await prisma.reviews.findMany({
     targetUserId: userId,

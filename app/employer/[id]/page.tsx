@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { getUserProfile } from '@/app/actions/review'
 import { getCurrentUser } from '@/lib/auth'
 import Link from 'next/link'
-import { createReview } from '@/app/actions/review'
+import { createReviewAction } from '@/app/actions/review'
 import { prisma } from '@/lib/prisma'
 import SuccessBanner from '@/components/SuccessBanner'
 
@@ -289,7 +289,7 @@ function ReviewForm({
   const defaultMessage = existingReview?.message || ''
 
   return (
-    <form action={createReview}>
+    <form action={createReviewAction}>
       <input type="hidden" name="targetUserId" value={targetUserId} />
       <input type="hidden" name="businessId" value={businessId} />
       <input type="hidden" name="targetType" value={targetType} />

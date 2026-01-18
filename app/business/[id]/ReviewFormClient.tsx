@@ -20,12 +20,12 @@ export default function ReviewFormClient({
   const router = useRouter()
   const [hasReview, setHasReview] = useState(!!existingReview)
   
-  const isUpdate = hasReview || (state?.success && state.isUpdate)
+  const isUpdate = hasReview || (state && 'success' in state && state.success && state.isUpdate)
   const defaultRating = existingReview?.rating || ''
   const defaultMessage = existingReview?.message || ''
 
   useEffect(() => {
-    if (state?.success) {
+    if (state && 'success' in state && state.success) {
       // Update local state to reflect that review now exists
       setHasReview(true)
       // Refresh the page data to get updated review
@@ -40,17 +40,17 @@ export default function ReviewFormClient({
       <input type="hidden" name="targetType" value={targetType} />
       <input type="hidden" name="returnToBusiness" value="true" />
 
-      {state?.error && (
+      {state && 'error' in state && state.error ? (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
           {state.error}
         </div>
-      )}
+      ) : null}
       
-      {state?.success && (
+      {state && 'success' in state && state.success ? (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
           {state.message}
         </div>
-      )}
+      ) : null}
 
       <label className="block text-sm font-medium text-gray-700 mb-2">
         {isUpdate ? 'Update Review' : 'Leave a Review'}

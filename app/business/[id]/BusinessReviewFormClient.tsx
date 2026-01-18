@@ -17,10 +17,10 @@ export default function BusinessReviewFormClient({
   const router = useRouter()
   const [hasReview, setHasReview] = useState(!!existingReview)
   
-  const isUpdate = hasReview || (state?.success && state.isUpdate)
+  const isUpdate = hasReview || (state && 'success' in state && state.success && state.isUpdate)
 
   useEffect(() => {
-    if (state?.success) {
+    if (state && 'success' in state && state.success) {
       // Update local state to reflect that review now exists
       setHasReview(true)
       // Refresh the page data to get updated review
@@ -32,17 +32,17 @@ export default function BusinessReviewFormClient({
     <form action={formAction} className="mb-6 border rounded-lg p-4">
       <input type="hidden" name="businessId" value={businessId} />
       
-      {state?.error && (
+      {state && 'error' in state && state.error ? (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
           {state.error}
         </div>
-      )}
+      ) : null}
       
-      {state?.success && (
+      {state && 'success' in state && state.success ? (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
           {state.message}
         </div>
-      )}
+      ) : null}
       
       <label className="block text-sm font-medium text-gray-700 mb-4">
         {isUpdate ? 'Update Your Review' : 'Leave a Review'}
