@@ -15,9 +15,7 @@ export default async function EmployerDashboard() {
     redirect('/dashboard/employee')
   }
 
-  if (!user.verified) {
-    redirect('/verify?email=' + user.email)
-  }
+  // Employers can access dashboard even if not verified (verified: false by default)
 
   // Get all reviews that this employer has left
   const employerReviews = await prisma.reviews.findMany({

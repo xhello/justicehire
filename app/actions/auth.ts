@@ -232,7 +232,7 @@ export async function verifyEmailOtp(formData: FormData) {
       city: pendingSignup.city || null,
       position: pendingSignup.position || null,
       photoUrl: pendingSignup.photoUrl || null,
-      verified: true, // User is verified since OTP was successful
+      verified: false, // Employers need additional verification
       employerProfile: pendingSignup.businessId ? {
         businessId: pendingSignup.businessId,
       } : undefined,
@@ -267,7 +267,8 @@ export async function login(formData: FormData) {
     return { error: 'Invalid email or password' }
   }
 
-  if (!user.verified) {
+  // Employees must be verified, but employers can log in with verified: false
+  if (!user.verified && user.role === 'EMPLOYEE') {
     return { error: 'Please verify your email first' }
   }
 
