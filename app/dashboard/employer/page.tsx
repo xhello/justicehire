@@ -119,7 +119,18 @@ export default async function EmployerDashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8">Employer Dashboard</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-bold text-gray-900">Employer Dashboard</h2>
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              user.verified 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              {user.verified ? '✓ Verified' : '⚠ Not Verified'}
+            </span>
+          </div>
+        </div>
 
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h3 className="text-xl font-semibold mb-4">Your Business</h3>
