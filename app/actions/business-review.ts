@@ -135,21 +135,20 @@ export async function createBusinessReview(
 }
 
 export async function getBusinessReviews(businessId: string) {
+  // Get all reviews for this business (BUSINESS, EMPLOYER, and EMPLOYEE reviews)
   const reviews = await prisma.reviews.findMany({
     businessId,
-    targetType: 'BUSINESS',
   })
 
-  // Debug: Log first review to see what fields are present
-  if (reviews.length > 0) {
-    console.log('DEBUG: First review fields:', Object.keys(reviews[0]))
-    console.log('DEBUG: First review data:', JSON.stringify(reviews[0], null, 2))
-  }
-
-  // Get reviewer information
+  // Get reviewer and target user information
   const reviewsWithUsers = await Promise.all(
     reviews.map(async (review: any) => {
       const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
+      let targetUser = null
+      if (review.targetUserId) {
+        targetUser = await prisma.users.findUnique({ id: review.targetUserId })
+      }
+      
       return {
         ...review,
         reviewer: reviewer
@@ -158,6 +157,14 @@ export async function getBusinessReviews(businessId: string) {
               lastName: reviewer.lastName,
               photoUrl: reviewer.photoUrl,
               role: reviewer.role,
+            }
+          : null,
+        targetUser: targetUser
+          ? {
+              firstName: targetUser.firstName,
+              lastName: targetUser.lastName,
+              photoUrl: targetUser.photoUrl,
+              role: targetUser.role,
             }
           : null,
       }

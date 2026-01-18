@@ -20,16 +20,21 @@ export default async function BusinessDetailPage({
   const { id } = await params
   const user = await getCurrentUser()
   const business = await getBusinessDetails(id)
-  const businessReviews = await getBusinessReviews(id)
+  const allReviews = await getBusinessReviews(id)
   
-  // Calculate average ratings for the three fields
-  const payCompetitiveValues = businessReviews
+  // Separate reviews by type
+  const businessReviews = allReviews.filter((r: any) => r.targetType === 'BUSINESS')
+  const employerReviews = allReviews.filter((r: any) => r.targetType === 'EMPLOYER')
+  const employeeReviews = allReviews.filter((r: any) => r.targetType === 'EMPLOYEE')
+  
+  // Calculate average ratings for the three fields (from all review types)
+  const payCompetitiveValues = allReviews
     .map((r: any) => r.payCompetitive)
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
-  const workloadValues = businessReviews
+  const workloadValues = allReviews
     .map((r: any) => r.workload)
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
-  const flexibilityValues = businessReviews
+  const flexibilityValues = allReviews
     .map((r: any) => r.flexibility)
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
   
@@ -44,7 +49,7 @@ export default async function BusinessDetailPage({
     : null
   
   const hasRatings = avgPayCompetitive || avgWorkload || avgFlexibility
-  const reviewCount = businessReviews.length
+  const reviewCount = allReviews.length
 
   if (!business) {
     return (
@@ -205,48 +210,76 @@ export default async function BusinessDetailPage({
                   ) : null}
 
                   <div className="mt-6 space-y-4">
-                    {businessReviews.length === 0 ? (
+                    {allReviews.length === 0 ? (
                       <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
                     ) : (
-                      businessReviews.map((review: any) => {
-                        // Debug: Log review data
-                        if (process.env.NODE_ENV === 'development') {
-                          console.log('Review data:', {
-                            id: review.id,
-                            targetType: review.targetType,
-                            payCompetitive: review.payCompetitive,
-                            workload: review.workload,
-                            flexibility: review.flexibility,
-                            hasFields: !!(review.payCompetitive || review.workload || review.flexibility)
-                          })
+                      allReviews.map((review: any) => {
+                        const getRatingLabel = (rating: string | null) => {
+                          if (!rating) return null
+                          switch (rating) {
+                            case 'OUTSTANDING':
+                              return <span className="text-green-600 font-medium">Outstanding</span>
+                            case 'DELIVERED_AS_EXPECTED':
+                              return <span className="text-yellow-600 font-medium">No issue</span>
+                            case 'GOT_NOTHING_NICE_TO_SAY':
+                              return <span className="text-red-600 font-medium">Nothing nice to say</span>
+                            default:
+                              return null
+                          }
+                        }
+
+                        const getTargetName = () => {
+                          if (review.targetType === 'EMPLOYER' && review.targetUser) {
+                            return `${review.targetUser.firstName} ${review.targetUser.lastName} (Employer)`
+                          } else if (review.targetType === 'EMPLOYEE' && review.targetUser) {
+                            return `${review.targetUser.firstName} ${review.targetUser.lastName} (Employee)`
+                          } else if (review.targetType === 'BUSINESS') {
+                            return business.name
+                          }
+                          return 'Unknown'
                         }
                         
                         return (
                         <div key={review.id} className="border rounded-lg p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <p className="text-sm text-gray-600 capitalize font-medium">{review.reviewer?.role?.toLowerCase() || 'Reviewer'}</p>
+                              <p className="text-sm text-gray-600 capitalize font-medium">
+                                {review.reviewer?.role?.toLowerCase() || 'Reviewer'} review
+                                {review.targetType !== 'BUSINESS' && (
+                                  <span className="text-gray-500"> for {getTargetName()}</span>
+                                )}
+                              </p>
                             </div>
                             <span className="text-xs text-gray-500">
                               {new Date(review.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                           
-                          {/* Display three ratings - always show for business reviews, even if not rated */}
-                          <div className="mt-3 space-y-2">
-                            {review.payCompetitive ? (
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-gray-700 min-w-[140px]">Pay Competitive:</span>
-                                <div className="flex text-yellow-400">
-                                  {[1, 2, 3, 4, 5].map((star: number) => (
-                                    <span key={star}>{star <= review.payCompetitive! ? '★' : '☆'}</span>
-                                  ))}
+                          {/* Display rating for EMPLOYER/EMPLOYEE reviews */}
+                          {review.targetType !== 'BUSINESS' && review.rating && (
+                            <div className="mt-2 mb-3">
+                              <p className="text-sm text-gray-700">
+                                Rating: {getRatingLabel(review.rating)}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Display three ratings for BUSINESS reviews */}
+                          {review.targetType === 'BUSINESS' && (
+                            <div className="mt-3 space-y-2">
+                              {review.payCompetitive ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-700 min-w-[140px]">Pay Competitive:</span>
+                                  <div className="flex text-yellow-400">
+                                    {[1, 2, 3, 4, 5].map((star: number) => (
+                                      <span key={star}>{star <= review.payCompetitive! ? '★' : '☆'}</span>
+                                    ))}
+                                  </div>
+                                  <span className="text-sm text-gray-600">({review.payCompetitive}/5)</span>
                                 </div>
-                                <span className="text-sm text-gray-600">({review.payCompetitive}/5)</span>
-                              </div>
-                            ) : (
-                              <div className="text-xs text-gray-500">Pay Competitive: Not rated</div>
-                            )}
+                              ) : (
+                                <div className="text-xs text-gray-500">Pay Competitive: Not rated</div>
+                              )}
                               {review.workload ? (
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-medium text-gray-700 min-w-[160px]">Workload amount:</span>
@@ -273,11 +306,12 @@ export default async function BusinessDetailPage({
                               ) : (
                                 <div className="text-xs text-gray-500">Schedule flexibility: Not rated</div>
                               )}
-                          </div>
+                            </div>
+                          )}
                           
                           {review.message && (
                             <div className="mt-3 pt-3 border-t">
-                              <p className="text-sm font-medium text-gray-700 mb-1">Additional Comments:</p>
+                              <p className="text-sm font-medium text-gray-700 mb-1">Comments:</p>
                               <p className="text-gray-700">{review.message}</p>
                             </div>
                           )}
