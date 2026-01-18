@@ -109,8 +109,8 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
     
     // Use cropped image if available, otherwise show error
     if (croppedImage) {
-      // Check if base64 string is too large (roughly 3MB base64 = ~2MB actual)
-      if (croppedImage.length > 3 * 1024 * 1024) {
+      // Check if base64 string is too large (max 1.5MB base64)
+      if (croppedImage.length > 1.5 * 1024 * 1024) {
         setError('Photo is too large after processing. Please try a smaller photo or crop it more.')
         setLoading(false)
         return

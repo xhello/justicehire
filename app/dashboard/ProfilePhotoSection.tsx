@@ -60,8 +60,8 @@ export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) 
     setLoading(true)
 
     try {
-      // Check if base64 string is too large (roughly 3MB base64 = ~2MB actual)
-      if (croppedImageData.length > 3 * 1024 * 1024) {
+      // Check if base64 string is too large (max 1.5MB base64)
+      if (croppedImageData.length > 1.5 * 1024 * 1024) {
         setError('Photo is too large after processing. Please try a smaller photo or crop it more.')
         setLoading(false)
         return

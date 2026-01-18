@@ -29,9 +29,9 @@ export async function getCroppedImg(
     pixelCrop.height
   )
 
-  // Return as base64 string with compression
-  // Limit canvas size to max 800x800 to reduce file size
-  const maxDimension = 800
+  // Return as base64 string with aggressive compression
+  // Limit canvas size to max 600x600 to reduce file size significantly
+  const maxDimension = 600
   let outputWidth = pixelCrop.width
   let outputHeight = pixelCrop.height
   
@@ -51,45 +51,53 @@ export async function getCroppedImg(
     throw new Error('No 2d context for output canvas')
   }
 
-  // Draw resized image to output canvas
+  // Draw resized image to output canvas with better quality settings
+  outputCtx.imageSmoothingEnabled = true
+  outputCtx.imageSmoothingQuality = 'high'
   outputCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, outputWidth, outputHeight)
 
-  // Return as base64 string with compression (lower quality for smaller file size)
+  // Return as base64 string with aggressive compression
+  // Start with quality 0.75, reduce if needed
   return new Promise((resolve, reject) => {
-    outputCanvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Canvas is empty'))
-          return
-        }
-        
-        // Check if blob is too large (max 2MB for base64)
-        if (blob.size > 2 * 1024 * 1024) {
-          // Try with even lower quality
-          outputCanvas.toBlob(
-            (smallerBlob) => {
-              if (!smallerBlob) {
-                reject(new Error('Image is too large even after compression'))
-                return
+    const tryCompress = (quality: number) => {
+      outputCanvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Canvas is empty'))
+            return
+          }
+          
+          // Target: keep base64 under 1.5MB (roughly 1MB actual file)
+          // Base64 is ~33% larger, so 1MB file = ~1.33MB base64
+          // We'll target 1.5MB base64 to be safe
+          const maxBase64Size = 1.5 * 1024 * 1024
+          const estimatedBase64Size = blob.size * 1.33
+          
+          if (estimatedBase64Size > maxBase64Size && quality > 0.5) {
+            // Try with lower quality
+            tryCompress(quality - 0.1)
+          } else {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              const base64 = reader.result as string
+              // Final check
+              if (base64.length > maxBase64Size && quality > 0.5) {
+                tryCompress(quality - 0.1)
+              } else {
+                resolve(base64)
               }
-              const reader = new FileReader()
-              reader.onloadend = () => resolve(reader.result as string)
-              reader.onerror = reject
-              reader.readAsDataURL(smallerBlob)
-            },
-            'image/jpeg',
-            0.7 // Lower quality
-          )
-        } else {
-          const reader = new FileReader()
-          reader.onloadend = () => resolve(reader.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(blob)
-        }
-      },
-      'image/jpeg',
-      0.85 // Slightly lower quality for smaller file size
-    )
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(blob)
+          }
+        },
+        'image/jpeg',
+        quality
+      )
+    }
+    
+    // Start with 0.75 quality
+    tryCompress(0.75)
   })
 }
 

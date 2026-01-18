@@ -92,6 +92,12 @@ export async function signupEmployee(formData: FormData) {
     if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
       return { error: 'Database setup incomplete. Please contact support.' }
     }
+    // Check for request body size errors
+    if (error?.message?.includes('body') && error?.message?.includes('limit') || 
+        error?.message?.includes('too large') ||
+        error?.message?.includes('PayloadTooLargeError')) {
+      return { error: 'Photo is too large. Please try a smaller photo or crop it more.' }
+    }
     return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
 }
@@ -163,6 +169,12 @@ export async function signupEmployer(formData: FormData) {
     // Check if it's a table not found error
     if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
       return { error: 'Database setup incomplete. Please contact support.' }
+    }
+    // Check for request body size errors
+    if (error?.message?.includes('body') && error?.message?.includes('limit') || 
+        error?.message?.includes('too large') ||
+        error?.message?.includes('PayloadTooLargeError')) {
+      return { error: 'Photo is too large. Please try a smaller photo or crop it more.' }
     }
     return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
