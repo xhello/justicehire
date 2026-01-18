@@ -179,10 +179,10 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           <button
             type="button"
             onClick={() => setRole('EMPLOYEE')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium ${
+            className={`flex-1 py-3 px-4 rounded-md font-medium touch-manipulation ${
               role === 'EMPLOYEE'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400'
             }`}
           >
             Employee
@@ -190,10 +190,10 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           <button
             type="button"
             onClick={() => setRole('EMPLOYER')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium ${
+            className={`flex-1 py-3 px-4 rounded-md font-medium touch-manipulation ${
               role === 'EMPLOYER'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:bg-gray-400'
             }`}
           >
             Employer
@@ -398,7 +398,8 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                capture="environment"
+                className="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 active:file:bg-blue-200 touch-manipulation"
               />
               <p className="mt-1 text-xs text-gray-500">Upload a profile photo (JPG, PNG, etc.)</p>
               {croppedImage && (
@@ -418,7 +419,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 touch-manipulation"
             >
               {loading ? 'Signing up...' : 'Sign Up'}
             </button>
