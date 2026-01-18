@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
+import ProfilePhotoSection from '../ProfilePhotoSection'
 
 export default async function EmployerDashboard() {
   const user = await getCurrentUser()
@@ -132,30 +133,36 @@ export default async function EmployerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h3 className="text-xl font-semibold mb-4">Your Business</h3>
-          {user.employerProfile ? (
-            <div>
-              <Link 
-                href={`/business/${user.employerProfile.business.id}`}
-                className="text-lg font-medium text-blue-600 hover:text-blue-700"
-              >
-                {user.employerProfile.business.name}
-              </Link>
-              <p className="text-sm text-gray-700">
-                {user.employerProfile.business.address}
-              </p>
-              <p className="text-sm text-gray-600">
-                {user.employerProfile.business.city}, {user.employerProfile.business.state}
-              </p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <ProfilePhotoSection user={user} />
+          </div>
+          
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-xl font-semibold mb-4">Your Business</h3>
+              {user.employerProfile ? (
+                <div>
+                  <Link 
+                    href={`/business/${user.employerProfile.business.id}`}
+                    className="text-lg font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    {user.employerProfile.business.name}
+                  </Link>
+                  <p className="text-sm text-gray-700">
+                    {user.employerProfile.business.address}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {user.employerProfile.business.city}, {user.employerProfile.business.state}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-700">No business associated</p>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-700">No business associated</p>
-          )}
-        </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold mb-4">Reviews Given</h3>
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-xl font-semibold mb-4">Reviews Given</h3>
           {reviewsWithDetails.length === 0 ? (
             <p className="text-gray-700">You haven't left any reviews yet.</p>
           ) : (
@@ -165,6 +172,8 @@ export default async function EmployerDashboard() {
               ))}
             </div>
           )}
+            </div>
+          </div>
         </div>
       </main>
     </div>

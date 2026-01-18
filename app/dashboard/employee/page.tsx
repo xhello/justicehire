@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth'
 import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import { prisma } from '@/lib/prisma'
+import ProfilePhotoSection from '../ProfilePhotoSection'
 
 export default async function EmployeeDashboard() {
   const user = await getCurrentUser()
@@ -123,8 +124,14 @@ export default async function EmployeeDashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold mb-4">Your Reviews</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <ProfilePhotoSection user={user} />
+          </div>
+          
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-xl font-semibold mb-4">Your Reviews</h3>
           {reviewsWithDetails.length === 0 ? (
             <p className="text-gray-700">You haven't left any reviews yet.</p>
           ) : (
@@ -257,6 +264,8 @@ export default async function EmployeeDashboard() {
               ))}
             </div>
           )}
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -410,3 +410,27 @@ export async function logout() {
   await deleteSession()
   redirect('/')
 }
+
+export async function updateUserPhoto(formData: FormData) {
+  const user = await getCurrentUser()
+  
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const photoUrl = formData.get('photoUrl') as string
+
+  if (!photoUrl) {
+    return { error: 'Photo URL is required' }
+  }
+
+  try {
+    await prisma.users.update({ id: user.id }, { photoUrl })
+    revalidatePath('/dashboard/employee')
+    revalidatePath('/dashboard/employer')
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error updating user photo:', error)
+    return { error: error?.message || 'Failed to update photo' }
+  }
+}
