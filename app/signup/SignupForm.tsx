@@ -108,8 +108,9 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
         } else {
           router.push(`/verify?email=${formData.get('email')}`)
         }
-      } catch (err) {
-        setError('An error occurred. Please try again.')
+      } catch (err: any) {
+        console.error('Signup error:', err)
+        setError(err?.message || 'An error occurred. Please try again.')
         setLoading(false)
       }
     } else {

@@ -88,9 +88,13 @@ export async function signupEmployee(formData: FormData) {
     return { success: true }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
     // Check if it's a table not found error
-    if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
-      return { error: 'Database setup incomplete. Please contact support.' }
+    if (error?.message?.includes('PendingSignup') || 
+        error?.message?.includes('does not exist') ||
+        error?.message?.includes('relation') ||
+        error?.code === '42P01') {
+      return { error: 'Database setup incomplete. Please run the SQL migration to create the PendingSignup table.' }
     }
     return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
@@ -160,9 +164,13 @@ export async function signupEmployer(formData: FormData) {
     return { success: true }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
+    console.error('Error details:', JSON.stringify(error, null, 2))
     // Check if it's a table not found error
-    if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
-      return { error: 'Database setup incomplete. Please contact support.' }
+    if (error?.message?.includes('PendingSignup') || 
+        error?.message?.includes('does not exist') ||
+        error?.message?.includes('relation') ||
+        error?.code === '42P01') {
+      return { error: 'Database setup incomplete. Please run the SQL migration to create the PendingSignup table.' }
     }
     return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
