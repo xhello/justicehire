@@ -90,27 +90,30 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
       return
     }
     
-    // Use cropped image if available
+    // Use cropped image if available, otherwise show error
     if (croppedImage) {
       formData.set('photoUrl', croppedImage)
-    }
-    
-    try {
-      let result
-      if (role === 'EMPLOYEE') {
-        result = await signupEmployee(formData)
-      } else {
-        result = await signupEmployer(formData)
-      }
+      
+      try {
+        let result
+        if (role === 'EMPLOYEE') {
+          result = await signupEmployee(formData)
+        } else {
+          result = await signupEmployer(formData)
+        }
 
-      if (result?.error) {
-        setError(result.error)
+        if (result?.error) {
+          setError(result.error)
+          setLoading(false)
+        } else {
+          router.push(`/verify?email=${formData.get('email')}`)
+        }
+      } catch (err) {
+        setError('An error occurred. Please try again.')
         setLoading(false)
-      } else {
-        router.push(`/verify?email=${formData.get('email')}`)
       }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
+    } else {
+      setError('Please upload and adjust a photo')
       setLoading(false)
     }
   }
@@ -386,7 +389,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
 
             <div>
               <label htmlFor="photo" className="block text-sm font-medium text-gray-700">
-                Photo
+                Photo <span className="text-red-500">*</span>
               </label>
               <input
                 id="photo"

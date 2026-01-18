@@ -15,7 +15,7 @@ const signupEmployeeSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
   phoneNumber: z.string().min(1, 'Phone number is required'),
-  photoUrl: z.string().optional(),
+  photoUrl: z.string().min(1, 'Photo is required'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -31,7 +31,7 @@ const signupEmployerSchema = z.object({
   city: z.string().min(1),
   businessId: z.string().min(1),
   position: z.enum(['owner', 'manager', 'supervisor on duty']),
-  photoUrl: z.string().optional(),
+  photoUrl: z.string().min(1, 'Photo is required'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -45,7 +45,7 @@ export async function signupEmployee(formData: FormData) {
     password: formData.get('password') as string,
     confirmPassword: formData.get('confirmPassword') as string,
     phoneNumber: formData.get('phoneNumber') as string,
-    photoUrl: formData.get('photoUrl') as string | null,
+    photoUrl: formData.get('photoUrl') as string,
   }
 
   const validated = signupEmployeeSchema.parse(data)
@@ -78,7 +78,7 @@ export async function signupEmployee(formData: FormData) {
       lastName: validated.lastName,
       password: hashedPassword,
       socialUrl: validated.phoneNumber,
-      photoUrl: validated.photoUrl || null,
+      photoUrl: validated.photoUrl,
       expiresAt: expiresAt.toISOString(),
     })
 
@@ -107,7 +107,7 @@ export async function signupEmployer(formData: FormData) {
     city: formData.get('city') as string,
     businessId: formData.get('businessId') as string,
     position: formData.get('position') as string,
-    photoUrl: formData.get('photoUrl') as string | null,
+    photoUrl: formData.get('photoUrl') as string,
   }
 
   const validated = signupEmployerSchema.parse(data)
@@ -149,7 +149,7 @@ export async function signupEmployer(formData: FormData) {
       state: validated.state,
       city: validated.city,
       position: validated.position,
-      photoUrl: validated.photoUrl || null,
+      photoUrl: validated.photoUrl,
       businessId: validated.businessId,
       expiresAt: expiresAt.toISOString(),
     })
@@ -418,7 +418,11 @@ export async function updateUserPhoto(formData: FormData) {
     return { error: 'Not authenticated' }
   }
 
-  const photoUrl = formData.get('photoUrl') as string | null
+  const photoUrl = formData.get('photoUrl') as string
+
+  if (!photoUrl) {
+    return { error: 'Photo URL is required' }
+  }
 
   try {
     await prisma.users.update({ id: user.id }, { photoUrl })
