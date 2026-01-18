@@ -62,28 +62,37 @@ export async function signupEmployee(formData: FormData) {
   // Store signup data temporarily (will create user only after OTP verification)
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
   
-  // Delete any existing pending signup for this email
   try {
-    await prisma.pendingSignups.delete({ email: validated.email })
-  } catch (err) {
-    // Ignore if doesn't exist
+    // Delete any existing pending signup for this email
+    try {
+      await prisma.pendingSignups.delete({ email: validated.email })
+    } catch (err) {
+      // Ignore if doesn't exist
+    }
+    
+    await prisma.pendingSignups.create({
+      email: validated.email,
+      role: 'EMPLOYEE',
+      firstName: validated.firstName,
+      lastName: validated.lastName,
+      password: hashedPassword,
+      socialUrl: validated.phoneNumber,
+      photoUrl: validated.photoUrl,
+      expiresAt: expiresAt.toISOString(),
+    })
+
+    // Generate and send OTP
+    await generateOTP(validated.email)
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error creating pending signup:', error)
+    // Check if it's a table not found error
+    if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
+      return { error: 'Database setup incomplete. Please contact support.' }
+    }
+    return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
-  
-  await prisma.pendingSignups.create({
-    email: validated.email,
-    role: 'EMPLOYEE',
-    firstName: validated.firstName,
-    lastName: validated.lastName,
-    password: hashedPassword,
-    socialUrl: validated.phoneNumber,
-    photoUrl: validated.photoUrl,
-    expiresAt: expiresAt.toISOString(),
-  })
-
-  // Generate and send OTP
-  await generateOTP(validated.email)
-
-  return { success: true }
 }
 
 export async function signupEmployer(formData: FormData) {
@@ -122,31 +131,40 @@ export async function signupEmployer(formData: FormData) {
   // Store signup data temporarily (will create user only after OTP verification)
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
   
-  // Delete any existing pending signup for this email
   try {
-    await prisma.pendingSignups.delete({ email: validated.email })
-  } catch (err) {
-    // Ignore if doesn't exist
+    // Delete any existing pending signup for this email
+    try {
+      await prisma.pendingSignups.delete({ email: validated.email })
+    } catch (err) {
+      // Ignore if doesn't exist
+    }
+    
+    await prisma.pendingSignups.create({
+      email: validated.email,
+      role: 'EMPLOYER',
+      firstName: validated.firstName,
+      lastName: validated.lastName,
+      password: hashedPassword,
+      state: validated.state,
+      city: validated.city,
+      position: validated.position,
+      photoUrl: validated.photoUrl,
+      businessId: validated.businessId,
+      expiresAt: expiresAt.toISOString(),
+    })
+
+    // Generate and send OTP
+    await generateOTP(validated.email)
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('Error creating pending signup:', error)
+    // Check if it's a table not found error
+    if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
+      return { error: 'Database setup incomplete. Please contact support.' }
+    }
+    return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
-  
-  await prisma.pendingSignups.create({
-    email: validated.email,
-    role: 'EMPLOYER',
-    firstName: validated.firstName,
-    lastName: validated.lastName,
-    password: hashedPassword,
-    state: validated.state,
-    city: validated.city,
-    position: validated.position,
-    photoUrl: validated.photoUrl,
-    businessId: validated.businessId,
-    expiresAt: expiresAt.toISOString(),
-  })
-
-  // Generate and send OTP
-  await generateOTP(validated.email)
-
-  return { success: true }
 }
 
 export async function requestEmailOtp(formData: FormData) {
