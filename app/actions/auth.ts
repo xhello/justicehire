@@ -27,6 +27,7 @@ const signupEmployerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
   state: z.enum(['CA', 'OR']),
   city: z.string().min(1),
   businessId: z.string().min(1),
@@ -71,21 +72,30 @@ export async function signupEmployee(formData: FormData) {
       // Ignore if doesn't exist
     }
     
-    await prisma.pendingSignups.create({
-      email: validated.email,
+    // Check if phone is verified (client-side Firebase verification)
+    const phoneVerified = formData.get('phoneVerified') === 'true'
+    
+    if (!phoneVerified) {
+      return { error: 'Phone number must be verified before signup' }
+    }
+
+    // Phone is already verified client-side with Firebase, so create user directly
+    // (No need for PendingSignup since verification is complete)
+    const user = await prisma.users.create({
       role: 'EMPLOYEE',
       firstName: validated.firstName,
       lastName: validated.lastName,
+      email: validated.email,
       password: hashedPassword,
       socialUrl: validated.phoneNumber,
       photoUrl: validated.photoUrl,
-      expiresAt: expiresAt.toISOString(),
+      verified: true, // Phone verified via Firebase
     })
 
-    // Generate and send OTP
-    await generateOTP(validated.email)
+    // Create session
+    await createSession(user.id)
 
-    return { success: true }
+    return { success: true, userId: user.id }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
     // Check if it's a table not found error
@@ -109,6 +119,7 @@ export async function signupEmployer(formData: FormData) {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     confirmPassword: formData.get('confirmPassword') as string,
+    phoneNumber: formData.get('phoneNumber') as string,
     state: formData.get('state') as string,
     city: formData.get('city') as string,
     businessId: formData.get('businessId') as string,
@@ -146,24 +157,35 @@ export async function signupEmployer(formData: FormData) {
       // Ignore if doesn't exist
     }
     
-    await prisma.pendingSignups.create({
-      email: validated.email,
+    // Check if phone is verified (client-side Firebase verification)
+    const phoneVerified = formData.get('phoneVerified') === 'true'
+    
+    if (!phoneVerified) {
+      return { error: 'Phone number must be verified before signup' }
+    }
+
+    // Phone is already verified client-side with Firebase, so create user directly
+    // (No need for PendingSignup since verification is complete)
+    const user = await prisma.users.create({
       role: 'EMPLOYER',
       firstName: validated.firstName,
       lastName: validated.lastName,
+      email: validated.email,
       password: hashedPassword,
       state: validated.state,
       city: validated.city,
       position: validated.position,
       photoUrl: validated.photoUrl,
-      businessId: validated.businessId,
-      expiresAt: expiresAt.toISOString(),
-    })
+      verified: false, // Employers need additional verification
+      employerProfile: validated.businessId ? {
+        businessId: validated.businessId,
+      } : undefined,
+    } as any)
 
-    // Generate and send OTP
-    await generateOTP(validated.email)
+    // Create session
+    await createSession(user.id)
 
-    return { success: true }
+    return { success: true, userId: user.id }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
     // Check if it's a table not found error
