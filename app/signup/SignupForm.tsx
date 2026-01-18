@@ -115,6 +115,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           setError(result.error)
           setLoading(false)
         } else {
+          // Redirect to verify page - user data is stored in PendingSignup, not created yet
           router.push(`/verify?email=${formData.get('email')}`)
         }
       } catch (err) {
