@@ -80,16 +80,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           setError(result.error)
           setLoading(false)
         } else {
-          // Show warning if OTP failed but signup succeeded
-          if (result?.warning) {
-            setError(result.warning)
-            // Still redirect to verify page where user can resend OTP
-            setTimeout(() => {
-              router.push(`/verify?email=${formData.get('email')}`)
-            }, 3000)
-          } else {
-            router.push(`/verify?email=${formData.get('email')}`)
-          }
+          router.push(`/verify?email=${formData.get('email')}`)
         }
       } catch (err) {
         setError('An error occurred. Please try again.')

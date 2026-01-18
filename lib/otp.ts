@@ -10,9 +10,13 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
   const resendApiKey = 're_9yQ4yVuX_MT1MTmhBbSsB2m6soEBmVxXQ'
   const fromEmail = 'onboarding@resend.dev'
 
+  console.log(`[OTP] Attempting to send email to ${email} using Resend API`)
+  console.log(`[OTP] From: ${fromEmail}, API Key: ${resendApiKey.substring(0, 10)}...`)
+
   try {
     const resend = new Resend(resendApiKey)
     
+    console.log(`[OTP] Calling Resend API...`)
     const result = await resend.emails.send({
       from: fromEmail,
       to: email,
@@ -30,17 +34,29 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
       `,
     })
     
+    console.log(`[OTP] Resend API response:`, JSON.stringify(result, null, 2))
+    
     if (result.error) {
-      console.error('[OTP] Resend API error:', result.error)
+      console.error('[OTP] Resend API returned an error:', JSON.stringify(result.error, null, 2))
       throw new Error(`Failed to send OTP email: ${JSON.stringify(result.error)}`)
     }
     
-    console.log(`[OTP] Email sent successfully to ${email}, ID: ${result.data?.id || 'unknown'}`)
+    if (!result.data) {
+      console.error('[OTP] Resend API returned no data:', result)
+      throw new Error(`Failed to send OTP email: No data returned from Resend API`)
+    }
+    
+    console.log(`[OTP] ✅ Email sent successfully to ${email}, ID: ${result.data.id}`)
   } catch (error: any) {
-    console.error('[OTP] Failed to send email to', email, ':', error)
-    console.error('[OTP] Error details:', error?.message, error?.stack)
+    console.error('[OTP] ❌ Failed to send email to', email)
+    console.error('[OTP] Error type:', error?.constructor?.name)
+    console.error('[OTP] Error message:', error?.message)
+    console.error('[OTP] Error stack:', error?.stack)
+    if (error?.response) {
+      console.error('[OTP] Error response:', JSON.stringify(error.response, null, 2))
+    }
     // Fallback: log to console if email sending fails
-    console.log(`[OTP] FALLBACK - Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
+    console.log(`[OTP] ⚠️  FALLBACK - Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
     // Re-throw the error so calling code knows it failed
     throw new Error(`Failed to send OTP email: ${error?.message || 'Unknown error'}`)
   }
