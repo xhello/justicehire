@@ -238,9 +238,14 @@ export default async function EmployeeProfilePage({
                 </>
               )}
               {user && !user.verified && (
-                <p className="text-gray-700">
-                  Please verify your account to leave reviews.
-                </p>
+                <div>
+                  <p className="text-gray-700 font-medium mb-2">
+                    Only verified users can submit reviews.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Please verify your email address to leave reviews. You can verify your email from your dashboard.
+                  </p>
+                </div>
               )}
               {user && user.verified && user.id === employee.id && (
                 <p className="text-gray-700">

@@ -198,8 +198,11 @@ export default async function BusinessDetailPage({
                   
                   {!user || !user.verified ? (
                     <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                      <p className="text-gray-700">
-                        Please <Link href="/signup" className="text-blue-600 hover:text-blue-700">sign up</Link> and verify your account to leave a review.
+                      <p className="text-gray-700 font-medium mb-2">
+                        Only verified users can submit reviews.
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Please <Link href="/signup" className="text-blue-600 hover:text-blue-700">sign up</Link> and verify your email address to leave a review. You can verify your email from your dashboard.
                       </p>
                     </div>
                   ) : null}

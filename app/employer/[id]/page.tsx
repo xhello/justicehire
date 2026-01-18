@@ -216,9 +216,14 @@ export default async function EmployerProfilePage({
                 </div>
               )}
               {user && !user.verified && (
-                <p className="mt-2 text-sm text-gray-600">
-                  Please verify your account to leave reviews.
-                </p>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-700 font-medium mb-1">
+                    Only verified users can submit reviews.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Please verify your email address to leave reviews. You can verify your email from your dashboard.
+                  </p>
+                </div>
               )}
               {user && user.verified && user.role !== 'EMPLOYEE' && user.role !== 'EMPLOYER' && (
                 <p className="mt-2 text-sm text-gray-600">
