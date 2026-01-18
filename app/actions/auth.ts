@@ -38,61 +38,76 @@ const signupEmployerSchema = z.object({
 })
 
 export async function signupEmployee(formData: FormData) {
-  const data = {
-    firstName: formData.get('firstName') as string,
-    lastName: formData.get('lastName') as string,
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-    phoneNumber: formData.get('phoneNumber') as string,
-    photoUrl: formData.get('photoUrl') as string,
+  try {
+    const data = {
+      firstName: formData.get('firstName') as string,
+      lastName: formData.get('lastName') as string,
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+      confirmPassword: formData.get('confirmPassword') as string,
+      phoneNumber: formData.get('phoneNumber') as string,
+      photoUrl: formData.get('photoUrl') as string,
+    }
+
+    const validated = signupEmployeeSchema.parse(data)
+
+    // Check if user already exists
+    const existing = await prisma.users.findUnique({ email: validated.email })
+
+    if (existing) {
+      return { error: 'Email already registered' }
+    }
+
+    // Hash password
+    const hashedPassword = await hashPassword(validated.password)
+
+    // Create user
+    // Note: Storing phoneNumber in socialUrl field for now (would need migration for new field)
+    const user = await prisma.users.create({
+      role: 'EMPLOYEE',
+      firstName: validated.firstName,
+      lastName: validated.lastName,
+      email: validated.email,
+      password: hashedPassword,
+      socialUrl: validated.phoneNumber,
+      photoUrl: validated.photoUrl,
+      verified: false,
+    })
+
+    // Generate and send OTP
+    await generateOTP(validated.email)
+
+    return { success: true, userId: user.id }
+  } catch (error: any) {
+    console.error('Error in signupEmployee:', error)
+    
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      const firstError = error.issues[0]
+      return { error: firstError.message || 'Validation error' }
+    }
+    
+    // Handle other errors
+    return { error: error?.message || 'An error occurred. Please try again.' }
   }
-
-  const validated = signupEmployeeSchema.parse(data)
-
-  // Check if user already exists
-  const existing = await prisma.users.findUnique({ email: validated.email })
-
-  if (existing) {
-    return { error: 'Email already registered' }
-  }
-
-  // Hash password
-  const hashedPassword = await hashPassword(validated.password)
-
-  // Create user
-  // Note: Storing phoneNumber in socialUrl field for now (would need migration for new field)
-  const user = await prisma.users.create({
-    role: 'EMPLOYEE',
-    firstName: validated.firstName,
-    lastName: validated.lastName,
-    email: validated.email,
-    password: hashedPassword,
-    socialUrl: validated.phoneNumber,
-    photoUrl: validated.photoUrl,
-    verified: false,
-  })
-
-  // Generate and send OTP
-  await generateOTP(validated.email)
-
-  return { success: true, userId: user.id }
 }
 
 export async function signupEmployer(formData: FormData) {
-  const data = {
-    firstName: formData.get('firstName') as string,
-    lastName: formData.get('lastName') as string,
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-    confirmPassword: formData.get('confirmPassword') as string,
-    state: formData.get('state') as string,
-    city: formData.get('city') as string,
-    businessId: formData.get('businessId') as string,
-    position: formData.get('position') as string,
-    photoUrl: formData.get('photoUrl') as string,
-  }
+  try {
+    const data = {
+      firstName: formData.get('firstName') as string,
+      lastName: formData.get('lastName') as string,
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+      confirmPassword: formData.get('confirmPassword') as string,
+      state: formData.get('state') as string,
+      city: formData.get('city') as string,
+      businessId: formData.get('businessId') as string,
+      position: formData.get('position') as string,
+      photoUrl: formData.get('photoUrl') as string,
+    }
 
-  const validated = signupEmployerSchema.parse(data)
+    const validated = signupEmployerSchema.parse(data)
 
   // Check if user already exists
   const existing = await prisma.users.findUnique({ email: validated.email })
@@ -132,6 +147,18 @@ export async function signupEmployer(formData: FormData) {
   await generateOTP(validated.email)
 
   return { success: true, userId: user.id }
+  } catch (error: any) {
+    console.error('Error in signupEmployer:', error)
+    
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      const firstError = error.issues[0]
+      return { error: firstError.message || 'Validation error' }
+    }
+    
+    // Handle other errors
+    return { error: error?.message || 'An error occurred. Please try again.' }
+  }
 }
 
 export async function requestEmailOtp(formData: FormData) {
