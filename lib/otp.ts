@@ -37,8 +37,20 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
     console.log(`[OTP] Resend API response:`, JSON.stringify(result, null, 2))
     
     if (result.error) {
+      const errorMessage = result.error.message || JSON.stringify(result.error)
       console.error('[OTP] Resend API returned an error:', JSON.stringify(result.error, null, 2))
-      throw new Error(`Failed to send OTP email: ${JSON.stringify(result.error)}`)
+      console.error(`[OTP] Error details for ${email}:`, errorMessage)
+      
+      // Provide more specific error messages based on Resend error types
+      if (errorMessage.includes('rate_limit') || errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+        throw new Error('Too many emails sent. Please wait a few minutes and try again.')
+      } else if (errorMessage.includes('invalid') || errorMessage.includes('rejected') || errorMessage.includes('bounce')) {
+        throw new Error(`Email address may be invalid or blocked: ${errorMessage}`)
+      } else if (errorMessage.includes('quota') || errorMessage.includes('limit') || errorMessage.includes('exceeded')) {
+        throw new Error('Email service limit reached. Please try again later.')
+      } else {
+        throw new Error(`Failed to send verification email: ${errorMessage}`)
+      }
     }
     
     if (!result.data) {
@@ -55,10 +67,32 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
     if (error?.response) {
       console.error('[OTP] Error response:', JSON.stringify(error.response, null, 2))
     }
+    
+    // Extract more detailed error information
+    let errorDetails = error?.message || 'Unknown error'
+    if (error?.response?.data) {
+      errorDetails = JSON.stringify(error.response.data)
+    } else if (typeof error === 'object' && error !== null) {
+      errorDetails = JSON.stringify(error)
+    }
+    
+    console.error(`[OTP] Detailed error for ${email}:`, errorDetails)
+    
     // Fallback: log to console if email sending fails
     console.log(`[OTP] ⚠️  FALLBACK - Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
+    
+    // Provide more specific error message
+    let userFriendlyError = 'Failed to send verification email. Please try again.'
+    if (errorDetails.includes('rate_limit') || errorDetails.includes('rate limit')) {
+      userFriendlyError = 'Too many emails sent. Please wait a few minutes and try again.'
+    } else if (errorDetails.includes('invalid') || errorDetails.includes('rejected')) {
+      userFriendlyError = 'Email address may be invalid or blocked. Please try a different email address.'
+    } else if (errorDetails.includes('quota') || errorDetails.includes('limit')) {
+      userFriendlyError = 'Email service limit reached. Please try again later.'
+    }
+    
     // Re-throw the error so calling code knows it failed
-    throw new Error(`Failed to send OTP email: ${error?.message || 'Unknown error'}`)
+    throw new Error(userFriendlyError)
   }
 }
 
