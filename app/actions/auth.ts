@@ -74,17 +74,21 @@ export async function signupEmployee(formData: FormData) {
       verified: false,
     })
 
-    // Generate and send OTP
+    // Generate and send OTP - this must succeed for signup to complete
+    console.log(`[Signup] Generating OTP for employee: ${validated.email}`)
     try {
-      console.log(`[Signup] Generating OTP for employee: ${validated.email}`)
       await generateOTP(validated.email)
       console.log(`[Signup] OTP generated and sent successfully for employee: ${validated.email}`)
     } catch (otpError: any) {
-      console.error('[Signup] Error generating/sending OTP in signupEmployee:', otpError)
+      console.error('[Signup] CRITICAL: Error generating/sending OTP in signupEmployee:', otpError)
       console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
-      // User is already created, but OTP failed - still return success but log the error
-      // The user can request a new OTP later if needed
-      // Don't fail the entire signup if OTP sending fails
+      // If OTP fails, we should still allow signup but return a warning
+      // User can request a new OTP on the verify page
+      return { 
+        success: true, 
+        userId: user.id,
+        warning: 'Account created but verification email failed to send. Please use "Resend OTP" on the verification page.'
+      }
     }
 
     return { success: true, userId: user.id }
@@ -153,17 +157,21 @@ export async function signupEmployer(formData: FormData) {
     },
   } as any)
 
-  // Generate and send OTP
+  // Generate and send OTP - this must succeed for signup to complete
+  console.log(`[Signup] Generating OTP for employer: ${validated.email}`)
   try {
-    console.log(`[Signup] Generating OTP for employer: ${validated.email}`)
     await generateOTP(validated.email)
     console.log(`[Signup] OTP generated and sent successfully for employer: ${validated.email}`)
   } catch (otpError: any) {
-    console.error('[Signup] Error generating/sending OTP in signupEmployer:', otpError)
+    console.error('[Signup] CRITICAL: Error generating/sending OTP in signupEmployer:', otpError)
     console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
-    // User is already created, but OTP failed - still return success but log the error
-    // The user can request a new OTP later if needed
-    // Don't fail the entire signup if OTP sending fails
+    // If OTP fails, we should still allow signup but return a warning
+    // User can request a new OTP on the verify page
+    return { 
+      success: true, 
+      userId: user.id,
+      warning: 'Account created but verification email failed to send. Please use "Resend OTP" on the verification page.'
+    }
   }
 
   return { success: true, userId: user.id }
@@ -182,23 +190,30 @@ export async function signupEmployer(formData: FormData) {
 }
 
 export async function requestEmailOtp(formData: FormData) {
-  const email = formData.get('email') as string
+  try {
+    const email = formData.get('email') as string
 
-  if (!email || !z.string().email().safeParse(email).success) {
-    return { error: 'Invalid email' }
+    if (!email || !z.string().email().safeParse(email).success) {
+      return { error: 'Invalid email' }
+    }
+
+    // Check if user exists
+    const user = await prisma.users.findUnique({ email })
+
+    if (!user) {
+      return { error: 'User not found' }
+    }
+
+    // Generate OTP
+    console.log(`[requestEmailOtp] Generating OTP for: ${email}`)
+    await generateOTP(email)
+    console.log(`[requestEmailOtp] OTP generated and sent successfully for: ${email}`)
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('[requestEmailOtp] Error:', error)
+    return { error: `Failed to send OTP: ${error?.message || 'Unknown error'}` }
   }
-
-  // Check if user exists
-  const user = await prisma.users.findUnique({ email })
-
-  if (!user) {
-    return { error: 'User not found' }
-  }
-
-  // Generate OTP
-  await generateOTP(email)
-
-  return { success: true }
 }
 
 export async function verifyEmailOtp(formData: FormData) {
