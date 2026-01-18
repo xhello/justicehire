@@ -21,42 +21,55 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
 
   useEffect(() => {
     // Initialize image scale and frame position
-    if (imageRef.current && containerRef.current) {
+    const initializeCropper = () => {
+      if (!imageRef.current || !containerRef.current) return
+      
       const img = imageRef.current
       const container = containerRef.current
       
       const handleImageLoad = () => {
-        const containerRect = container.getBoundingClientRect()
-        const containerWidth = containerRect.width
-        const containerHeight = containerRect.height
-        
-        // Calculate scale to fit image in container (contain mode)
-        const imgWidth = img.naturalWidth
-        const imgHeight = img.naturalHeight
-        
-        const scaleX = containerWidth / imgWidth
-        const scaleY = containerHeight / imgHeight
-        const initialScale = Math.min(scaleX, scaleY) * 0.9 // Slightly smaller to show full image
-        
-        setImageScale(initialScale)
-        
-        // Set frame size to be a percentage of container (square)
-        const containerSize = Math.min(containerWidth, containerHeight)
-        frameSizeRef.current = containerSize * 0.7 // Frame is 70% of container
-        
-        // Center the frame initially
-        setFramePosition({
-          x: (containerWidth - frameSizeRef.current) / 2,
-          y: (containerHeight - frameSizeRef.current) / 2,
-        })
+        // Use setTimeout to ensure container has rendered
+        setTimeout(() => {
+          if (!containerRef.current || !imageRef.current) return
+          
+          const containerRect = container.getBoundingClientRect()
+          const containerWidth = containerRect.width
+          const containerHeight = containerRect.height
+          
+          // Calculate scale to fit image in container (contain mode)
+          const imgWidth = img.naturalWidth || img.width || 100
+          const imgHeight = img.naturalHeight || img.height || 100
+          
+          if (imgWidth > 0 && imgHeight > 0) {
+            const scaleX = containerWidth / imgWidth
+            const scaleY = containerHeight / imgHeight
+            const initialScale = Math.min(scaleX, scaleY) * 0.9 // Slightly smaller to show full image
+            
+            setImageScale(initialScale)
+            
+            // Set frame size to be a percentage of container (square)
+            const containerSize = Math.min(containerWidth, containerHeight)
+            frameSizeRef.current = containerSize * 0.7 // Frame is 70% of container
+            
+            // Center the frame initially
+            setFramePosition({
+              x: (containerWidth - frameSizeRef.current) / 2,
+              y: (containerHeight - frameSizeRef.current) / 2,
+            })
+          }
+        }, 100)
       }
       
-      if (img.complete) {
+      if (img.complete && img.naturalWidth > 0) {
         handleImageLoad()
       } else {
         img.onload = handleImageLoad
+        // Fallback in case onload doesn't fire
+        setTimeout(handleImageLoad, 500)
       }
     }
+    
+    initializeCropper()
   }, [imageSrc])
 
   const handleFrameMouseDown = (e: React.MouseEvent) => {
@@ -198,20 +211,34 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
             ref={imageRef}
             src={imageSrc}
             alt="Preview"
-            className="absolute select-none"
+            className="absolute select-none z-0"
             style={{
               left: '50%',
               top: '50%',
               transform: `translate(-50%, -50%) scale(${imageScale})`,
               transformOrigin: 'center center',
               maxWidth: 'none',
+              width: 'auto',
+              height: 'auto',
+              display: 'block',
             }}
             draggable={false}
+            onError={(e) => {
+              console.error('Image failed to load:', imageSrc)
+              const target = e.target as HTMLImageElement
+              target.style.display = 'none'
+            }}
+            onLoad={(e) => {
+              console.log('Image loaded successfully', {
+                naturalWidth: (e.target as HTMLImageElement).naturalWidth,
+                naturalHeight: (e.target as HTMLImageElement).naturalHeight,
+              })
+            }}
           />
           
           {/* Crop Frame Overlay - movable square frame */}
           <div
-            className="absolute border-4 border-blue-500 bg-blue-500 bg-opacity-20 cursor-move"
+            className="absolute border-4 border-blue-500 bg-blue-500 bg-opacity-20 cursor-move z-20"
             style={{
               left: `${framePosition.x}px`,
               top: `${framePosition.y}px`,
@@ -228,7 +255,7 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
           </div>
           
           {/* Dark overlay outside frame - using 4 rectangles for better performance */}
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-10">
             {/* Top overlay */}
             <div
               className="absolute bg-black bg-opacity-50"
