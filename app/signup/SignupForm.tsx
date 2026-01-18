@@ -76,7 +76,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           result = await signupEmployer(formData)
         }
 
-        if (result && 'error' in result) {
+        if (result?.error) {
           setError(result.error)
           setLoading(false)
         } else {

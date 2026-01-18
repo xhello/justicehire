@@ -32,17 +32,17 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
     
     if (result.error) {
       console.error('[OTP] Resend API error:', result.error)
-      throw new Error(`Failed to send email: ${JSON.stringify(result.error)}`)
+      throw new Error(`Failed to send OTP email: ${JSON.stringify(result.error)}`)
     }
     
     console.log(`[OTP] Email sent successfully to ${email}, ID: ${result.data?.id || 'unknown'}`)
   } catch (error: any) {
-    console.error('[OTP] Failed to send email:', error)
+    console.error('[OTP] Failed to send email to', email, ':', error)
     console.error('[OTP] Error details:', error?.message, error?.stack)
     // Fallback: log to console if email sending fails
     console.log(`[OTP] FALLBACK - Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
-    // Re-throw so caller knows email failed
-    throw error
+    // Re-throw the error so calling code knows it failed
+    throw new Error(`Failed to send OTP email: ${error?.message || 'Unknown error'}`)
   }
 }
 
@@ -74,7 +74,7 @@ export async function generateOTP(email: string): Promise<string> {
     
     return otp
   } catch (error: any) {
-    console.error(`[OTP] Error generating OTP for ${email}:`, error)
+    console.error(`[OTP] Error in generateOTP for ${email}:`, error)
     throw error
   }
 }
