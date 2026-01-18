@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 
 const createBusinessReviewSchema = z.object({
   businessId: z.string(),
@@ -13,11 +14,14 @@ const createBusinessReviewSchema = z.object({
   message: z.string().optional(),
 })
 
-export async function createBusinessReview(formData: FormData): Promise<void> {
+export async function createBusinessReview(
+  prevState: any,
+  formData: FormData
+): Promise<{ success: boolean; isUpdate: boolean; message: string } | { error: string }> {
   const user = await getCurrentUser()
 
   if (!user || !user.verified) {
-    return
+    return { error: 'You must be logged in and verified to leave a review.' }
   }
 
   const data = {
@@ -32,14 +36,14 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
   try {
     validated = createBusinessReviewSchema.parse(data)
   } catch {
-    return
+    return { error: 'Invalid form data. Please check your inputs.' }
   }
 
   // Check if business exists
   const business = await prisma.businesses.findUnique({ id: validated.businessId })
 
   if (!business) {
-    return
+    return { error: 'Business not found.' }
   }
 
   // Check for existing review
@@ -119,6 +123,15 @@ export async function createBusinessReview(formData: FormData): Promise<void> {
   }
 
   revalidatePath(`/business/${validated.businessId}`)
+
+  // Return success state instead of redirecting
+  return {
+    success: true,
+    isUpdate: !!existingReview,
+    message: existingReview 
+      ? 'Business review updated successfully!'
+      : 'Business review submitted successfully!'
+  }
 }
 
 export async function getBusinessReviews(businessId: string) {

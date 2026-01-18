@@ -93,25 +93,25 @@ export async function getUniqueCities(state?: string) {
 
 export async function getCitiesByState() {
   try {
-    const allBusinesses = await prisma.businesses.findMany({})
-    
-    const citiesByState: Record<string, string[]> = {}
-    
-    allBusinesses.forEach((business: any) => {
-      if (!citiesByState[business.state]) {
-        citiesByState[business.state] = []
-      }
-      if (!citiesByState[business.state].includes(business.city)) {
-        citiesByState[business.state].push(business.city)
-      }
-    })
-    
-    // Sort cities in each state
-    Object.keys(citiesByState).forEach((state: string) => {
-      citiesByState[state].sort()
-    })
-    
-    return citiesByState
+  const allBusinesses = await prisma.businesses.findMany({})
+  
+  const citiesByState: Record<string, string[]> = {}
+  
+  allBusinesses.forEach((business: any) => {
+    if (!citiesByState[business.state]) {
+      citiesByState[business.state] = []
+    }
+    if (!citiesByState[business.state].includes(business.city)) {
+      citiesByState[business.state].push(business.city)
+    }
+  })
+  
+  // Sort cities in each state
+  Object.keys(citiesByState).forEach((state: string) => {
+    citiesByState[state].sort()
+  })
+  
+  return citiesByState
   } catch (err) {
     console.error('Error in getCitiesByState:', err)
     return {}
@@ -131,11 +131,11 @@ export async function getBusinessDetails(businessId: string) {
   // Get all employer profiles for this business
   let employerProfiles: any[] = []
   try {
-    const { supabaseAdmin } = await import('@/lib/supabase')
+  const { supabaseAdmin } = await import('@/lib/supabase')
     const { data } = await supabaseAdmin
-      .from('EmployerProfile')
-      .select('userId, businessId')
-      .eq('businessId', businessId)
+    .from('EmployerProfile')
+    .select('userId, businessId')
+    .eq('businessId', businessId)
     employerProfiles = data || []
   } catch (err) {
     console.error('Error fetching employer profiles:', err)

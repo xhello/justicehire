@@ -11,26 +11,44 @@ const createReviewSchema = z.object({
   targetType: z.enum(['EMPLOYEE', 'EMPLOYER']),
   businessId: z.string(),
   rating: z.enum(['OUTSTANDING', 'DELIVERED_AS_EXPECTED', 'GOT_NOTHING_NICE_TO_SAY']),
+  message: z.string().max(1000).optional().or(z.literal('')),
 })
 
-export async function createReview(formData: FormData): Promise<void> {
+export async function createReview(
+  prevState: any,
+  formData?: FormData
+): Promise<{ success: boolean; isUpdate: boolean; message: string } | { error: string } | void> {
+  // Handle both useFormState (prevState, formData) and direct server action (formData only)
+  // If formData is undefined, prevState is actually the FormData from direct server action call
+  const isUseFormState = formData !== undefined
+  const actualFormData = isUseFormState ? formData! : (prevState as FormData)
+  
   const user = await getCurrentUser()
 
   if (!user || !user.verified) {
+    // If used with useFormState, return error object; otherwise return void (old behavior)
+    if (isUseFormState) {
+      return { error: 'You must be logged in and verified to leave a review.' }
+    }
     return
   }
 
   const data = {
-    targetUserId: formData.get('targetUserId') as string,
-    targetType: formData.get('targetType') as 'EMPLOYEE' | 'EMPLOYER',
-    businessId: formData.get('businessId') as string,
-    rating: formData.get('rating') as string,
+    targetUserId: actualFormData.get('targetUserId') as string,
+    targetType: actualFormData.get('targetType') as 'EMPLOYEE' | 'EMPLOYER',
+    businessId: actualFormData.get('businessId') as string,
+    rating: actualFormData.get('rating') as string,
+    message: (actualFormData.get('message') as string) || undefined,
+    returnToBusiness: actualFormData.get('returnToBusiness') === 'true',
   }
 
   let validated
   try {
     validated = createReviewSchema.parse(data)
   } catch {
+    if (isUseFormState) {
+      return { error: 'Invalid form data. Please check your inputs.' }
+    }
     return
   }
 
@@ -38,6 +56,9 @@ export async function createReview(formData: FormData): Promise<void> {
   const targetUser = await prisma.users.findUnique({ id: validated.targetUserId })
 
   if (!targetUser) {
+    if (isUseFormState) {
+      return { error: 'Target user not found.' }
+    }
     return
   }
 
@@ -45,11 +66,17 @@ export async function createReview(formData: FormData): Promise<void> {
   const business = await prisma.businesses.findUnique({ id: validated.businessId })
 
   if (!business) {
+    if (isUseFormState) {
+      return { error: 'Business not found.' }
+    }
     return
   }
 
   // Prevent self-review
   if (user.id === validated.targetUserId) {
+    if (isUseFormState) {
+      return { error: 'You cannot review yourself.' }
+    }
     return
   }
 
@@ -60,6 +87,8 @@ export async function createReview(formData: FormData): Promise<void> {
     businessId: validated.businessId,
   })
 
+  const isUpdate = !!existingReview
+
   if (existingReview) {
     // Update existing review - try by ID first, fallback to combination
     try {
@@ -68,6 +97,7 @@ export async function createReview(formData: FormData): Promise<void> {
           where: { id: existingReview.id },
           data: {
             rating: validated.rating,
+            message: validated.message || null,
           },
         })
       } else {
@@ -80,6 +110,7 @@ export async function createReview(formData: FormData): Promise<void> {
           },
           data: {
             rating: validated.rating,
+            message: validated.message || null,
           },
         })
       }
@@ -96,6 +127,7 @@ export async function createReview(formData: FormData): Promise<void> {
         targetType: validated.targetType,
         businessId: validated.businessId,
         rating: validated.rating,
+        message: validated.message || null,
       })
     }
   } else {
@@ -106,6 +138,7 @@ export async function createReview(formData: FormData): Promise<void> {
       targetType: validated.targetType,
       businessId: validated.businessId,
       rating: validated.rating,
+      message: validated.message || null,
     })
   }
 
@@ -114,6 +147,28 @@ export async function createReview(formData: FormData): Promise<void> {
   revalidatePath(`/business/${validated.businessId}`)
   revalidatePath(`/employee/${validated.targetUserId}`)
   revalidatePath(`/employer/${validated.targetUserId}`)
+
+  // Return success state instead of redirecting if returnToBusiness is true
+  if (data.returnToBusiness) {
+    return {
+      success: true,
+      isUpdate,
+      message: isUpdate 
+        ? 'Review updated successfully!'
+        : 'Review submitted successfully!'
+    }
+  }
+
+  // Redirect with success message (for reviews from profile pages)
+  const successMessage = isUpdate 
+    ? encodeURIComponent('Review updated successfully!')
+    : encodeURIComponent('Review submitted successfully!')
+  
+  if (validated.targetType === 'EMPLOYEE') {
+    redirect(`/employee/${validated.targetUserId}?success=${successMessage}`)
+  } else {
+    redirect(`/employer/${validated.targetUserId}?success=${successMessage}`)
+  }
 }
 
 export async function getAggregatedRatings(userId: string) {

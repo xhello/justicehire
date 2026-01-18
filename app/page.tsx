@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { getCitiesByState } from './actions/business'
 import { searchResults } from './actions/search'
 import { getCurrentUser } from '@/lib/auth'
 import BusinessFilters from './business/BusinessFilters'
 import BusinessImage from './business/BusinessImage'
+import SuccessBanner from '@/components/SuccessBanner'
 
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic'
@@ -44,6 +46,9 @@ export default async function Home({
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Suspense fallback={null}>
+        <SuccessBanner />
+      </Suspense>
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -54,34 +59,21 @@ export default async function Home({
               {user ? (
                 <Link
                   href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
                 >
-                  {user.photoUrl ? (
-                    <img
-                      src={user.photoUrl}
-                      alt={`${user.firstName} ${user.lastName}`}
-                      className="w-8 h-8 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-500 text-xs">
-                        {user.firstName[0]}{user.lastName[0]}
-                      </span>
-                    </div>
-                  )}
                   Dashboard
                 </Link>
               ) : (
                 <>
                   <Link
                     href="/signup"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
                   >
                     Sign Up
                   </Link>
                   <Link
                     href="/login"
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700"
                   >
                     Log In
                   </Link>
@@ -91,6 +83,10 @@ export default async function Home({
           </div>
         </div>
       </nav>
+
+      <Suspense fallback={null}>
+        <SuccessBanner />
+      </Suspense>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">

@@ -8,9 +8,9 @@ export async function searchResults(filters: {
   category?: string
 }) {
   try {
-    const category = filters.category?.toLowerCase()
+  const category = filters.category?.toLowerCase()
 
-    if (category === 'business') {
+  if (category === 'business') {
     // Fetch businesses
     const where: any = {}
     if (filters.state) where.state = filters.state
@@ -78,10 +78,10 @@ export async function searchResults(filters: {
     // Get all employer profiles to map business IDs
     let employerProfiles: any[] = []
     try {
-      const { supabaseAdmin } = await import('@/lib/supabase')
+    const { supabaseAdmin } = await import('@/lib/supabase')
       const { data } = await supabaseAdmin
-        .from('EmployerProfile')
-        .select('userId, businessId')
+      .from('EmployerProfile')
+      .select('userId, businessId')
       employerProfiles = data || []
     } catch (err) {
       console.error('Error fetching employer profiles:', err)

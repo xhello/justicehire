@@ -28,7 +28,7 @@ export default async function EmployerDashboard() {
   const allBusinesses = await prisma.businesses.findMany({})
   const allUsers = await prisma.users.findMany({})
   
-  // Enrich reviews with business and target user information
+  // Enrich reviews given with business and target user information
   const reviewsWithDetails = employerReviews.map((review: any) => {
     const business = allBusinesses.find((b: any) => b.id === review.businessId)
     const targetUser = review.targetUserId 
@@ -37,8 +37,22 @@ export default async function EmployerDashboard() {
     
     return {
       ...review,
-      business,
-      targetUser,
+      business: business
+        ? {
+            id: business.id,
+            name: business.name,
+            photoUrl: business.photoUrl,
+          }
+        : null,
+      targetUser: targetUser
+        ? {
+            id: targetUser.id,
+            firstName: targetUser.firstName,
+            lastName: targetUser.lastName,
+            role: targetUser.role,
+            photoUrl: targetUser.photoUrl,
+          }
+        : null,
     }
   })
   
@@ -54,24 +68,49 @@ export default async function EmployerDashboard() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700">
                 Justice Hire
               </Link>
+              <Link
+                href="/"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+              >
+                Explore
+              </Link>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-700">
+              <Link 
+                href={`/employer/${user.id}`}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+              >
+                {user.photoUrl ? (
+                  <img
+                    src={user.photoUrl}
+                    alt={`${user.firstName} ${user.lastName}`}
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs">
+                      {user.firstName[0]}{user.lastName[0]}
+                    </span>
+                  </div>
+                )}
                 {user.firstName} {user.lastName}
-              </span>
+              </Link>
               {user.employerProfile && (
-                <span className="text-sm text-gray-700">
+                <Link 
+                  href={`/business/${user.employerProfile.business.id}`}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+                >
                   {user.employerProfile.business.name}
-                </span>
+                </Link>
               )}
               <form action={logout}>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
                 >
                   Logout
                 </button>
@@ -88,7 +127,12 @@ export default async function EmployerDashboard() {
           <h3 className="text-xl font-semibold mb-4">Your Business</h3>
           {user.employerProfile ? (
             <div>
-              <p className="text-lg font-medium">{user.employerProfile.business.name}</p>
+              <Link 
+                href={`/business/${user.employerProfile.business.id}`}
+                className="text-lg font-medium text-blue-600 hover:text-blue-700"
+              >
+                {user.employerProfile.business.name}
+              </Link>
               <p className="text-sm text-gray-700">
                 {user.employerProfile.business.address}
               </p>
@@ -101,9 +145,8 @@ export default async function EmployerDashboard() {
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h3 className="text-xl font-semibold mb-4">Your Reviews</h3>
-          
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-xl font-semibold mb-4">Reviews Given</h3>
           {reviewsWithDetails.length === 0 ? (
             <p className="text-gray-700">You haven't left any reviews yet.</p>
           ) : (
@@ -126,9 +169,9 @@ function ReviewCard({ review }: { review: any }) {
       case 'OUTSTANDING':
         return <span className="text-green-600 font-medium">Outstanding</span>
       case 'DELIVERED_AS_EXPECTED':
-        return <span className="text-yellow-600 font-medium">As Expected</span>
+        return <span className="text-yellow-600 font-medium">No issue</span>
       case 'GOT_NOTHING_NICE_TO_SAY':
-        return <span className="text-red-600 font-medium">nothing nice to say</span>
+        return <span className="text-red-600 font-medium">Nothing nice to say</span>
       default:
         return null
     }
@@ -159,22 +202,59 @@ function ReviewCard({ review }: { review: any }) {
   return (
     <div className="border rounded-lg p-4">
       <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <Link 
-            href={getTargetLink()}
-            className="text-lg font-semibold text-blue-600 hover:text-blue-700"
-          >
-            {getTargetName()}
-          </Link>
-          {review.business && review.targetType !== 'BUSINESS' && (
-            <p className="text-sm text-gray-600 mt-1">
-              at <Link href={`/business/${review.businessId}`} className="text-blue-600 hover:text-blue-700">
-                {review.business.name}
+        <div className="flex items-center gap-3 flex-1">
+          {/* Photo - Business or Profile */}
+          {review.targetType === 'BUSINESS' && review.business ? (
+            <Link href={getTargetLink()} className="flex-shrink-0">
+              {review.business.photoUrl ? (
+                <img
+                  src={review.business.photoUrl}
+                  alt={review.business.name}
+                  className="w-12 h-12 rounded-lg object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors cursor-pointer">
+                  <span className="text-gray-400 text-lg">🏢</span>
+                </div>
+              )}
+            </Link>
+          ) : review.targetUser ? (
+            <Link href={getTargetLink()} className="flex-shrink-0">
+              {review.targetUser.photoUrl ? (
+                <img
+                  src={review.targetUser.photoUrl}
+                  alt={`${review.targetUser.firstName} ${review.targetUser.lastName}`}
+                  className="w-12 h-12 rounded-lg object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors cursor-pointer">
+                  <span className="text-gray-500 text-sm">
+                    {review.targetUser.firstName[0]}{review.targetUser.lastName[0]}
+                  </span>
+                </div>
+              )}
+            </Link>
+          ) : null}
+          
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900">
+              Review for: <Link 
+                href={getTargetLink()}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                {getTargetName()}
               </Link>
             </p>
-          )}
+            {review.business && review.targetType !== 'BUSINESS' && (
+              <p className="text-sm text-gray-600 mt-1">
+                at <Link href={`/business/${review.businessId}`} className="text-blue-600 hover:text-blue-700">
+                  {review.business.name}
+                </Link>
+              </p>
+            )}
+          </div>
         </div>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-500 ml-4">
           {new Date(review.createdAt).toLocaleDateString()}
         </span>
       </div>

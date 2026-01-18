@@ -1,0 +1,232 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+
+interface ImageCropperProps {
+  imageSrc: string
+  onCrop: (croppedImage: string) => void
+  onCancel: () => void
+  aspectRatio?: number // width/height ratio (1 for square, etc.)
+}
+
+export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio = 1 }: ImageCropperProps) {
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [scale, setScale] = useState(1)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    // Center the image initially
+    if (imageRef.current && containerRef.current) {
+      const img = imageRef.current
+      const container = containerRef.current
+      
+      // Wait for image to load
+      img.onload = () => {
+        const containerWidth = container.clientWidth
+        const containerHeight = container.clientHeight
+        
+        // Calculate initial position to center
+        const imgWidth = img.naturalWidth
+        const imgHeight = img.naturalHeight
+        
+        // Calculate scale to fit container while maintaining aspect ratio
+        const scaleX = containerWidth / imgWidth
+        const scaleY = containerHeight / imgHeight
+        const initialScale = Math.max(scaleX, scaleY) * 1.2 // Start slightly zoomed in
+        setScale(initialScale)
+        
+        // Center position
+        setPosition({
+          x: (containerWidth - imgWidth * initialScale) / 2,
+          y: (containerHeight - imgHeight * initialScale) / 2,
+        })
+      }
+    }
+  }, [imageSrc])
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !containerRef.current || !imageRef.current) return
+    
+    const newX = e.clientX - dragStart.x
+    const newY = e.clientY - dragStart.y
+    
+    const container = containerRef.current
+    const img = imageRef.current
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
+    const imgWidth = img.naturalWidth * scale
+    const imgHeight = img.naturalHeight * scale
+    
+    // Constrain movement within bounds
+    const maxX = 0
+    const minX = containerWidth - imgWidth
+    const maxY = 0
+    const minY = containerHeight - imgHeight
+    
+    setPosition({
+      x: Math.max(minX, Math.min(maxX, newX)),
+      y: Math.max(minY, Math.min(maxY, newY)),
+    })
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    if (!containerRef.current || !imageRef.current) return
+    
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    const newScale = Math.max(0.5, Math.min(3, scale * delta))
+    setScale(newScale)
+    
+    // Adjust position to keep image centered on mouse position
+    const rect = containerRef.current.getBoundingClientRect()
+    const mouseX = e.clientX - rect.left
+    const mouseY = e.clientY - rect.top
+    
+    const img = imageRef.current
+    const imgWidth = img.naturalWidth * newScale
+    const imgHeight = img.naturalHeight * newScale
+    
+    setPosition({
+      x: mouseX - (mouseX - position.x) * (newScale / scale),
+      y: mouseY - (mouseY - position.y) * (newScale / scale),
+    })
+  }
+
+  const handleCrop = () => {
+    if (!imageRef.current || !containerRef.current) return
+    
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    const container = containerRef.current
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
+    
+    // Set canvas size to match crop area
+    canvas.width = containerWidth
+    canvas.height = containerHeight
+    
+    const img = imageRef.current
+    const imgWidth = img.naturalWidth
+    const imgHeight = img.naturalHeight
+    
+    // Draw the cropped portion of the image
+    ctx.drawImage(
+      img,
+      -position.x / scale,
+      -position.y / scale,
+      imgWidth,
+      imgHeight,
+      0,
+      0,
+      containerWidth,
+      containerHeight
+    )
+    
+    // Convert to base64
+    const croppedImage = canvas.toDataURL('image/jpeg', 0.9)
+    onCrop(croppedImage)
+  }
+
+  const centerImage = () => {
+    if (!containerRef.current || !imageRef.current) return
+    
+    const container = containerRef.current
+    const img = imageRef.current
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
+    const imgWidth = img.naturalWidth * scale
+    const imgHeight = img.naturalHeight * scale
+    
+    setPosition({
+      x: (containerWidth - imgWidth) / 2,
+      y: (containerHeight - imgHeight) / 2,
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+        <h3 className="text-lg font-semibold mb-4">Adjust Your Photo</h3>
+        
+        <div
+          ref={containerRef}
+          className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden cursor-move border-2 border-gray-300"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onWheel={handleWheel}
+        >
+          <img
+            ref={imageRef}
+            src={imageSrc}
+            alt="Preview"
+            className="absolute select-none"
+            style={{
+              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              transformOrigin: '0 0',
+            }}
+            draggable={false}
+          />
+        </div>
+        
+        <div className="mt-4 space-y-2">
+          <p className="text-sm text-gray-600">
+            Drag to reposition • Scroll to zoom • Use buttons to adjust zoom
+          </p>
+          
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setScale(Math.max(0.5, scale - 0.1))}
+              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+            >
+              Zoom Out
+            </button>
+            <button
+              type="button"
+              onClick={() => setScale(Math.min(3, scale + 0.1))}
+              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+            >
+              Zoom In
+            </button>
+          </div>
+          
+          <div className="flex gap-2 mt-4">
+            <button
+              type="button"
+              onClick={handleCrop}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+            >
+              Use This Photo
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

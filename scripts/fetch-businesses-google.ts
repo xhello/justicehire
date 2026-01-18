@@ -6,21 +6,31 @@ import { resolve } from 'path'
 import { readFileSync } from 'fs'
 import { createClient } from '@supabase/supabase-js'
 
-// Manually load .env.local
-const envPath = resolve(process.cwd(), '.env.local')
-const envFile = readFileSync(envPath, 'utf-8')
-envFile.split('\n').forEach(line => {
-  const [key, ...valueParts] = line.split('=')
-  if (key && valueParts.length > 0) {
-    const value = valueParts.join('=').trim()
-    if (value && !key.startsWith('#')) {
-      process.env[key.trim()] = value.replace(/^["']|["']$/g, '')
-    }
+// Manually load .env.local or .env
+try {
+  let envPath = resolve(process.cwd(), '.env.local')
+  try {
+    readFileSync(envPath, 'utf-8')
+  } catch {
+    envPath = resolve(process.cwd(), '.env')
   }
-})
+  const envFile = readFileSync(envPath, 'utf-8')
+  envFile.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=')
+    if (key && valueParts.length > 0) {
+      const value = valueParts.join('=').trim()
+      if (value && !key.startsWith('#')) {
+        process.env[key.trim()] = value.replace(/^["']|["']$/g, '')
+      }
+    }
+  })
+} catch (error) {
+  console.log('No .env.local or .env file found, using environment variables')
+}
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Create Supabase admin client directly (with hardcoded fallbacks)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hrynlmbegmdvmeeuhpdc.supabase.co'
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_r87zjoGJmDU5UFIVr853dQ_HGfQpAIY'
 const googleApiKey = process.env.GOOGLE_PLACES_API_KEY
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -28,7 +38,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 if (!googleApiKey) {
-  throw new Error('Missing GOOGLE_PLACES_API_KEY in .env.local')
+  throw new Error('Missing GOOGLE_PLACES_API_KEY in .env.local or environment variables')
 }
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -98,10 +108,14 @@ async function main() {
   const searches = [
     { query: 'restaurant Crescent City California', state: 'CA', city: 'Crescent City' },
     { query: 'hotel Crescent City California', state: 'CA', city: 'Crescent City' },
+    { query: 'lodging Crescent City California', state: 'CA', city: 'Crescent City' },
+    { query: 'cafe Crescent City California', state: 'CA', city: 'Crescent City' },
+    { query: 'bar Crescent City California', state: 'CA', city: 'Crescent City' },
     { query: 'restaurant Brookings Oregon', state: 'OR', city: 'Brookings' },
     { query: 'hotel Brookings Oregon', state: 'OR', city: 'Brookings' },
-    { query: 'restaurant Eureka California', state: 'CA', city: 'Eureka' },
-    { query: 'brewery Eureka California', state: 'CA', city: 'Eureka' },
+    { query: 'lodging Brookings Oregon', state: 'OR', city: 'Brookings' },
+    { query: 'cafe Brookings Oregon', state: 'OR', city: 'Brookings' },
+    { query: 'bar Brookings Oregon', state: 'OR', city: 'Brookings' },
   ]
 
   const businesses = new Map<string, any>()

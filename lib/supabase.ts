@@ -25,11 +25,11 @@ function getSupabaseAdminClient(): SupabaseClient {
   if (!supabaseAdminClient) {
     try {
       supabaseAdminClient = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+})
     } catch (err) {
       console.error('Error creating Supabase admin client:', err)
       // Return a dummy client that will fail gracefully

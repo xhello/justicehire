@@ -11,7 +11,9 @@
     "db:seed-dummy": "tsx scripts/seed-dummy-data.ts",
     "db:seed-businesses": "tsx scripts/seed-more-businesses.ts",
     "db:fetch-google": "tsx scripts/fetch-businesses-google.ts",
-    "db:update-photos": "tsx scripts/update-business-photos.ts"
+    "db:update-photos": "tsx scripts/update-business-photos.ts",
+    "db:restore-businesses": "tsx scripts/restore-original-businesses.ts",
+    "db:clear-users": "tsx scripts/clear-user-data.ts"
   },
   "dependencies": {
     "@prisma/client": "^7.2.0",
