@@ -341,7 +341,7 @@ export async function forgotPassword(formData: FormData) {
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
     
     await resend.emails.send({
-      from: 'onboarding@resend.dev',
+      from: 'onboarding@justicehire.com',
       to: email,
       subject: 'Reset Your Justice Hire Password',
       html: `

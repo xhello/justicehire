@@ -8,7 +8,7 @@ const OTP_EXPIRY_MINUTES = 10
 async function sendOTPEmail(email: string, otp: string): Promise<void> {
   // Hardcoded Resend API key and email
   const resendApiKey = 're_9yQ4yVuX_MT1MTmhBbSsB2m6soEBmVxXQ'
-  const fromEmail = 'onboarding@resend.dev'
+  const fromEmail = 'onboarding@justicehire.com'
 
   try {
     const resend = new Resend(resendApiKey)
