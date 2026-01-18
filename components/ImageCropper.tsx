@@ -18,24 +18,31 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
   const imageRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
-    // Center the image initially
+    // Center the image initially - ensure square container
     if (imageRef.current && containerRef.current) {
       const img = imageRef.current
       const container = containerRef.current
       
       // Wait for image to load
       img.onload = () => {
-        const containerWidth = container.clientWidth
-        const containerHeight = container.clientHeight
+        // Ensure container is square
+        const containerSize = Math.min(container.clientWidth, container.clientHeight)
+        container.style.width = `${containerSize}px`
+        container.style.height = `${containerSize}px`
+        
+        const containerWidth = containerSize
+        const containerHeight = containerSize
         
         // Calculate initial position to center
         const imgWidth = img.naturalWidth
         const imgHeight = img.naturalHeight
         
-        // Calculate scale to fit container while maintaining aspect ratio
+        // Calculate scale to fill the square container (cover mode)
+        // Use the larger scale to ensure the image covers the entire square
         const scaleX = containerWidth / imgWidth
         const scaleY = containerHeight / imgHeight
-        const initialScale = Math.max(scaleX, scaleY) * 1.2 // Start slightly zoomed in
+        const initialScale = Math.max(scaleX, scaleY) * 1.1 // Start slightly zoomed in to ensure coverage
+        
         setScale(initialScale)
         
         // Center position
@@ -115,28 +122,33 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     if (!ctx) return
     
     const container = containerRef.current
-    const containerWidth = container.clientWidth
-    const containerHeight = container.clientHeight
+    // Ensure square crop area
+    const containerSize = Math.min(container.clientWidth, container.clientHeight)
     
-    // Set canvas size to match crop area
-    canvas.width = containerWidth
-    canvas.height = containerHeight
+    // Set canvas size to square (1:1 aspect ratio)
+    canvas.width = containerSize
+    canvas.height = containerSize
     
     const img = imageRef.current
     const imgWidth = img.naturalWidth
     const imgHeight = img.naturalHeight
     
-    // Draw the cropped portion of the image
+    // Calculate source coordinates for square crop
+    const sourceX = -position.x / scale
+    const sourceY = -position.y / scale
+    const sourceSize = containerSize / scale
+    
+    // Draw the cropped square portion of the image
     ctx.drawImage(
       img,
-      -position.x / scale,
-      -position.y / scale,
-      imgWidth,
-      imgHeight,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
       0,
       0,
-      containerWidth,
-      containerHeight
+      containerSize,
+      containerSize
     )
     
     // Convert to base64
@@ -148,15 +160,16 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     if (!containerRef.current || !imageRef.current) return
     
     const container = containerRef.current
+    // Ensure we're working with square dimensions
+    const containerSize = Math.min(container.clientWidth, container.clientHeight)
     const img = imageRef.current
-    const containerWidth = container.clientWidth
-    const containerHeight = container.clientHeight
     const imgWidth = img.naturalWidth * scale
     const imgHeight = img.naturalHeight * scale
     
+    // Center the image in the square container
     setPosition({
-      x: (containerWidth - imgWidth) / 2,
-      y: (containerHeight - imgHeight) / 2,
+      x: (containerSize - imgWidth) / 2,
+      y: (containerSize - imgHeight) / 2,
     })
   }
 
@@ -167,7 +180,7 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
         
         <div
           ref={containerRef}
-          className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden cursor-move border-2 border-gray-300"
+          className="relative w-full aspect-square max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden cursor-move border-2 border-gray-300"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -188,8 +201,8 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
         </div>
         
         <div className="mt-4 space-y-2">
-          <p className="text-sm text-gray-600">
-            Drag to reposition • Scroll to zoom • Use buttons to adjust zoom
+          <p className="text-sm text-gray-600 text-center">
+            Drag to reposition • Scroll to zoom • Crop area is square (1:1)
           </p>
           
           <div className="flex gap-2">
@@ -199,6 +212,13 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
               className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm font-medium"
             >
               Zoom Out
+            </button>
+            <button
+              type="button"
+              onClick={centerImage}
+              className="flex-1 px-4 py-2 bg-blue-200 text-blue-700 rounded-md hover:bg-blue-300 text-sm font-medium"
+            >
+              Center
             </button>
             <button
               type="button"
