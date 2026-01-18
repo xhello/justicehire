@@ -126,14 +126,25 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           result = await signupEmployer(formData)
         }
 
-        if (result && 'error' in result) {
+        if (result?.error) {
           setError(result.error)
           setLoading(false)
-        } else if (result && 'success' in result && result.success && 'redirect' in result) {
-          // Redirect to dashboard on success
-          router.push(result.redirect)
         }
-      } catch (err) {
+        // If successful, signup action will redirect to dashboard
+      } catch (err: any) {
+        // NEXT_REDIRECT is a special error thrown by Next.js redirect() function
+        // We should ignore it as it's the expected behavior for redirects
+        // The error can have different structures, so check multiple properties
+        const isRedirectError = 
+          err?.digest?.startsWith('NEXT_REDIRECT') ||
+          err?.message?.includes('NEXT_REDIRECT') ||
+          err?.digest?.includes('redirect') ||
+          (err?.name === 'NEXT_REDIRECT')
+        
+        if (isRedirectError) {
+          // Redirect is happening, don't show error - let Next.js handle the redirect
+          return
+        }
         console.error('Signup error:', err)
         setError('An error occurred. Please try again. If the issue persists, try using a smaller photo.')
         setLoading(false)

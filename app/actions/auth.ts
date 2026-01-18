@@ -143,11 +143,9 @@ export async function signupEmployer(formData: FormData) {
       },
     } as any)
 
-    // Create session
+    // Create session and redirect to dashboard
     await createSession(user.id)
-    
-    // Return success with redirect path for client-side navigation
-    return { success: true, redirect: '/dashboard/employer' }
+    redirect('/dashboard/employer')
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
     // Check if it's a table not found error
