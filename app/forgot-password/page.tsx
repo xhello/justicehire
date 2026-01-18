@@ -21,7 +21,7 @@ function ForgotPasswordForm() {
     }
     
     if (noPassword === 'true') {
-      setError('Your account was created before password authentication was added. Please set a password using the reset link we\'ll send to your email.')
+      setError('Your account does not have a password set. Please set a password using the reset link we\'ll send to your email.')
     }
   }, [searchParams])
 
