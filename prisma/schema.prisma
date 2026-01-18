@@ -47,6 +47,7 @@ model User {
   firstName     String
   lastName      String
   email         String          @unique
+  password      String?         // Hashed password
   socialUrl     String?         // instagramOrFacebookUrl for employees
   photoUrl      String?
   state         String?         // CA or OR for employers
@@ -127,5 +128,17 @@ model Otp {
   createdAt DateTime @default(now())
   
   @@index([email])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
   @@index([expiresAt])
 }

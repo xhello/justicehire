@@ -99,6 +99,27 @@ export default function LoginPage() {
           </div>
 
           <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                Forgot your password?
+              </Link>
+            </div>
+          </div>
+
+          <div>
             <button
               type="submit"
               disabled={loading}

@@ -210,6 +210,22 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
               />
             </div>
 
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                minLength={8}
+                placeholder="At least 8 characters"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">Password must be at least 8 characters</p>
+            </div>
+
             {role === 'EMPLOYEE' && (
               <div>
                 <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
