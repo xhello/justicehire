@@ -150,14 +150,14 @@ model PendingSignup {
   firstName     String
   lastName      String
   password      String   // Hashed password
-  socialUrl     String?  // Phone number for employees
+  socialUrl     String?  // phoneNumber for employees
   photoUrl      String?
   state         String?  // For employers
   city          String?  // For employers
   position      String?  // For employers
   businessId    String?  // For employers
-  expiresAt     DateTime
   createdAt     DateTime @default(now())
+  expiresAt     DateTime // Auto-expire after 24 hours
   
   @@index([email])
   @@index([expiresAt])

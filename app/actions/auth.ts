@@ -38,93 +38,69 @@ const signupEmployerSchema = z.object({
 })
 
 export async function signupEmployee(formData: FormData) {
-  try {
-    const data = {
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
-      email: formData.get('email') as string,
-      password: formData.get('password') as string,
-      confirmPassword: formData.get('confirmPassword') as string,
-      phoneNumber: formData.get('phoneNumber') as string,
-      photoUrl: formData.get('photoUrl') as string,
-    }
-
-    const validated = signupEmployeeSchema.parse(data)
-
-    // Check if user already exists
-    const existing = await prisma.users.findUnique({ email: validated.email })
-
-    if (existing) {
-      return { error: 'Email already registered' }
-    }
-
-    // Check if there's already a pending signup for this email
-    const existingPending = await prisma.pendingSignups.findUnique({ email: validated.email })
-    if (existingPending) {
-      // Delete old pending signup
-      await prisma.pendingSignups.delete({ email: validated.email })
-    }
-
-    // Hash password
-    const hashedPassword = await hashPassword(validated.password)
-
-    // Store signup data in PendingSignup (expires in 1 hour)
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
-    await prisma.pendingSignups.create({
-      email: validated.email,
-      role: 'EMPLOYEE',
-      firstName: validated.firstName,
-      lastName: validated.lastName,
-      password: hashedPassword,
-      socialUrl: validated.phoneNumber,
-      photoUrl: validated.photoUrl,
-      expiresAt: expiresAt.toISOString(),
-    })
-
-    // Generate and send OTP
-    try {
-      console.log(`[Signup] Generating OTP for employee: ${validated.email}`)
-      await generateOTP(validated.email)
-      console.log(`[Signup] OTP generated and sent successfully for employee: ${validated.email}`)
-    } catch (otpError: any) {
-      console.error('[Signup] Error generating/sending OTP in signupEmployee:', otpError)
-      console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
-      // Clean up pending signup if OTP fails
-      await prisma.pendingSignups.delete({ email: validated.email }).catch(() => {})
-      return { error: 'Failed to send verification email. Please try again.' }
-    }
-
-    return { success: true }
-  } catch (error: any) {
-    console.error('Error in signupEmployee:', error)
-    
-    // Handle Zod validation errors
-    if (error instanceof z.ZodError) {
-      const firstError = error.issues[0]
-      return { error: firstError.message || 'Validation error' }
-    }
-    
-    // Handle other errors
-    return { error: error?.message || 'An error occurred. Please try again.' }
+  const data = {
+    firstName: formData.get('firstName') as string,
+    lastName: formData.get('lastName') as string,
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+    phoneNumber: formData.get('phoneNumber') as string,
+    photoUrl: formData.get('photoUrl') as string,
   }
+
+  const validated = signupEmployeeSchema.parse(data)
+
+  // Check if user already exists
+  const existing = await prisma.users.findUnique({ email: validated.email })
+
+  if (existing) {
+    return { error: 'Email already registered' }
+  }
+
+  // Hash password
+  const hashedPassword = await hashPassword(validated.password)
+
+  // Store signup data temporarily (will create user only after OTP verification)
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
+  
+  // Delete any existing pending signup for this email
+  try {
+    await prisma.pendingSignups.delete({ email: validated.email })
+  } catch (err) {
+    // Ignore if doesn't exist
+  }
+  
+  await prisma.pendingSignups.create({
+    email: validated.email,
+    role: 'EMPLOYEE',
+    firstName: validated.firstName,
+    lastName: validated.lastName,
+    password: hashedPassword,
+    socialUrl: validated.phoneNumber,
+    photoUrl: validated.photoUrl,
+    expiresAt: expiresAt.toISOString(),
+  })
+
+  // Generate and send OTP
+  await generateOTP(validated.email)
+
+  return { success: true }
 }
 
 export async function signupEmployer(formData: FormData) {
-  try {
-    const data = {
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
-      email: formData.get('email') as string,
-      password: formData.get('password') as string,
-      confirmPassword: formData.get('confirmPassword') as string,
-      state: formData.get('state') as string,
-      city: formData.get('city') as string,
-      businessId: formData.get('businessId') as string,
-      position: formData.get('position') as string,
-      photoUrl: formData.get('photoUrl') as string,
-    }
+  const data = {
+    firstName: formData.get('firstName') as string,
+    lastName: formData.get('lastName') as string,
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
+    confirmPassword: formData.get('confirmPassword') as string,
+    state: formData.get('state') as string,
+    city: formData.get('city') as string,
+    businessId: formData.get('businessId') as string,
+    position: formData.get('position') as string,
+    photoUrl: formData.get('photoUrl') as string,
+  }
 
-    const validated = signupEmployerSchema.parse(data)
+  const validated = signupEmployerSchema.parse(data)
 
   // Check if user already exists
   const existing = await prisma.users.findUnique({ email: validated.email })
@@ -140,18 +116,19 @@ export async function signupEmployer(formData: FormData) {
     return { error: 'Business not found' }
   }
 
-  // Check if there's already a pending signup for this email
-  const existingPending = await prisma.pendingSignups.findUnique({ email: validated.email })
-  if (existingPending) {
-    // Delete old pending signup
-    await prisma.pendingSignups.delete({ email: validated.email })
-  }
-
   // Hash password
   const hashedPassword = await hashPassword(validated.password)
 
-  // Store signup data in PendingSignup (expires in 1 hour)
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+  // Store signup data temporarily (will create user only after OTP verification)
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
+  
+  // Delete any existing pending signup for this email
+  try {
+    await prisma.pendingSignups.delete({ email: validated.email })
+  } catch (err) {
+    // Ignore if doesn't exist
+  }
+  
   await prisma.pendingSignups.create({
     email: validated.email,
     role: 'EMPLOYER',
@@ -167,31 +144,9 @@ export async function signupEmployer(formData: FormData) {
   })
 
   // Generate and send OTP
-  try {
-    console.log(`[Signup] Generating OTP for employer: ${validated.email}`)
-    await generateOTP(validated.email)
-    console.log(`[Signup] OTP generated and sent successfully for employer: ${validated.email}`)
-  } catch (otpError: any) {
-    console.error('[Signup] Error generating/sending OTP in signupEmployer:', otpError)
-    console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
-    // Clean up pending signup if OTP fails
-    await prisma.pendingSignups.delete({ email: validated.email }).catch(() => {})
-    return { error: 'Failed to send verification email. Please try again.' }
-  }
+  await generateOTP(validated.email)
 
   return { success: true }
-  } catch (error: any) {
-    console.error('Error in signupEmployer:', error)
-    
-    // Handle Zod validation errors
-    if (error instanceof z.ZodError) {
-      const firstError = error.issues[0]
-      return { error: firstError.message || 'Validation error' }
-    }
-    
-    // Handle other errors
-    return { error: error?.message || 'An error occurred. Please try again.' }
-  }
 }
 
 export async function requestEmailOtp(formData: FormData) {
@@ -201,11 +156,12 @@ export async function requestEmailOtp(formData: FormData) {
     return { error: 'Invalid email' }
   }
 
-  // Check if user exists
+  // Check if there's a pending signup (for new signups) or existing user (for resend)
+  const pendingSignup = await prisma.pendingSignups.findUnique({ email })
   const user = await prisma.users.findUnique({ email })
 
-  if (!user) {
-    return { error: 'User not found' }
+  if (!pendingSignup && !user) {
+    return { error: 'No signup or account found for this email' }
   }
 
   // Generate OTP
@@ -236,21 +192,13 @@ export async function verifyEmailOtp(formData: FormData) {
     return { error: 'Signup session expired. Please sign up again.' }
   }
 
-  // Check if pending signup has expired
+  // Check if expired
   if (new Date(pendingSignup.expiresAt) < new Date()) {
     await prisma.pendingSignups.delete({ email })
     return { error: 'Signup session expired. Please sign up again.' }
   }
 
-  // Check if user already exists (race condition check)
-  const existing = await prisma.users.findUnique({ email })
-  if (existing) {
-    // Clean up pending signup
-    await prisma.pendingSignups.delete({ email }).catch(() => {})
-    return { error: 'Email already registered' }
-  }
-
-  // Create user from pending signup data
+  // Now create the user (only after OTP verification)
   let user
   if (pendingSignup.role === 'EMPLOYEE') {
     user = await prisma.users.create({
@@ -261,15 +209,19 @@ export async function verifyEmailOtp(formData: FormData) {
       password: pendingSignup.password,
       socialUrl: pendingSignup.socialUrl || null,
       photoUrl: pendingSignup.photoUrl || null,
-      verified: true, // Verified since OTP was successful
+      verified: true, // User is verified since OTP was successful
     })
   } else {
     // EMPLOYER
-    if (!pendingSignup.businessId) {
-      await prisma.pendingSignups.delete({ email }).catch(() => {})
-      return { error: 'Invalid signup data. Please sign up again.' }
+    // Verify business still exists
+    if (pendingSignup.businessId) {
+      const business = await prisma.businesses.findUnique({ id: pendingSignup.businessId })
+      if (!business) {
+        await prisma.pendingSignups.delete({ email })
+        return { error: 'Business not found. Please sign up again.' }
+      }
     }
-
+    
     user = await prisma.users.create({
       role: 'EMPLOYER',
       firstName: pendingSignup.firstName,
@@ -280,15 +232,15 @@ export async function verifyEmailOtp(formData: FormData) {
       city: pendingSignup.city || null,
       position: pendingSignup.position || null,
       photoUrl: pendingSignup.photoUrl || null,
-      verified: false, // Employers default to false, need additional verification
-      employerProfile: {
+      verified: true, // User is verified since OTP was successful
+      employerProfile: pendingSignup.businessId ? {
         businessId: pendingSignup.businessId,
-      },
+      } : undefined,
     } as any)
   }
 
-  // Clean up pending signup
-  await prisma.pendingSignups.delete({ email }).catch(() => {})
+  // Delete pending signup after successful user creation
+  await prisma.pendingSignups.delete({ email })
 
   // Create session
   await createSession(user.id)

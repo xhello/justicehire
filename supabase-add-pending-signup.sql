@@ -1,4 +1,6 @@
--- Create PendingSignup table for storing signup data before OTP verification
+-- Create PendingSignup table for temporary signup data storage
+-- This ensures no user data is written to the database until OTP verification is successful
+
 CREATE TABLE IF NOT EXISTS "PendingSignup" (
   "id" TEXT NOT NULL PRIMARY KEY,
   "email" TEXT NOT NULL UNIQUE,
@@ -12,10 +14,10 @@ CREATE TABLE IF NOT EXISTS "PendingSignup" (
   "city" TEXT,
   "position" TEXT,
   "businessId" TEXT,
-  "expiresAt" TIMESTAMP NOT NULL,
-  "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "expiresAt" TIMESTAMP NOT NULL
 );
 
--- Create indexes
+-- Create indexes for efficient queries
 CREATE INDEX IF NOT EXISTS "PendingSignup_email_idx" ON "PendingSignup"("email");
 CREATE INDEX IF NOT EXISTS "PendingSignup_expiresAt_idx" ON "PendingSignup"("expiresAt");

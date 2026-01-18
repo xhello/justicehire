@@ -88,8 +88,8 @@ export interface SupabasePendingSignup {
   city?: string | null
   position?: string | null
   businessId?: string | null
-  expiresAt: string
   createdAt: string
+  expiresAt: string
 }
 
 export interface SupabaseEmployerProfile {
@@ -615,6 +615,37 @@ export const supabaseDb = {
   },
   
   pendingSignups: {
+    create: async (data: Omit<SupabasePendingSignup, 'id' | 'createdAt'>): Promise<SupabasePendingSignup> => {
+      try {
+        const { data: pendingSignup, error } = await supabaseAdmin
+          .from('PendingSignup')
+          .insert({
+            id: randomUUID(),
+            email: data.email,
+            role: data.role,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            password: data.password,
+            socialUrl: data.socialUrl || null,
+            photoUrl: data.photoUrl || null,
+            state: data.state || null,
+            city: data.city || null,
+            position: data.position || null,
+            businessId: data.businessId || null,
+            expiresAt: data.expiresAt,
+          })
+          .select()
+          .single()
+        
+        if (error) throw new Error(`Failed to create pending signup: ${error.message}`)
+        
+        return pendingSignup as SupabasePendingSignup
+      } catch (err) {
+        console.error('Error creating pending signup:', err)
+        throw err
+      }
+    },
+    
     findUnique: async (where: { email: string }): Promise<SupabasePendingSignup | null> => {
       try {
         const { data, error } = await supabaseAdmin
@@ -625,35 +656,17 @@ export const supabaseDb = {
         
         if (error || !data) return null
         
+        // Check if expired
+        if (new Date(data.expiresAt) < new Date()) {
+          // Delete expired record
+          await supabaseAdmin.from('PendingSignup').delete().eq('email', where.email)
+          return null
+        }
+        
         return data as SupabasePendingSignup
       } catch (err) {
         console.error('Error querying PendingSignup table:', err)
         return null
-      }
-    },
-    
-    create: async (data: Omit<SupabasePendingSignup, 'id' | 'createdAt'>): Promise<void> => {
-      try {
-        const { error } = await supabaseAdmin.from('PendingSignup').insert({
-          id: randomUUID(),
-          email: data.email,
-          role: data.role,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          password: data.password,
-          socialUrl: data.socialUrl || null,
-          photoUrl: data.photoUrl || null,
-          state: data.state || null,
-          city: data.city || null,
-          position: data.position || null,
-          businessId: data.businessId || null,
-          expiresAt: data.expiresAt,
-        })
-        
-        if (error) throw new Error(`Failed to create pending signup: ${error.message}`)
-      } catch (err) {
-        console.error('Error creating pending signup:', err)
-        throw err
       }
     },
     
