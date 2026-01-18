@@ -61,7 +61,7 @@ export async function signupEmployee(formData: FormData) {
     // Hash password
     const hashedPassword = await hashPassword(validated.password)
 
-    // Create user
+    // Create user (verified defaults to false - user must verify email via OTP)
     // Note: Storing phoneNumber in socialUrl field for now (would need migration for new field)
     const user = await prisma.users.create({
       role: 'EMPLOYEE',
@@ -71,7 +71,7 @@ export async function signupEmployee(formData: FormData) {
       password: hashedPassword,
       socialUrl: validated.phoneNumber,
       photoUrl: validated.photoUrl,
-      verified: false,
+      verified: false, // Must verify email via OTP before account is active
     })
 
     // Generate and send OTP
@@ -141,7 +141,7 @@ export async function signupEmployer(formData: FormData) {
   // Hash password
   const hashedPassword = await hashPassword(validated.password)
 
-  // Create user
+  // Create user (verified defaults to false - user must verify email via OTP)
   const user = await prisma.users.create({
     role: 'EMPLOYER',
     firstName: validated.firstName,
@@ -152,7 +152,7 @@ export async function signupEmployer(formData: FormData) {
     city: validated.city,
     position: validated.position,
     photoUrl: validated.photoUrl,
-    verified: false,
+    verified: false, // Must verify email via OTP before account is active
     employerProfile: {
       businessId: validated.businessId,
     },
