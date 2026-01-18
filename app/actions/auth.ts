@@ -11,7 +11,7 @@ const signupEmployeeSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.string().email(),
-  socialUrl: z.string().url().optional().or(z.literal('')),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
   photoUrl: z.string().min(1, 'Photo is required'),
 })
 
@@ -31,7 +31,7 @@ export async function signupEmployee(formData: FormData) {
     firstName: formData.get('firstName') as string,
     lastName: formData.get('lastName') as string,
     email: formData.get('email') as string,
-    socialUrl: formData.get('socialUrl') as string || undefined,
+    phoneNumber: formData.get('phoneNumber') as string,
     photoUrl: formData.get('photoUrl') as string,
   }
 
@@ -45,12 +45,13 @@ export async function signupEmployee(formData: FormData) {
   }
 
   // Create user
+  // Note: Storing phoneNumber in socialUrl field for now (would need migration for new field)
   const user = await prisma.users.create({
     role: 'EMPLOYEE',
     firstName: validated.firstName,
     lastName: validated.lastName,
     email: validated.email,
-    socialUrl: validated.socialUrl,
+    socialUrl: validated.phoneNumber,
     photoUrl: validated.photoUrl,
     verified: false,
   })

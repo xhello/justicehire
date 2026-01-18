@@ -4,12 +4,48 @@ import { useState } from 'react'
 import { signupEmployee, signupEmployer } from '../actions/auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import ImageCropper from '@/components/ImageCropper'
 
 export default function SignupForm({ businesses }: { businesses: any[] }) {
   const [role, setRole] = useState<'EMPLOYEE' | 'EMPLOYER'>('EMPLOYEE')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showCropper, setShowCropper] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [croppedImage, setCroppedImage] = useState<string | null>(null)
   const router = useRouter()
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+        setShowCropper(true)
+      }
+      reader.onerror = () => {
+        setError('Failed to read photo file. Please try again.')
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleCropComplete = (croppedImageData: string) => {
+    setCroppedImage(croppedImageData)
+    setShowCropper(false)
+    setImagePreview(null)
+  }
+
+  const handleCropCancel = () => {
+    setShowCropper(false)
+    setImagePreview(null)
+    setCroppedImage(null)
+    // Reset file input
+    const fileInput = document.getElementById('photo') as HTMLInputElement
+    if (fileInput) {
+      fileInput.value = ''
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -18,47 +54,78 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
 
     const formData = new FormData(e.currentTarget)
     
-    // Convert photo file to base64 data URL
-    const photoFile = formData.get('photo') as File
-    if (photoFile && photoFile.size > 0) {
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64String = reader.result as string
-        formData.set('photoUrl', base64String)
-        
-        try {
-          let result
-          if (role === 'EMPLOYEE') {
-            result = await signupEmployee(formData)
-          } else {
-            result = await signupEmployer(formData)
-          }
-
-          if (result?.error) {
-            setError(result.error)
-            setLoading(false)
-          } else {
-            router.push(`/verify?email=${formData.get('email')}`)
-          }
-        } catch (err) {
-          setError('An error occurred. Please try again.')
-          setLoading(false)
+    // Use cropped image if available, otherwise show error
+    if (croppedImage) {
+      formData.set('photoUrl', croppedImage)
+      
+      try {
+        let result
+        if (role === 'EMPLOYEE') {
+          result = await signupEmployee(formData)
+        } else {
+          result = await signupEmployer(formData)
         }
-      }
-      reader.onerror = () => {
-        setError('Failed to read photo file. Please try again.')
+
+        if (result?.error) {
+          setError(result.error)
+          setLoading(false)
+        } else {
+          router.push(`/verify?email=${formData.get('email')}`)
+        }
+      } catch (err) {
+        setError('An error occurred. Please try again.')
         setLoading(false)
       }
-      reader.readAsDataURL(photoFile)
     } else {
-      setError('Please upload a photo')
+      setError('Please upload and adjust a photo')
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gray-50">
+      {showCropper && imagePreview && (
+        <ImageCropper
+          imageSrc={imagePreview}
+          onCrop={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={1}
+        />
+      )}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-2xl font-bold text-blue-600">
+                Justice Hire
+              </Link>
+              <Link
+                href="/"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+              >
+                Explore
+              </Link>
+            </div>
+            <div className="flex gap-4">
+              <Link
+                href="/signup"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+              >
+                Sign Up
+              </Link>
+              <Link
+                href="/login"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Log In
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign up for Justice Hire
@@ -145,13 +212,15 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
 
             {role === 'EMPLOYEE' && (
               <div>
-                <label htmlFor="socialUrl" className="block text-sm font-medium text-gray-700">
-                  Instagram or Facebook URL (optional)
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                  Phone Number <span className="text-red-500">*</span>
                 </label>
                 <input
-                  id="socialUrl"
-                  name="socialUrl"
-                  type="url"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  required
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -235,10 +304,20 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                 name="photo"
                 type="file"
                 accept="image/*"
-                required
+                onChange={handleFileChange}
                 className="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
               <p className="mt-1 text-xs text-gray-500">Upload a profile photo (JPG, PNG, etc.)</p>
+              {croppedImage && (
+                <div className="mt-2">
+                  <img
+                    src={croppedImage}
+                    alt="Selected photo"
+                    className="w-24 h-24 rounded-lg object-cover border-2 border-blue-500"
+                  />
+                  <p className="mt-1 text-xs text-green-600">Photo selected ✓</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -252,6 +331,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   )

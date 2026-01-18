@@ -26,13 +26,46 @@ export async function listBusinesses(filters: {
   const businesses = await prisma.businesses.findMany(where)
   const reviews = await prisma.reviews.findMany({})
   
-  // Add review counts
+  // Add review counts and average ratings
   const businessesWithCounts = businesses.map((business: any) => {
-    const reviewCount = reviews.filter((r: any) => r.businessId === business.id).length
+    const businessReviews = reviews.filter((r: any) => 
+      r.businessId === business.id && 
+      r.targetType === 'BUSINESS' && 
+      r.targetUserId === null
+    )
+    
+    const reviewCount = businessReviews.length
+    
+    // Calculate average ratings for the three fields
+    const payCompetitiveValues = businessReviews
+      .map((r: any) => r.payCompetitive)
+      .filter((v: any): v is number => typeof v === 'number' && v > 0)
+    const workloadValues = businessReviews
+      .map((r: any) => r.workload)
+      .filter((v: any): v is number => typeof v === 'number' && v > 0)
+    const flexibilityValues = businessReviews
+      .map((r: any) => r.flexibility)
+      .filter((v: any): v is number => typeof v === 'number' && v > 0)
+    
+    const avgPayCompetitive = payCompetitiveValues.length > 0
+      ? (payCompetitiveValues.reduce((sum: number, v: number) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
+      : null
+    const avgWorkload = workloadValues.length > 0
+      ? (workloadValues.reduce((sum: number, v: number) => sum + v, 0) / workloadValues.length).toFixed(1)
+      : null
+    const avgFlexibility = flexibilityValues.length > 0
+      ? (flexibilityValues.reduce((sum: number, v: number) => sum + v, 0) / flexibilityValues.length).toFixed(1)
+      : null
+    
     return {
       ...business,
       _count: {
         reviews: reviewCount,
+      },
+      avgRatings: {
+        payCompetitive: avgPayCompetitive,
+        workload: avgWorkload,
+        flexibility: avgFlexibility,
       },
     }
   })
@@ -98,11 +131,17 @@ export async function getBusinessDetails(businessId: string) {
   const allReviews = await prisma.reviews.findMany({ businessId })
 
   // Get all employer profiles for this business
+  let employerProfiles: any[] = []
+  try {
   const { supabaseAdmin } = await import('@/lib/supabase')
-  const { data: employerProfiles } = await supabaseAdmin
+    const { data } = await supabaseAdmin
     .from('EmployerProfile')
     .select('userId, businessId')
     .eq('businessId', businessId)
+    employerProfiles = data || []
+  } catch (err) {
+    console.error('Error fetching employer profiles:', err)
+  }
   
   if (!employerProfiles || employerProfiles.length === 0) {
     return {
@@ -115,7 +154,7 @@ export async function getBusinessDetails(businessId: string) {
   }
 
   // Get all users who are employers for this business
-  const employerUserIds = employerProfiles.map((p: any) => p.userId)
+  const employerUserIds = employerProfiles.filter((p: any) => p?.userId).map((p: any) => p.userId)
   const allUsers = await prisma.users.findMany({})
   const employerUsers = allUsers.filter(
     (u: any) => u.role === 'EMPLOYER' && employerUserIds.includes(u.id)

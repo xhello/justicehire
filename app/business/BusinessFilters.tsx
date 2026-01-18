@@ -47,6 +47,7 @@ export default function BusinessFilters({
     if (state) params.set('state', state)
     if (city) params.set('city', city)
     if (category) params.set('category', category)
+    params.set('success', encodeURIComponent('searching as we speak'))
     // Always redirect to home page for search
     router.push(`/?${params.toString()}`)
   }

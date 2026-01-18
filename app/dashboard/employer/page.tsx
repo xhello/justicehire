@@ -3,16 +3,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
-import { getAggregatedRatings } from '@/app/actions/review'
-import BusinessFilter from './BusinessFilter'
-import StateCityFilter from './StateCityFilter'
 
-export default async function EmployerDashboard({
-  searchParams,
-}: {
-  searchParams: Promise<{ state?: string; city?: string; businessId?: string }>
-}) {
-  const params = await searchParams
+export default async function EmployerDashboard() {
   const user = await getCurrentUser()
 
   if (!user) {
@@ -27,97 +19,98 @@ export default async function EmployerDashboard({
     redirect('/verify?email=' + user.email)
   }
 
-  // Get all businesses
-  const allBusinesses = await prisma.businesses.findMany({})
-  
-  // Get unique states and cities from all businesses
-  const uniqueStates = [...new Set<string>(allBusinesses.map((b: any) => b.state as string))].sort()
-  const uniqueCities = params.state
-    ? [...new Set<string>(allBusinesses.filter((b: any) => b.state === params.state).map((b: any) => b.city as string))].sort()
-    : [...new Set<string>(allBusinesses.map((b: any) => b.city as string))].sort()
-
-  // Filter businesses based on selected state and city
-  let filteredBusinesses = allBusinesses
-  if (params.state) {
-    filteredBusinesses = filteredBusinesses.filter((b: any) => b.state === params.state)
-  }
-  if (params.city) {
-    filteredBusinesses = filteredBusinesses.filter((b: any) => b.city === params.city)
-  }
-
-  // Get all reviews
-  const allReviews = await prisma.reviews.findMany({})
-  
-  // Filter reviews by selected filters
-  // If no filters are selected, show all employees who reviewed any business
-  const relevantReviews = allReviews.filter((review: any) => {
-    // If businessId filter is specified, only include reviews for that business
-    if (params.businessId) {
-      return review.businessId === params.businessId
-    }
-    
-    // If state or city filters are specified, filter by those
-    if (params.state || params.city) {
-      const business = filteredBusinesses.find((b: any) => b.id === review.businessId)
-      return !!business
-    }
-    
-    // No filters - include all reviews
-    return true
+  // Get all reviews that this employer has left
+  const employerReviews = await prisma.reviews.findMany({
+    reviewerId: user.id,
   })
-
-  // Get unique employee IDs who reviewed businesses in the area
-  const employeeIds = [...new Set<string>(relevantReviews.map((r: any) => r.reviewerId as string))]
   
-  // Get all users
+  // Get all businesses and users for display
+  const allBusinesses = await prisma.businesses.findMany({})
   const allUsers = await prisma.users.findMany({})
   
-  // Get employee users with their review information
-  const employeesWithReviews = employeeIds
-    .map((employeeId: string) => {
-      const employee = allUsers.find((u: any) => u.id === employeeId && u.role === 'EMPLOYEE')
-      if (!employee) return null
-      
-      // Get businesses this employee reviewed
-      const employeeReviews = relevantReviews.filter((r: any) => r.reviewerId === employeeId)
-      const reviewedBusinessIds = Array.from(new Set<string>(employeeReviews.map((r: any) => r.businessId as string)))
-      const reviewedBusinesses = reviewedBusinessIds
-        .map((bid: string) => allBusinesses.find((b: any) => b.id === bid))
-        .filter(Boolean)
-      
-      return {
-        employee,
-        reviewedBusinesses,
-        reviewCount: employeeReviews.length,
-      }
-    })
-    .filter((e: any) => e !== null) as Array<{
-      employee: any
-      reviewedBusinesses: any[]
-      reviewCount: number
-    }>
+  // Enrich reviews given with business and target user information
+  const reviewsWithDetails = employerReviews.map((review: any) => {
+    const business = allBusinesses.find((b: any) => b.id === review.businessId)
+    const targetUser = review.targetUserId 
+      ? allUsers.find((u: any) => u.id === review.targetUserId)
+      : null
+    
+    return {
+      ...review,
+      business: business
+        ? {
+            id: business.id,
+            name: business.name,
+            photoUrl: business.photoUrl,
+          }
+        : null,
+      targetUser: targetUser
+        ? {
+            id: targetUser.id,
+            firstName: targetUser.firstName,
+            lastName: targetUser.lastName,
+            role: targetUser.role,
+            photoUrl: targetUser.photoUrl,
+          }
+        : null,
+    }
+  })
+  
+  // Sort by most recent first
+  reviewsWithDetails.sort((a: any, b: any) => {
+    const dateA = new Date(a.createdAt).getTime()
+    const dateB = new Date(b.createdAt).getTime()
+    return dateB - dateA
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-blue-600">Justice Hire</h1>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700">
+                Justice Hire
+              </Link>
+              <Link
+                href="/"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+              >
+                Explore
+              </Link>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-700">
+              <Link 
+                href={`/employer/${user.id}`}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+              >
+                {user.photoUrl ? (
+                  <img
+                    src={user.photoUrl}
+                    alt={`${user.firstName} ${user.lastName}`}
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-500 text-xs">
+                      {user.firstName[0]}{user.lastName[0]}
+                    </span>
+                  </div>
+                )}
                 {user.firstName} {user.lastName}
-              </span>
+              </Link>
               {user.employerProfile && (
-                <span className="text-sm text-gray-700">
+                <Link 
+                  href={`/business/${user.employerProfile.business.id}`}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+                >
                   {user.employerProfile.business.name}
-                </span>
+                </Link>
               )}
               <form action={logout}>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
                 >
                   Logout
                 </button>
@@ -134,7 +127,12 @@ export default async function EmployerDashboard({
           <h3 className="text-xl font-semibold mb-4">Your Business</h3>
           {user.employerProfile ? (
             <div>
-              <p className="text-lg font-medium">{user.employerProfile.business.name}</p>
+              <Link 
+                href={`/business/${user.employerProfile.business.id}`}
+                className="text-lg font-medium text-blue-600 hover:text-blue-700"
+              >
+                {user.employerProfile.business.name}
+              </Link>
               <p className="text-sm text-gray-700">
                 {user.employerProfile.business.address}
               </p>
@@ -147,63 +145,14 @@ export default async function EmployerDashboard({
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h3 className="text-xl font-semibold mb-4">
-            Find Employees Who Reviewed Businesses
-          </h3>
-          
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div>
-              <label htmlFor="stateFilter" className="block text-sm font-medium text-gray-700 mb-2">
-                State
-              </label>
-              <StateCityFilter
-                type="state"
-                options={uniqueStates}
-                currentValue={params.state}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="cityFilter" className="block text-sm font-medium text-gray-700 mb-2">
-                City
-              </label>
-              <StateCityFilter
-                type="city"
-                options={uniqueCities}
-                currentValue={params.city}
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="businessFilter" className="block text-sm font-medium text-gray-700 mb-2">
-                Business (optional)
-              </label>
-              <BusinessFilter
-                businesses={filteredBusinesses.map((b: any) => ({ id: b.id, name: b.name }))}
-                currentBusinessId={params.businessId}
-              />
-            </div>
-          </div>
-
-          {employeesWithReviews.length === 0 ? (
-            <p className="text-gray-700">
-              {params.businessId
-                ? 'No employees have reviewed the selected business yet.'
-                : params.state || params.city
-                ? `No employees have reviewed businesses in ${params.city || 'selected cities'}, ${params.state || 'selected states'} yet.`
-                : 'Select a state and/or city to filter employees.'}
-            </p>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-xl font-semibold mb-4">Reviews Given</h3>
+          {reviewsWithDetails.length === 0 ? (
+            <p className="text-gray-700">You haven't left any reviews yet.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {employeesWithReviews.map(({ employee, reviewedBusinesses, reviewCount }: any) => (
-                <EmployeeCard
-                  key={employee.id}
-                  employeeId={employee.id}
-                  reviewedBusinesses={reviewedBusinesses}
-                  reviewCount={reviewCount}
-                />
+            <div className="space-y-4">
+              {reviewsWithDetails.map((review: any) => (
+                <ReviewCard key={review.id} review={review} />
               ))}
             </div>
           )}
@@ -213,63 +162,153 @@ export default async function EmployerDashboard({
   )
 }
 
-async function EmployeeCard({
-  employeeId,
-  reviewedBusinesses,
-  reviewCount,
-}: {
-  employeeId: string
-  reviewedBusinesses: any[]
-  reviewCount: number
-}) {
-  const employee = await prisma.users.findUnique({ id: employeeId })
+function ReviewCard({ review }: { review: any }) {
+  const getRatingLabel = (rating: string | null) => {
+    if (!rating) return null
+    switch (rating) {
+      case 'OUTSTANDING':
+        return <span className="text-green-600 font-medium">Outstanding</span>
+      case 'DELIVERED_AS_EXPECTED':
+        return <span className="text-yellow-600 font-medium">No issue</span>
+      case 'GOT_NOTHING_NICE_TO_SAY':
+        return <span className="text-red-600 font-medium">Nothing nice to say</span>
+      default:
+        return null
+    }
+  }
 
-  if (!employee) return null
+  const getTargetName = () => {
+    if (review.targetType === 'EMPLOYEE' && review.targetUser) {
+      return `${review.targetUser.firstName} ${review.targetUser.lastName} (Employee)`
+    } else if (review.targetType === 'EMPLOYER' && review.targetUser) {
+      return `${review.targetUser.firstName} ${review.targetUser.lastName} (Employer)`
+    } else if (review.targetType === 'BUSINESS' && review.business) {
+      return review.business.name
+    }
+    return 'Unknown'
+  }
 
-  const ratings = await getAggregatedRatings(employeeId)
+  const getTargetLink = () => {
+    if (review.targetType === 'EMPLOYEE' && review.targetUserId) {
+      return `/employee/${review.targetUserId}`
+    } else if (review.targetType === 'EMPLOYER' && review.targetUserId) {
+      return `/employer/${review.targetUserId}`
+    } else if (review.targetType === 'BUSINESS' && review.businessId) {
+      return `/business/${review.businessId}`
+    }
+    return '#'
+  }
 
   return (
-    <Link
-      href={`/employee/${employeeId}`}
-      className="border rounded-lg p-4 hover:shadow-md transition block"
-    >
-      <div className="flex items-center gap-4 mb-3">
-        {employee.photoUrl ? (
-          <img
-            src={employee.photoUrl}
-            alt={`${employee.firstName} ${employee.lastName}`}
-            className="w-12 h-12 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-600">
-              {employee.firstName[0]}{employee.lastName[0]}
-            </span>
+    <div className="border rounded-lg p-4">
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-3 flex-1">
+          {/* Photo - Business or Profile */}
+          {review.targetType === 'BUSINESS' && review.business ? (
+            <Link href={getTargetLink()} className="flex-shrink-0">
+              {review.business.photoUrl ? (
+                <img
+                  src={review.business.photoUrl}
+                  alt={review.business.name}
+                  className="w-12 h-12 rounded-lg object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors cursor-pointer">
+                  <span className="text-gray-400 text-lg">🏢</span>
+                </div>
+              )}
+            </Link>
+          ) : review.targetUser ? (
+            <Link href={getTargetLink()} className="flex-shrink-0">
+              {review.targetUser.photoUrl ? (
+                <img
+                  src={review.targetUser.photoUrl}
+                  alt={`${review.targetUser.firstName} ${review.targetUser.lastName}`}
+                  className="w-12 h-12 rounded-lg object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors cursor-pointer">
+                  <span className="text-gray-500 text-sm">
+                    {review.targetUser.firstName[0]}{review.targetUser.lastName[0]}
+                  </span>
+                </div>
+              )}
+            </Link>
+          ) : null}
+          
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-900">
+              Review for: <Link 
+                href={getTargetLink()}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                {getTargetName()}
+              </Link>
+            </p>
+            {review.business && review.targetType !== 'BUSINESS' && (
+              <p className="text-sm text-gray-600 mt-1">
+                at <Link href={`/business/${review.businessId}`} className="text-blue-600 hover:text-blue-700">
+                  {review.business.name}
+                </Link>
+              </p>
+            )}
           </div>
-        )}
-        <div className="flex-1">
-          <h4 className="font-semibold text-gray-900">
-            {employee.firstName} {employee.lastName}
-          </h4>
-          <p className="text-xs text-gray-600 mt-1">
-            Reviewed {reviewCount} business{reviewCount !== 1 ? 'es' : ''}
-          </p>
         </div>
-        </div>
-
-      <div className="text-sm text-gray-700 border-t pt-3">
-        <p className="font-medium mb-1">Overall Rating:</p>
-        <p>Total Reviews: {ratings.total}</p>
-        <div className="mt-1 space-y-0.5">
-          <p className="text-green-600">Outstanding: {ratings.ratings.OUTSTANDING}</p>
-          <p className="text-yellow-600">
-            As Expected: {ratings.ratings.DELIVERED_AS_EXPECTED}
-          </p>
-          <p className="text-red-600">
-            Poor: {ratings.ratings.GOT_NOTHING_NICE_TO_SAY}
-          </p>
-        </div>
+        <span className="text-xs text-gray-500 ml-4">
+          {new Date(review.createdAt).toLocaleDateString()}
+        </span>
       </div>
-    </Link>
+      
+      {review.targetType === 'BUSINESS' ? (
+        <div className="mt-3 space-y-2">
+          {review.payCompetitive && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 min-w-[140px]">Pay Competitive:</span>
+              <div className="flex text-yellow-400">
+                {[1, 2, 3, 4, 5].map((star: number) => (
+                  <span key={star}>{star <= review.payCompetitive ? '★' : '☆'}</span>
+                ))}
+              </div>
+              <span className="text-sm text-gray-600">({review.payCompetitive}/5)</span>
+            </div>
+          )}
+          {review.workload && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 min-w-[140px]">Workload amount:</span>
+              <div className="flex text-yellow-400">
+                {[1, 2, 3, 4, 5].map((star: number) => (
+                  <span key={star}>{star <= review.workload ? '★' : '☆'}</span>
+                ))}
+              </div>
+              <span className="text-sm text-gray-600">({review.workload}/5)</span>
+            </div>
+          )}
+          {review.flexibility && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 min-w-[140px]">Schedule flexibility:</span>
+              <div className="flex text-yellow-400">
+                {[1, 2, 3, 4, 5].map((star: number) => (
+                  <span key={star}>{star <= review.flexibility ? '★' : '☆'}</span>
+                ))}
+              </div>
+              <span className="text-sm text-gray-600">({review.flexibility}/5)</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="mt-2">
+          <p className="text-sm text-gray-700">
+            Rating: {getRatingLabel(review.rating)}
+          </p>
+        </div>
+      )}
+      
+      {review.message && (
+        <div className="mt-3 pt-3 border-t">
+          <p className="text-sm font-medium text-gray-700 mb-1">Comment:</p>
+          <p className="text-gray-700">{review.message}</p>
+        </div>
+      )}
+    </div>
   )
 }

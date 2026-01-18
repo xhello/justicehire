@@ -20,12 +20,45 @@ export async function searchResults(filters: {
     const reviews = await prisma.reviews.findMany({})
     
     const businessesWithCounts = businesses.map((business: any) => {
-      const reviewCount = reviews.filter((r: any) => r.businessId === business.id).length
+      const businessReviews = reviews.filter((r: any) => 
+        r.businessId === business.id && 
+        r.targetType === 'BUSINESS' && 
+        r.targetUserId === null
+      )
+      
+      const reviewCount = businessReviews.length
+      
+      // Calculate average ratings for the three fields
+      const payCompetitiveValues = businessReviews
+        .map((r: any) => r.payCompetitive)
+        .filter((v: any): v is number => typeof v === 'number' && v > 0)
+      const workloadValues = businessReviews
+        .map((r: any) => r.workload)
+        .filter((v: any): v is number => typeof v === 'number' && v > 0)
+      const flexibilityValues = businessReviews
+        .map((r: any) => r.flexibility)
+        .filter((v: any): v is number => typeof v === 'number' && v > 0)
+      
+      const avgPayCompetitive = payCompetitiveValues.length > 0
+        ? (payCompetitiveValues.reduce((sum: number, v: number) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
+        : null
+      const avgWorkload = workloadValues.length > 0
+        ? (workloadValues.reduce((sum: number, v: number) => sum + v, 0) / workloadValues.length).toFixed(1)
+        : null
+      const avgFlexibility = flexibilityValues.length > 0
+        ? (flexibilityValues.reduce((sum: number, v: number) => sum + v, 0) / flexibilityValues.length).toFixed(1)
+        : null
+      
       return {
         ...business,
         type: 'business' as const,
         _count: {
           reviews: reviewCount,
+        },
+        avgRatings: {
+          payCompetitive: avgPayCompetitive,
+          workload: avgWorkload,
+          flexibility: avgFlexibility,
         },
       }
     })
@@ -43,10 +76,16 @@ export async function searchResults(filters: {
     const allBusinesses = await prisma.businesses.findMany({})
     
     // Get all employer profiles to map business IDs
+    let employerProfiles: any[] = []
+    try {
     const { supabaseAdmin } = await import('@/lib/supabase')
-    const { data: employerProfiles } = await supabaseAdmin
+      const { data } = await supabaseAdmin
       .from('EmployerProfile')
       .select('userId, businessId')
+      employerProfiles = data || []
+    } catch (err) {
+      console.error('Error fetching employer profiles:', err)
+    }
     
     const userIdToBusinessId = new Map<string, string>()
     employerProfiles?.forEach((profile: any) => {
@@ -201,12 +240,45 @@ export async function searchResults(filters: {
     const reviews = await prisma.reviews.findMany({})
     
     const businessesWithCounts = businesses.map((business: any) => {
-      const reviewCount = reviews.filter((r: any) => r.businessId === business.id).length
+      const businessReviews = reviews.filter((r: any) => 
+        r.businessId === business.id && 
+        r.targetType === 'BUSINESS' && 
+        r.targetUserId === null
+      )
+      
+      const reviewCount = businessReviews.length
+      
+      // Calculate average ratings for the three fields
+      const payCompetitiveValues = businessReviews
+        .map((r: any) => r.payCompetitive)
+        .filter((v: any): v is number => typeof v === 'number' && v > 0)
+      const workloadValues = businessReviews
+        .map((r: any) => r.workload)
+        .filter((v: any): v is number => typeof v === 'number' && v > 0)
+      const flexibilityValues = businessReviews
+        .map((r: any) => r.flexibility)
+        .filter((v: any): v is number => typeof v === 'number' && v > 0)
+      
+      const avgPayCompetitive = payCompetitiveValues.length > 0
+        ? (payCompetitiveValues.reduce((sum: number, v: number) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
+        : null
+      const avgWorkload = workloadValues.length > 0
+        ? (workloadValues.reduce((sum: number, v: number) => sum + v, 0) / workloadValues.length).toFixed(1)
+        : null
+      const avgFlexibility = flexibilityValues.length > 0
+        ? (flexibilityValues.reduce((sum: number, v: number) => sum + v, 0) / flexibilityValues.length).toFixed(1)
+        : null
+      
       return {
         ...business,
         type: 'business' as const,
         _count: {
           reviews: reviewCount,
+        },
+        avgRatings: {
+          payCompetitive: avgPayCompetitive,
+          workload: avgWorkload,
+          flexibility: avgFlexibility,
         },
       }
     })
