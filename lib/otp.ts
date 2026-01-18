@@ -6,20 +6,12 @@ import { Resend } from 'resend'
 const OTP_EXPIRY_MINUTES = 10
 
 async function sendOTPEmail(email: string, otp: string): Promise<void> {
-  const resendApiKey = process.env.RESEND_API_KEY
-  
-  // If Resend API key is not configured, just log to console (for development)
-  if (!resendApiKey) {
-    console.log(`[OTP] Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
-    console.log('[OTP] Resend API key not configured. Set RESEND_API_KEY in .env.local to send emails.')
-    return
-  }
+  // Hardcoded Resend API key and email
+  const resendApiKey = 're_9yQ4yVuX_MT1MTmhBbSsB2m6soEBmVxXQ'
+  const fromEmail = 'onboarding@resend.dev'
 
   try {
     const resend = new Resend(resendApiKey)
-    
-    // Get the from email from env or use a default
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
     
     await resend.emails.send({
       from: fromEmail,
