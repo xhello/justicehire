@@ -1,5 +1,6 @@
 // Supabase database adapter - replaces static database
 import { supabaseAdmin } from './supabase'
+import { randomUUID } from 'crypto'
 
 // Types matching Prisma schema
 export interface SupabaseUser {
@@ -546,6 +547,7 @@ export const supabaseDb = {
     create: async (data: Omit<SupabasePasswordResetToken, 'id' | 'createdAt'>): Promise<void> => {
       try {
         const { error } = await supabaseAdmin.from('PasswordResetToken').insert({
+          id: randomUUID(),
           userId: data.userId,
           token: data.token,
           expiresAt: data.expiresAt,
