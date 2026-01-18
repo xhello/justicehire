@@ -83,6 +83,23 @@ export interface SupabaseEmployerProfile {
   updatedAt?: string | null
 }
 
+export interface SupabasePendingSignup {
+  id: string
+  email: string
+  role: 'EMPLOYEE' | 'EMPLOYER'
+  firstName: string
+  lastName: string
+  password: string
+  socialUrl?: string | null
+  photoUrl?: string | null
+  state?: string | null
+  city?: string | null
+  position?: string | null
+  businessId?: string | null
+  expiresAt: string
+  createdAt: string
+}
+
 // Database adapter matching the static-db interface
 export const supabaseDb = {
   users: {
@@ -593,6 +610,80 @@ export const supabaseDb = {
       } catch (err) {
         console.error('Error deleting password reset tokens:', err)
         // Don't throw - allow deleteMany to fail silently
+      }
+    },
+  },
+  
+  pendingSignups: {
+    create: async (data: Omit<SupabasePendingSignup, 'id' | 'createdAt'>): Promise<SupabasePendingSignup> => {
+      try {
+        const { data: pendingSignup, error } = await supabaseAdmin
+          .from('PendingSignup')
+          .insert({
+            id: randomUUID(),
+            email: data.email,
+            role: data.role,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            password: data.password,
+            socialUrl: data.socialUrl || null,
+            photoUrl: data.photoUrl || null,
+            state: data.state || null,
+            city: data.city || null,
+            position: data.position || null,
+            businessId: data.businessId || null,
+            expiresAt: data.expiresAt,
+          })
+          .select()
+          .single()
+        
+        if (error) throw new Error(`Failed to create pending signup: ${error.message}`)
+        
+        return pendingSignup as SupabasePendingSignup
+      } catch (err) {
+        console.error('Error creating pending signup:', err)
+        throw err
+      }
+    },
+    
+    findUnique: async (where: { email: string }): Promise<SupabasePendingSignup | null> => {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('PendingSignup')
+          .select('*')
+          .eq('email', where.email)
+          .single()
+        
+        if (error || !data) return null
+        
+        return data as SupabasePendingSignup
+      } catch (err) {
+        console.error('Error querying PendingSignup table:', err)
+        return null
+      }
+    },
+    
+    delete: async (where: { email: string }): Promise<void> => {
+      try {
+        await supabaseAdmin.from('PendingSignup').delete().eq('email', where.email)
+      } catch (err) {
+        console.error('Error deleting pending signup:', err)
+        throw err
+      }
+    },
+    
+    deleteMany: async (where?: { expiresAt?: { lt: string } }): Promise<void> => {
+      try {
+        let query = supabaseAdmin.from('PendingSignup').delete()
+        
+        if (where?.expiresAt?.lt) {
+          query = query.lt('expiresAt', where.expiresAt.lt)
+        }
+        
+        await query
+      } catch (err) {
+        console.error('Error deleting pending signups:', err)
+        // Don't throw - allow cleanup to fail silently
       }
     },
   },

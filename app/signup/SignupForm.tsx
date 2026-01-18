@@ -80,10 +80,6 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           setError(result.error)
           setLoading(false)
         } else {
-          if (result && 'warning' in result) {
-            // Show warning but still proceed to verification page
-            alert(result.warning)
-          }
           router.push(`/verify?email=${formData.get('email')}`)
         }
       } catch (err) {

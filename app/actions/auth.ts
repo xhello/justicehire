@@ -58,20 +58,29 @@ export async function signupEmployee(formData: FormData) {
       return { error: 'Email already registered' }
     }
 
+    // Check if there's already a pending signup for this email
+    const existingPending = await prisma.pendingSignups.findUnique({ email: validated.email })
+    if (existingPending) {
+      // Delete old pending signup
+      await prisma.pendingSignups.delete({ email: validated.email })
+    }
+
     // Hash password
     const hashedPassword = await hashPassword(validated.password)
 
-    // Create user (verified defaults to false - user must verify email via OTP)
-    // Note: Storing phoneNumber in socialUrl field for now (would need migration for new field)
-    const user = await prisma.users.create({
+    // Store signup data in PendingSignup (expires in 24 hours)
+    // User will be created only after OTP verification
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    
+    await prisma.pendingSignups.create({
+      email: validated.email,
       role: 'EMPLOYEE',
       firstName: validated.firstName,
       lastName: validated.lastName,
-      email: validated.email,
       password: hashedPassword,
-      socialUrl: validated.phoneNumber,
+      socialUrl: validated.phoneNumber, // Storing phoneNumber in socialUrl field
       photoUrl: validated.photoUrl,
-      verified: false, // Must verify email via OTP before account is active
+      expiresAt: expiresAt.toISOString(),
     })
 
     // Generate and send OTP
@@ -83,15 +92,14 @@ export async function signupEmployee(formData: FormData) {
     } catch (otpError: any) {
       console.error('[Signup] Failed to generate/send OTP:', otpError)
       console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
-      // Don't fail signup if OTP fails, but log it
-      // User can request a new OTP later if needed
+      // If OTP fails, delete pending signup
+      await prisma.pendingSignups.delete({ email: validated.email })
+      return { error: 'Failed to send verification email. Please try again.' }
     }
 
     return { 
-      success: true, 
-      userId: user.id,
-      otpSent,
-      ...(otpSent ? {} : { warning: 'Account created but OTP email failed to send. Please use the resend option on the verification page.' })
+      success: true,
+      otpSent: true
     }
   } catch (error: any) {
     console.error('Error in signupEmployee:', error)
@@ -138,25 +146,33 @@ export async function signupEmployer(formData: FormData) {
     return { error: 'Business not found' }
   }
 
+  // Check if there's already a pending signup for this email
+  const existingPending = await prisma.pendingSignups.findUnique({ email: validated.email })
+  if (existingPending) {
+    // Delete old pending signup
+    await prisma.pendingSignups.delete({ email: validated.email })
+  }
+
   // Hash password
   const hashedPassword = await hashPassword(validated.password)
 
-  // Create user (verified defaults to false - user must verify email via OTP)
-  const user = await prisma.users.create({
+  // Store signup data in PendingSignup (expires in 24 hours)
+  // User will be created only after OTP verification
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+  
+  await prisma.pendingSignups.create({
+    email: validated.email,
     role: 'EMPLOYER',
     firstName: validated.firstName,
     lastName: validated.lastName,
-    email: validated.email,
     password: hashedPassword,
     state: validated.state,
     city: validated.city,
     position: validated.position,
     photoUrl: validated.photoUrl,
-    verified: false, // Must verify email via OTP before account is active
-    employerProfile: {
-      businessId: validated.businessId,
-    },
-  } as any)
+    businessId: validated.businessId,
+    expiresAt: expiresAt.toISOString(),
+  })
 
   // Generate and send OTP
   let otpSent = false
@@ -167,15 +183,14 @@ export async function signupEmployer(formData: FormData) {
   } catch (otpError: any) {
     console.error('[Signup] Failed to generate/send OTP:', otpError)
     console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
-    // Don't fail signup if OTP fails, but log it
-    // User can request a new OTP later if needed
+    // If OTP fails, delete pending signup
+    await prisma.pendingSignups.delete({ email: validated.email })
+    return { error: 'Failed to send verification email. Please try again.' }
   }
 
   return { 
-    success: true, 
-    userId: user.id,
-    otpSent,
-    ...(otpSent ? {} : { warning: 'Account created but OTP email failed to send. Please use the resend option on the verification page.' })
+    success: true,
+    otpSent: true
   }
   } catch (error: any) {
     console.error('Error in signupEmployer:', error)
@@ -198,14 +213,23 @@ export async function requestEmailOtp(formData: FormData) {
     return { error: 'Invalid email' }
   }
 
-  // Check if user exists
+  // Check if user exists (for existing users requesting new OTP)
   const user = await prisma.users.findUnique({ email })
 
-  if (!user) {
-    return { error: 'User not found' }
+  // Check if there's a pending signup (for new signups)
+  const pendingSignup = await prisma.pendingSignups.findUnique({ email })
+
+  if (!user && !pendingSignup) {
+    return { error: 'No account or pending signup found for this email' }
   }
 
-  // Generate OTP
+  // If pending signup exists but expired, delete it
+  if (pendingSignup && new Date(pendingSignup.expiresAt) < new Date()) {
+    await prisma.pendingSignups.delete({ email })
+    return { error: 'Signup session expired. Please sign up again.' }
+  }
+
+  // Generate OTP (works for both existing users and pending signups)
   await generateOTP(email)
 
   return { success: true }
@@ -226,8 +250,63 @@ export async function verifyEmailOtp(formData: FormData) {
     return { error: 'Invalid or expired OTP' }
   }
 
-  // Update user as verified
-  const user = await prisma.users.update({ email }, { verified: true })
+  // Find pending signup
+  const pendingSignup = await prisma.pendingSignups.findUnique({ email })
+
+  if (!pendingSignup) {
+    return { error: 'Signup session expired. Please sign up again.' }
+  }
+
+  // Check if pending signup has expired
+  if (new Date(pendingSignup.expiresAt) < new Date()) {
+    await prisma.pendingSignups.delete({ email })
+    return { error: 'Signup session expired. Please sign up again.' }
+  }
+
+  // Check if user already exists (race condition check)
+  const existing = await prisma.users.findUnique({ email })
+  if (existing) {
+    // User already exists, delete pending signup and verify existing user
+    await prisma.pendingSignups.delete({ email })
+    const user = await prisma.users.update({ email }, { verified: true })
+    await createSession(user.id)
+    redirect(`/verify/success?role=${user.role}`)
+  }
+
+  // Create user from pending signup data (verified = true since OTP is verified)
+  let user
+  if (pendingSignup.role === 'EMPLOYEE') {
+    user = await prisma.users.create({
+      role: 'EMPLOYEE',
+      firstName: pendingSignup.firstName,
+      lastName: pendingSignup.lastName,
+      email: pendingSignup.email,
+      password: pendingSignup.password,
+      socialUrl: pendingSignup.socialUrl, // Phone number
+      photoUrl: pendingSignup.photoUrl,
+      verified: true, // OTP verified, so account is verified
+    })
+  } else {
+    // EMPLOYER
+    user = await prisma.users.create({
+      role: 'EMPLOYER',
+      firstName: pendingSignup.firstName,
+      lastName: pendingSignup.lastName,
+      email: pendingSignup.email,
+      password: pendingSignup.password,
+      state: pendingSignup.state,
+      city: pendingSignup.city,
+      position: pendingSignup.position,
+      photoUrl: pendingSignup.photoUrl,
+      verified: true, // OTP verified, so account is verified
+      employerProfile: {
+        businessId: pendingSignup.businessId!,
+      },
+    } as any)
+  }
+
+  // Delete pending signup after successful user creation
+  await prisma.pendingSignups.delete({ email })
 
   // Create session
   await createSession(user.id)
