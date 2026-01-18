@@ -26,7 +26,7 @@ export default function Tabs({ tabs, defaultTab }: TabsProps) {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                px-6 py-3 text-sm font-medium rounded-md transition-colors
+                px-6 py-3 text-base font-medium rounded-md transition-colors
                 ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
