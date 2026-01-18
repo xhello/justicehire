@@ -43,6 +43,7 @@ export async function signupEmployee(formData: FormData) {
     lastName: formData.get('lastName') as string,
     email: formData.get('email') as string,
     password: formData.get('password') as string,
+    confirmPassword: formData.get('confirmPassword') as string,
     phoneNumber: formData.get('phoneNumber') as string,
     photoUrl: formData.get('photoUrl') as string,
   }
