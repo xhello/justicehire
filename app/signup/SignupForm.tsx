@@ -76,10 +76,14 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           result = await signupEmployer(formData)
         }
 
-        if (result?.error) {
+        if (result && 'error' in result) {
           setError(result.error)
           setLoading(false)
         } else {
+          if (result && 'warning' in result) {
+            // Show warning but still proceed to verification page
+            alert(result.warning)
+          }
           router.push(`/verify?email=${formData.get('email')}`)
         }
       } catch (err) {

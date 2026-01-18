@@ -75,9 +75,24 @@ export async function signupEmployee(formData: FormData) {
     })
 
     // Generate and send OTP
-    await generateOTP(validated.email)
+    let otpSent = false
+    try {
+      await generateOTP(validated.email)
+      console.log(`[Signup] OTP sent successfully to ${validated.email}`)
+      otpSent = true
+    } catch (otpError: any) {
+      console.error('[Signup] Failed to generate/send OTP:', otpError)
+      console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
+      // Don't fail signup if OTP fails, but log it
+      // User can request a new OTP later if needed
+    }
 
-    return { success: true, userId: user.id }
+    return { 
+      success: true, 
+      userId: user.id,
+      otpSent,
+      ...(otpSent ? {} : { warning: 'Account created but OTP email failed to send. Please use the resend option on the verification page.' })
+    }
   } catch (error: any) {
     console.error('Error in signupEmployee:', error)
     
@@ -144,9 +159,24 @@ export async function signupEmployer(formData: FormData) {
   } as any)
 
   // Generate and send OTP
-  await generateOTP(validated.email)
+  let otpSent = false
+  try {
+    await generateOTP(validated.email)
+    console.log(`[Signup] OTP sent successfully to ${validated.email}`)
+    otpSent = true
+  } catch (otpError: any) {
+    console.error('[Signup] Failed to generate/send OTP:', otpError)
+    console.error('[Signup] OTP Error details:', otpError?.message, otpError?.stack)
+    // Don't fail signup if OTP fails, but log it
+    // User can request a new OTP later if needed
+  }
 
-  return { success: true, userId: user.id }
+  return { 
+    success: true, 
+    userId: user.id,
+    otpSent,
+    ...(otpSent ? {} : { warning: 'Account created but OTP email failed to send. Please use the resend option on the verification page.' })
+  }
   } catch (error: any) {
     console.error('Error in signupEmployer:', error)
     

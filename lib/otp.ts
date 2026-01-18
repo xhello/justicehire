@@ -13,7 +13,7 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
   try {
     const resend = new Resend(resendApiKey)
     
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: 'Your Justice Hire Verification Code',
@@ -30,38 +30,53 @@ async function sendOTPEmail(email: string, otp: string): Promise<void> {
       `,
     })
     
-    console.log(`[OTP] Email sent successfully to ${email}`)
-  } catch (error) {
+    if (result.error) {
+      console.error('[OTP] Resend API error:', result.error)
+      throw new Error(`Failed to send email: ${JSON.stringify(result.error)}`)
+    }
+    
+    console.log(`[OTP] Email sent successfully to ${email}, ID: ${result.data?.id || 'unknown'}`)
+  } catch (error: any) {
     console.error('[OTP] Failed to send email:', error)
+    console.error('[OTP] Error details:', error?.message, error?.stack)
     // Fallback: log to console if email sending fails
-    console.log(`[OTP] Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
+    console.log(`[OTP] FALLBACK - Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
+    // Re-throw so caller knows email failed
+    throw error
   }
 }
 
 export async function generateOTP(email: string): Promise<string> {
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString()
-  
-  // Hash the OTP
-  const hash = crypto.createHash('sha256').update(otp).digest('hex')
-  
-  // Store hash and expiry
-  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
-  
-  // Delete old OTPs for this email
-  await prisma.otps.deleteMany({ email })
-  
-  // Store in database
-  await prisma.otps.create({
-    email,
-    hash,
-    expiresAt: expiresAt.toISOString(),
-  })
-  
-  // Send OTP via email
-  await sendOTPEmail(email, otp)
-  
-  return otp
+  try {
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    
+    // Hash the OTP
+    const hash = crypto.createHash('sha256').update(otp).digest('hex')
+    
+    // Store hash and expiry
+    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
+    
+    // Delete old OTPs for this email
+    await prisma.otps.deleteMany({ email })
+    
+    // Store in database
+    await prisma.otps.create({
+      email,
+      hash,
+      expiresAt: expiresAt.toISOString(),
+    })
+    
+    console.log(`[OTP] Generated and stored OTP for ${email}`)
+    
+    // Send OTP via email
+    await sendOTPEmail(email, otp)
+    
+    return otp
+  } catch (error: any) {
+    console.error(`[OTP] Error generating OTP for ${email}:`, error)
+    throw error
+  }
 }
 
 export async function verifyOTP(email: string, otp: string): Promise<boolean> {
