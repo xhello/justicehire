@@ -154,12 +154,14 @@ export default async function EmployerProfilePage({
                 <p className="text-sm text-gray-600">{employerPosition}</p>
               )}
               {employer.employerProfile && (
-                <Link
-                  href={`/business/${employer.employerProfile.business.id}`}
-                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                >
-                  {employer.employerProfile.business.name}
-                </Link>
+                <p className="text-sm text-gray-600">
+                  <Link 
+                    href={`/business/${employer.employerProfile.business.id}`}
+                    className="text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    {employer.employerProfile.business.name}
+                  </Link>
+                </p>
               )}
             </div>
           </div>

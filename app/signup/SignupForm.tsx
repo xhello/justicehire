@@ -5,7 +5,6 @@ import { signupEmployee, signupEmployer } from '../actions/auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageCropper from '@/components/ImageCropper'
-import PhoneVerification from '@/components/PhoneVerification'
 
 export default function SignupForm({ businesses }: { businesses: any[] }) {
   const [role, setRole] = useState<'EMPLOYEE' | 'EMPLOYER'>('EMPLOYEE')
@@ -17,8 +16,6 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
   const [selectedState, setSelectedState] = useState<string>('')
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [loadingCities, setLoadingCities] = useState(false)
-  const [phoneVerified, setPhoneVerified] = useState(false)
-  const [phoneNumber, setPhoneNumber] = useState<string>('')
   const router = useRouter()
 
   // Fetch cities when state changes
@@ -110,13 +107,6 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
       return
     }
     
-    // Check if phone is verified
-    if (!phoneVerified) {
-      setError('Please verify your phone number first')
-      setLoading(false)
-      return
-    }
-
     // Use cropped image if available, otherwise show error
     if (croppedImage) {
       // Check if base64 string is too large (max 1.5MB base64)
@@ -127,7 +117,6 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
       }
 
       formData.set('photoUrl', croppedImage)
-      formData.set('phoneVerified', 'true') // Flag to indicate phone is verified
       
       try {
         let result
@@ -141,12 +130,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           setError(result.error)
           setLoading(false)
         } else {
-          // Redirect to dashboard (phone verification is done client-side, user is created)
-          if (role === 'EMPLOYEE') {
-            router.push('/dashboard/employee')
-          } else {
-            router.push('/dashboard/employer')
-          }
+          router.push(`/verify?email=${formData.get('email')}`)
         }
       } catch (err) {
         console.error('Signup error:', err)
@@ -319,93 +303,23 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
             </div>
 
             {role === 'EMPLOYEE' && (
-              <>
-                <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    type="tel"
-                    placeholder="(555) 123-4567"
-                    required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={phoneVerified}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Enter your phone number to receive verification code</p>
-                </div>
-                
-                {phoneNumber && !phoneVerified && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-blue-900 mb-2">Verify Phone Number</h4>
-                    <PhoneVerification
-                      phoneNumber={phoneNumber}
-                      onVerificationSuccess={(verifiedPhone) => {
-                        setPhoneVerified(true)
-                        setPhoneNumber(verifiedPhone)
-                        setError(null)
-                      }}
-                      onError={(error) => setError(error)}
-                    />
-                  </div>
-                )}
-                
-                {phoneVerified && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm text-green-700">
-                      ✓ Phone number verified: {phoneNumber}
-                    </p>
-                  </div>
-                )}
-              </>
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  required
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             )}
 
             {role === 'EMPLOYER' && (
               <>
-                <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    type="tel"
-                    placeholder="(555) 123-4567"
-                    required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={phoneVerified}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Enter your phone number to receive verification code</p>
-                </div>
-                
-                {phoneNumber && !phoneVerified && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-blue-900 mb-2">Verify Phone Number</h4>
-                    <PhoneVerification
-                      phoneNumber={phoneNumber}
-                      onVerificationSuccess={(verifiedPhone) => {
-                        setPhoneVerified(true)
-                        setPhoneNumber(verifiedPhone)
-                        setError(null)
-                      }}
-                      onError={(error) => setError(error)}
-                    />
-                  </div>
-                )}
-                
-                {phoneVerified && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm text-green-700">
-                      ✓ Phone number verified: {phoneNumber}
-                    </p>
-                  </div>
-                )}
-
                 <div>
                   <label htmlFor="state" className="block text-sm font-medium text-gray-700">
                     State
@@ -527,16 +441,11 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           <div>
             <button
               type="submit"
-              disabled={loading || !phoneVerified}
+              disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {loading ? 'Signing up...' : phoneVerified ? 'Sign Up' : 'Verify Phone Number First'}
+              {loading ? 'Signing up...' : 'Sign Up'}
             </button>
-            {!phoneVerified && (
-              <p className="mt-2 text-xs text-center text-gray-500">
-                Please verify your phone number before submitting
-              </p>
-            )}
           </div>
         </form>
         </div>
