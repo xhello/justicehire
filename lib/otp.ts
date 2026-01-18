@@ -1,8 +1,50 @@
 import { prisma } from './prisma'
 import crypto from 'crypto'
 import { staticOtps } from './static-data'
+import { Resend } from 'resend'
 
 const OTP_EXPIRY_MINUTES = 10
+
+async function sendOTPEmail(email: string, otp: string): Promise<void> {
+  const resendApiKey = process.env.RESEND_API_KEY
+  
+  // If Resend API key is not configured, just log to console (for development)
+  if (!resendApiKey) {
+    console.log(`[OTP] Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
+    console.log('[OTP] Resend API key not configured. Set RESEND_API_KEY in .env.local to send emails.')
+    return
+  }
+
+  try {
+    const resend = new Resend(resendApiKey)
+    
+    // Get the from email from env or use a default
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    
+    await resend.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Your Justice Hire Verification Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Justice Hire - Email Verification</h2>
+          <p>Your verification code is:</p>
+          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+            <h1 style="color: #1f2937; font-size: 32px; letter-spacing: 4px; margin: 0;">${otp}</h1>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;">This code will expire in ${OTP_EXPIRY_MINUTES} minutes.</p>
+          <p style="color: #6b7280; font-size: 14px;">If you didn't request this code, please ignore this email.</p>
+        </div>
+      `,
+    })
+    
+    console.log(`[OTP] Email sent successfully to ${email}`)
+  } catch (error) {
+    console.error('[OTP] Failed to send email:', error)
+    // Fallback: log to console if email sending fails
+    console.log(`[OTP] Email: ${email}, OTP: ${otp}, Expires: ${new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000).toISOString()}`)
+  }
+}
 
 export async function generateOTP(email: string): Promise<string> {
   // Generate 6-digit OTP
@@ -14,9 +56,6 @@ export async function generateOTP(email: string): Promise<string> {
   // Store hash and expiry
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
   
-  // Log OTP to console (as per requirements)
-  console.log(`[OTP] Email: ${email}, OTP: ${otp}, Expires: ${expiresAt.toISOString()}`)
-  
   // Delete old OTPs for this email
   await prisma.otps.deleteMany({ email })
   
@@ -26,6 +65,9 @@ export async function generateOTP(email: string): Promise<string> {
     hash,
     expiresAt: expiresAt.toISOString(),
   })
+  
+  // Send OTP via email
+  await sendOTPEmail(email, otp)
   
   return otp
 }

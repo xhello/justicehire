@@ -64,13 +64,25 @@ An anonymous, verified review network for the hospitality industry where employe
 
 You can log in with any of these emails (no password needed for MVP).
 
-## Email Verification (MVP)
+## Email Verification
 
-For the MVP, email verification uses a mock OTP service:
+Email verification uses OTP (One-Time Password) codes:
 - OTP codes are generated as 6-digit numbers
-- OTP codes are logged to the server console
-- Check your terminal/console to see the OTP code when signing up
 - OTP codes expire after 10 minutes
+- **Email Service**: Uses Resend to send OTP emails
+
+### Setting up Email (Resend)
+
+1. Sign up for a free account at [resend.com](https://resend.com)
+2. Get your API key from the Resend dashboard
+3. Add to your `.env.local` file:
+   ```
+   RESEND_API_KEY=re_xxxxxxxxxxxxx
+   RESEND_FROM_EMAIL=noreply@yourdomain.com
+   ```
+   Note: For development, you can use `onboarding@resend.dev` as the from email. For production, you'll need to verify your domain with Resend.
+
+**Development Mode**: If `RESEND_API_KEY` is not set, OTP codes will be logged to the console instead of being sent via email.
 
 ## Seeded Data
 
