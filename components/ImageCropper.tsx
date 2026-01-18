@@ -148,33 +148,63 @@ export default function ImageCropper({ imageSrc, onCrop, onCancel, aspectRatio =
     if (!ctx) return
     
     const container = containerRef.current
-    // Ensure square crop area
-    const containerSize = Math.min(container.clientWidth, container.clientHeight)
+    const containerRect = container.getBoundingClientRect()
+    // Get actual rendered container size (should be square)
+    const containerSize = Math.min(containerRect.width, containerRect.height)
     
     // Set canvas size to square (1:1 aspect ratio)
     canvas.width = containerSize
     canvas.height = containerSize
     
     const img = imageRef.current
-    const imgWidth = img.naturalWidth
-    const imgHeight = img.naturalHeight
     
-    // Calculate source coordinates for square crop
-    const sourceX = -position.x / scale
-    const sourceY = -position.y / scale
-    const sourceSize = containerSize / scale
+    // The image is displayed with:
+    // - transform: translate(position.x, position.y) scale(scale)
+    // - transform-origin: 0 0
+    // This means the image's top-left corner is at (position.x, position.y) in container coordinates
     
-    // Draw the cropped square portion of the image
+    // The container shows from (0, 0) to (containerSize, containerSize)
+    // We need to map this to the original image coordinates
+    
+    // Container coordinate (0, 0) maps to image coordinate (-position.x / scale, -position.y / scale)
+    // Container coordinate (containerSize, containerSize) maps to image coordinate ((containerSize - position.x) / scale, (containerSize - position.y) / scale)
+    
+    // Calculate source rectangle in original image coordinates
+    const sourceX = Math.max(0, -position.x / scale)
+    const sourceY = Math.max(0, -position.y / scale)
+    const sourceWidth = (containerSize - Math.max(0, position.x) + Math.max(0, -position.x)) / scale
+    const sourceHeight = (containerSize - Math.max(0, position.y) + Math.max(0, -position.y)) / scale
+    
+    // Ensure we don't go beyond image bounds
+    const actualSourceWidth = Math.min(sourceWidth, img.naturalWidth - sourceX)
+    const actualSourceHeight = Math.min(sourceHeight, img.naturalHeight - sourceY)
+    
+    // Use square crop - use the smaller dimension to ensure square output
+    const sourceSize = Math.min(actualSourceWidth, actualSourceHeight)
+    
+    // Calculate destination offset if image doesn't fill container
+    const destOffsetX = position.x < 0 ? 0 : (containerSize - (sourceSize * scale)) / 2
+    const destOffsetY = position.y < 0 ? 0 : (containerSize - (sourceSize * scale)) / 2
+    
+    // Clear canvas with white background
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, containerSize, containerSize)
+    
+    // Draw the cropped square portion
+    // If image extends beyond container, we crop from the center of what's visible
+    const finalSourceX = position.x < 0 ? sourceX : Math.max(0, sourceX - (sourceWidth - sourceSize) / 2)
+    const finalSourceY = position.y < 0 ? sourceY : Math.max(0, sourceY - (sourceHeight - sourceSize) / 2)
+    
     ctx.drawImage(
       img,
-      sourceX,
-      sourceY,
+      finalSourceX,
+      finalSourceY,
       sourceSize,
       sourceSize,
-      0,
-      0,
-      containerSize,
-      containerSize
+      destOffsetX,
+      destOffsetY,
+      containerSize - (destOffsetX * 2),
+      containerSize - (destOffsetY * 2)
     )
     
     // Convert to base64
