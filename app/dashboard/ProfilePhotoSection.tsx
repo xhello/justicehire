@@ -24,6 +24,22 @@ export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Check file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        setError('Photo is too large. Please choose a photo smaller than 10MB.')
+        // Reset file input
+        e.target.value = ''
+        return
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file.')
+        e.target.value = ''
+        return
+      }
+
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
@@ -31,6 +47,7 @@ export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) 
       }
       reader.onerror = () => {
         setError('Failed to read photo file. Please try again.')
+        e.target.value = ''
       }
       reader.readAsDataURL(file)
     }
@@ -43,6 +60,13 @@ export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) 
     setLoading(true)
 
     try {
+      // Check if base64 string is too large (roughly 3MB base64 = ~2MB actual)
+      if (croppedImageData.length > 3 * 1024 * 1024) {
+        setError('Photo is too large after processing. Please try a smaller photo or crop it more.')
+        setLoading(false)
+        return
+      }
+
       const formData = new FormData()
       formData.append('photoUrl', croppedImageData)
 
@@ -55,7 +79,8 @@ export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) 
         router.refresh()
       }
     } catch (err) {
-      setError('An error occurred. Please try again.')
+      console.error('Photo update error:', err)
+      setError('An error occurred. Please try again. If the issue persists, try using a smaller photo.')
     } finally {
       setLoading(false)
     }

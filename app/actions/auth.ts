@@ -291,10 +291,11 @@ export async function login(formData: FormData) {
     return { error: 'Please verify your email first' }
   }
 
-  // Handle users without passwords
+  // Handle users without passwords (created before password auth was added)
   if (!user.password) {
-    // Redirect to forgot password page to allow them to set a password
-    redirect(`/forgot-password?email=${encodeURIComponent(email)}&setPassword=true`)
+    // Redirect to forgot password page with a message
+    // We'll allow them to set a password via reset flow
+    redirect(`/forgot-password?email=${encodeURIComponent(email)}&noPassword=true`)
   }
 
   const isPasswordValid = await verifyPassword(password, user.password)

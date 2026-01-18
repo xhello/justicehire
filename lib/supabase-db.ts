@@ -10,7 +10,6 @@ export interface SupabaseUser {
   firstName: string
   lastName: string
   email: string
-  password?: string | null
   socialUrl?: string | null
   photoUrl?: string | null
   state?: string | null
@@ -198,7 +197,6 @@ export const supabaseDb = {
             firstName: data.firstName,
             lastName: data.lastName,
             email: data.email,
-            password: data.password || null,
             socialUrl: data.socialUrl || null,
             photoUrl: data.photoUrl || null,
             state: data.state || null,
@@ -240,17 +238,10 @@ export const supabaseDb = {
     
     update: async (where: { id?: string; email?: string }, data: Partial<SupabaseUser>): Promise<SupabaseUser> => {
       try {
-        // Extract password separately to ensure it's included
-        const updateData: any = {
+        let query = supabaseAdmin.from('User').update({
           ...data,
           updatedAt: new Date().toISOString(),
-        }
-        // Explicitly include password if provided
-        if (data.password !== undefined) {
-          updateData.password = data.password
-        }
-        
-        let query = supabaseAdmin.from('User').update(updateData)
+        })
         
         if (where.id) {
           query = query.eq('id', where.id)

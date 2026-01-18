@@ -14,14 +14,14 @@ function ForgotPasswordForm() {
 
   useEffect(() => {
     const emailParam = searchParams.get('email')
-    const setPassword = searchParams.get('setPassword')
+    const noPassword = searchParams.get('noPassword')
     
     if (emailParam) {
       setEmail(emailParam)
     }
     
-    if (setPassword === 'true') {
-      setError('Your account doesn\'t have a password set. Please set a password using the reset link we\'ll send to your email.')
+    if (noPassword === 'true') {
+      setError('Your account was created before password authentication was added. Please set a password using the reset link we\'ll send to your email.')
     }
   }, [searchParams])
 

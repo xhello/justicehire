@@ -44,6 +44,22 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Check file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        setError('Photo is too large. Please choose a photo smaller than 10MB.')
+        // Reset file input
+        e.target.value = ''
+        return
+      }
+
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file.')
+        e.target.value = ''
+        return
+      }
+
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
@@ -51,6 +67,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
       }
       reader.onerror = () => {
         setError('Failed to read photo file. Please try again.')
+        e.target.value = ''
       }
       reader.readAsDataURL(file)
     }
@@ -92,6 +109,13 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
     
     // Use cropped image if available, otherwise show error
     if (croppedImage) {
+      // Check if base64 string is too large (roughly 3MB base64 = ~2MB actual)
+      if (croppedImage.length > 3 * 1024 * 1024) {
+        setError('Photo is too large after processing. Please try a smaller photo or crop it more.')
+        setLoading(false)
+        return
+      }
+
       formData.set('photoUrl', croppedImage)
       
       try {
@@ -109,7 +133,8 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           router.push(`/verify?email=${formData.get('email')}`)
         }
       } catch (err) {
-        setError('An error occurred. Please try again.')
+        console.error('Signup error:', err)
+        setError('An error occurred. Please try again. If the issue persists, try using a smaller photo.')
         setLoading(false)
       }
     } else {
