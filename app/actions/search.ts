@@ -63,13 +63,7 @@ export async function searchResults(filters: {
       }
     })
     
-    // Sort by review count (descending), then by name
-    businessesWithCounts.sort((a: any, b: any) => {
-      if (b._count.reviews !== a._count.reviews) {
-        return b._count.reviews - a._count.reviews
-      }
-      return a.name.localeCompare(b.name)
-    })
+    businessesWithCounts.sort((a: any, b: any) => a.name.localeCompare(b.name))
     return businessesWithCounts
   } else if (category === 'employer') {
     // Fetch employers
@@ -289,13 +283,7 @@ export async function searchResults(filters: {
       }
     })
     
-    // Sort by review count (descending), then by name
-    businessesWithCounts.sort((a: any, b: any) => {
-      if (b._count.reviews !== a._count.reviews) {
-        return b._count.reviews - a._count.reviews
-      }
-      return a.name.localeCompare(b.name)
-    })
+    businessesWithCounts.sort((a: any, b: any) => a.name.localeCompare(b.name))
     return businessesWithCounts
   }
   } catch (err) {

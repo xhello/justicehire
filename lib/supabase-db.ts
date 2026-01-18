@@ -240,10 +240,17 @@ export const supabaseDb = {
     
     update: async (where: { id?: string; email?: string }, data: Partial<SupabaseUser>): Promise<SupabaseUser> => {
       try {
-        let query = supabaseAdmin.from('User').update({
+        // Extract password separately to ensure it's included
+        const updateData: any = {
           ...data,
           updatedAt: new Date().toISOString(),
-        })
+        }
+        // Explicitly include password if provided
+        if (data.password !== undefined) {
+          updateData.password = data.password
+        }
+        
+        let query = supabaseAdmin.from('User').update(updateData)
         
         if (where.id) {
           query = query.eq('id', where.id)

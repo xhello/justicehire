@@ -88,13 +88,9 @@ export async function signupEmployee(formData: FormData) {
     return { success: true }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
-    console.error('Error details:', JSON.stringify(error, null, 2))
     // Check if it's a table not found error
-    if (error?.message?.includes('PendingSignup') || 
-        error?.message?.includes('does not exist') ||
-        error?.message?.includes('relation') ||
-        error?.code === '42P01') {
-      return { error: 'Database setup incomplete. Please run the SQL migration to create the PendingSignup table.' }
+    if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
+      return { error: 'Database setup incomplete. Please contact support.' }
     }
     return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
@@ -164,13 +160,9 @@ export async function signupEmployer(formData: FormData) {
     return { success: true }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
-    console.error('Error details:', JSON.stringify(error, null, 2))
     // Check if it's a table not found error
-    if (error?.message?.includes('PendingSignup') || 
-        error?.message?.includes('does not exist') ||
-        error?.message?.includes('relation') ||
-        error?.code === '42P01') {
-      return { error: 'Database setup incomplete. Please run the SQL migration to create the PendingSignup table.' }
+    if (error?.message?.includes('PendingSignup') || error?.message?.includes('does not exist')) {
+      return { error: 'Database setup incomplete. Please contact support.' }
     }
     return { error: error?.message || 'Failed to create signup. Please try again.' }
   }
@@ -299,11 +291,10 @@ export async function login(formData: FormData) {
     return { error: 'Please verify your email first' }
   }
 
-  // Handle users without passwords (created before password auth was added)
+  // Handle users without passwords
   if (!user.password) {
-    // Redirect to forgot password page with a message
-    // We'll allow them to set a password via reset flow
-    redirect(`/forgot-password?email=${encodeURIComponent(email)}&noPassword=true`)
+    // Redirect to forgot password page to allow them to set a password
+    redirect(`/forgot-password?email=${encodeURIComponent(email)}&setPassword=true`)
   }
 
   const isPasswordValid = await verifyPassword(password, user.password)
