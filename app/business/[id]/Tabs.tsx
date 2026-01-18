@@ -30,7 +30,7 @@ export default function Tabs({ tabs, defaultTab }: TabsProps) {
                 ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-800 hover:bg-gray-400'
+                    : 'bg-white text-blue-600 border border-blue-600 hover:bg-blue-50'
                 }
               `}
             >
