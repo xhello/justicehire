@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signupEmployee, signupEmployer } from '../actions/auth'
+import { getUniqueCities } from '../actions/business'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageCropper from '@/components/ImageCropper'
@@ -13,6 +14,9 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
+  const [selectedState, setSelectedState] = useState<string>('')
+  const [availableCities, setAvailableCities] = useState<string[]>([])
+  const [loadingCities, setLoadingCities] = useState(false)
   const router = useRouter()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +48,37 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
     const fileInput = document.getElementById('photo') as HTMLInputElement
     if (fileInput) {
       fileInput.value = ''
+    }
+  }
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (selectedState) {
+        setLoadingCities(true)
+        try {
+          const cities = await getUniqueCities(selectedState)
+          setAvailableCities(cities as string[])
+        } catch (err) {
+          console.error('Error fetching cities:', err)
+          setAvailableCities([])
+        } finally {
+          setLoadingCities(false)
+        }
+      } else {
+        setAvailableCities([])
+      }
+    }
+
+    fetchCities()
+  }, [selectedState])
+
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedState(e.target.value)
+    // Reset city when state changes
+    const citySelect = document.getElementById('city') as HTMLSelectElement
+    if (citySelect) {
+      citySelect.value = ''
     }
   }
 
@@ -277,6 +312,8 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                     id="state"
                     name="state"
                     required
+                    value={selectedState}
+                    onChange={handleStateChange}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select state</option>
@@ -289,13 +326,28 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700">
                     City
                   </label>
-                  <input
+                  <select
                     id="city"
                     name="city"
-                    type="text"
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
+                    disabled={!selectedState || loadingCities}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!selectedState 
+                        ? 'Select state first' 
+                        : loadingCities 
+                        ? 'Loading cities...' 
+                        : availableCities.length === 0
+                        ? 'No cities available'
+                        : 'Select city'}
+                    </option>
+                    {availableCities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
