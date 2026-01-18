@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signupEmployee, signupEmployer } from '../actions/auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -13,7 +13,33 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
+  const [selectedState, setSelectedState] = useState<string>('')
+  const [availableCities, setAvailableCities] = useState<string[]>([])
+  const [loadingCities, setLoadingCities] = useState(false)
   const router = useRouter()
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (selectedState) {
+        setLoadingCities(true)
+        try {
+          const response = await fetch(`/api/cities?state=${selectedState}`)
+          const data = await response.json()
+          setAvailableCities(data.cities || [])
+        } catch (err) {
+          console.error('Error fetching cities:', err)
+          setAvailableCities([])
+        } finally {
+          setLoadingCities(false)
+        }
+      } else {
+        setAvailableCities([])
+      }
+    }
+
+    fetchCities()
+  }, [selectedState])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -277,6 +303,15 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                     id="state"
                     name="state"
                     required
+                    value={selectedState}
+                    onChange={(e) => {
+                      setSelectedState(e.target.value)
+                      // Reset city when state changes
+                      const citySelect = document.getElementById('city') as HTMLSelectElement
+                      if (citySelect) {
+                        citySelect.value = ''
+                      }
+                    }}
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select state</option>
@@ -289,13 +324,29 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700">
                     City
                   </label>
-                  <input
+                  <select
                     id="city"
                     name="city"
-                    type="text"
                     required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  />
+                    disabled={!selectedState || loadingCities}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {!selectedState 
+                        ? 'Select state first' 
+                        : loadingCities 
+                        ? 'Loading cities...' 
+                        : 'Select city'}
+                    </option>
+                    {availableCities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                  {!selectedState && (
+                    <p className="mt-1 text-xs text-gray-500">Please select a state first</p>
+                  )}
                 </div>
 
                 <div>
