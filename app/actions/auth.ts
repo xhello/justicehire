@@ -280,7 +280,7 @@ export async function verifyEmailOtp(formData: FormData) {
       city: pendingSignup.city || null,
       position: pendingSignup.position || null,
       photoUrl: pendingSignup.photoUrl || null,
-      verified: true, // Verified since OTP was successful
+      verified: false, // Employers default to false, need additional verification
       employerProfile: {
         businessId: pendingSignup.businessId,
       },
