@@ -14,9 +14,10 @@ interface ProfilePhotoSectionProps {
     email: string
     verified: boolean
   }
+  ratingCount?: number
 }
 
-export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) {
+export default function ProfilePhotoSection({ user, ratingCount }: ProfilePhotoSectionProps) {
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -211,6 +212,18 @@ export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) 
               </span>
             </div>
           </div>
+          
+          {/* Rating count */}
+          {ratingCount !== undefined && (
+            <div className="mb-4 text-center">
+              <p className="text-sm font-medium text-gray-700">
+                Ratings Received
+              </p>
+              <p className="text-2xl font-bold text-blue-600">
+                {ratingCount}
+              </p>
+            </div>
+          )}
           
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm w-full">

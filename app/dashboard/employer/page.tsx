@@ -170,14 +170,17 @@ export default async function EmployerDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <ProfilePhotoSection user={{
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              photoUrl: user.photoUrl,
-              email: user.email,
-              verified: user.verified,
-            }} />
+            <ProfilePhotoSection 
+              user={{
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                photoUrl: user.photoUrl,
+                email: user.email,
+                verified: user.verified,
+              }}
+              ratingCount={employerReviewsReceived.length}
+            />
           </div>
           
           <div className="lg:col-span-2 space-y-6">
