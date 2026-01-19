@@ -325,10 +325,8 @@ export async function login(formData: FormData) {
     return { error: 'Invalid email or password' }
   }
 
-  // Employees must be verified, but employers can log in with verified: false
-  if (!user.verified && user.role === 'EMPLOYEE') {
-    return { error: 'Please verify your email first' }
-  }
+  // Both employees and employers can log in even if not verified
+  // They can verify their email from the dashboard
 
   // Handle users without passwords (created before password auth was added)
   if (!user.password) {
