@@ -12,22 +12,23 @@ export default async function EmployeeProfilePage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
-  const user = await getCurrentUser()
-  const employee = await getUserProfile(id)
+  try {
+    const { id } = await params
+    const user = await getCurrentUser()
+    const employee = await getUserProfile(id)
 
-  if (!employee || employee.role !== 'EMPLOYEE') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Employee not found</h1>
-          <Link href="/dashboard/employer" className="text-blue-600 hover:text-blue-700">
-            Back to dashboard
-          </Link>
+    if (!employee || employee.role !== 'EMPLOYEE') {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Employee not found</h1>
+            <Link href="/dashboard/employer" className="text-blue-600 hover:text-blue-700">
+              Back to dashboard
+            </Link>
+          </div>
         </div>
-      </div>
-    )
-  }
+      )
+    }
 
   // Check if current user can review this employee
   // Allow both employers and employees to review
@@ -43,76 +44,108 @@ export default async function EmployeeProfilePage({
   let reviewBusinessId: string | null = null
   
   if (canReview) {
-    if (user.role === 'EMPLOYER' && user.employerProfile) {
-      reviewBusinessId = user.employerProfile.business.id
-    } else if (user.role === 'EMPLOYEE') {
-      // Find businesses both employees have reviewed
-      // Business reviews have targetType: 'BUSINESS' and targetUserId: null
-      const allReviews = await prisma.reviews.findMany({
-        reviewerId: user.id,
-      })
-      const reviewerBusinessReviews = allReviews.filter((r: any) => 
-        r.targetType === 'BUSINESS' && r.targetUserId === null
-      )
-      
-      const allTargetReviews = await prisma.reviews.findMany({
-        reviewerId: employee.id,
-      })
-      const targetBusinessReviews = allTargetReviews.filter((r: any) => 
-        r.targetType === 'BUSINESS' && r.targetUserId === null
-      )
-      
-      const reviewerBusinessIds = new Set<string>(reviewerBusinessReviews.map((r: any) => r.businessId as string))
-      const targetBusinessIds = new Set<string>(targetBusinessReviews.map((r: any) => r.businessId as string))
-      
-      // Find common business
-      const commonBusinessId = Array.from(reviewerBusinessIds).find((bid: string) => 
-        targetBusinessIds.has(bid)
-      )
-      
-      if (commonBusinessId) {
-        reviewBusinessId = commonBusinessId
-      } else if (reviewerBusinessReviews.length > 0) {
-        // Use any business the reviewer has reviewed
-        reviewBusinessId = reviewerBusinessReviews[0].businessId
-      } else {
-        // Fallback: get first business from database
-        const firstBusiness = await prisma.businesses.findFirst({})
-        reviewBusinessId = firstBusiness?.id || null
+    try {
+      if (user.role === 'EMPLOYER' && user.employerProfile?.business?.id) {
+        reviewBusinessId = user.employerProfile.business.id
+      } else if (user.role === 'EMPLOYEE') {
+        // Find businesses both employees have reviewed
+        // Business reviews have targetType: 'BUSINESS' and targetUserId: null
+        const allReviews = await prisma.reviews.findMany({
+          reviewerId: user.id,
+        })
+        const reviewerBusinessReviews = allReviews.filter((r: any) => 
+          r.targetType === 'BUSINESS' && r.targetUserId === null && r.businessId
+        )
+        
+        const allTargetReviews = await prisma.reviews.findMany({
+          reviewerId: employee.id,
+        })
+        const targetBusinessReviews = allTargetReviews.filter((r: any) => 
+          r.targetType === 'BUSINESS' && r.targetUserId === null && r.businessId
+        )
+        
+        const reviewerBusinessIds = new Set<string>(reviewerBusinessReviews.map((r: any) => r.businessId as string).filter(Boolean))
+        const targetBusinessIds = new Set<string>(targetBusinessReviews.map((r: any) => r.businessId as string).filter(Boolean))
+        
+        // Find common business
+        const commonBusinessId = Array.from(reviewerBusinessIds).find((bid: string) => 
+          targetBusinessIds.has(bid)
+        )
+        
+        if (commonBusinessId) {
+          reviewBusinessId = commonBusinessId
+        } else if (reviewerBusinessReviews.length > 0 && reviewerBusinessReviews[0].businessId) {
+          // Use any business the reviewer has reviewed
+          reviewBusinessId = reviewerBusinessReviews[0].businessId as string
+        } else {
+          // Fallback: get first business from database
+          const businesses = await prisma.businesses.findMany({})
+          const firstBusiness = businesses.length > 0 ? businesses[0] : null
+          reviewBusinessId = firstBusiness?.id || null
+        }
       }
+    } catch (error) {
+      console.error('Error finding review business ID:', error)
+      // Continue without reviewBusinessId - user won't be able to review
+      reviewBusinessId = null
     }
   }
 
   // Get existing review (if any) to allow updating
-  const existingReview =
-    canReview && reviewBusinessId
-      ? await prisma.reviews.findFirst({
-          reviewerId: user.id,
-          targetUserId: employee.id,
-          businessId: reviewBusinessId,
-        })
-      : null
+  let existingReview = null
+  if (canReview && reviewBusinessId && user) {
+    try {
+      existingReview = await prisma.reviews.findFirst({
+        reviewerId: user.id,
+        targetUserId: employee.id,
+        businessId: reviewBusinessId,
+      })
+    } catch (error) {
+      console.error('Error fetching existing review:', error)
+      existingReview = null
+    }
+  }
   
   // Get all reviews for this employee to display
-  const allReviews = await prisma.reviews.findMany({
-    targetUserId: employee.id,
-    targetType: 'EMPLOYEE',
-  })
+  let allReviews: any[] = []
+  try {
+    allReviews = await prisma.reviews.findMany({
+      targetUserId: employee.id,
+      targetType: 'EMPLOYEE',
+    })
+  } catch (error) {
+    console.error('Error fetching reviews:', error)
+    allReviews = []
+  }
   
   // Get reviewer information for each review (only for role)
-  const reviewsWithUsers = await Promise.all(
-    allReviews.map(async (review: any) => {
-      const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
-      return {
-        ...review,
-        reviewer: reviewer
-          ? {
-              role: reviewer.role,
-            }
-          : null,
-      }
-    })
-  )
+  let reviewsWithUsers: any[] = []
+  try {
+    reviewsWithUsers = await Promise.all(
+      allReviews.map(async (review: any) => {
+        try {
+          const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
+          return {
+            ...review,
+            reviewer: reviewer
+              ? {
+                  role: reviewer.role,
+                }
+              : null,
+          }
+        } catch (error) {
+          console.error('Error fetching reviewer:', error)
+          return {
+            ...review,
+            reviewer: null,
+          }
+        }
+      })
+    )
+  } catch (error) {
+    console.error('Error processing reviews with users:', error)
+    reviewsWithUsers = []
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -304,6 +337,20 @@ export default async function EmployeeProfilePage({
       </main>
     </div>
   )
+  } catch (error) {
+    console.error('Error rendering employee profile page:', error)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h1>
+          <p className="text-gray-600 mb-4">An error occurred while loading the employee profile.</p>
+          <Link href="/" className="text-blue-600 hover:text-blue-700">
+            Go back home
+          </Link>
+        </div>
+      </div>
+    )
+  }
 }
 
 function ReviewForm({
