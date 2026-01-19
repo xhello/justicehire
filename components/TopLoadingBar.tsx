@@ -68,11 +68,44 @@ export default function TopLoadingBar() {
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
-      const button = target.closest('button[type="submit"]')
-      if (button) {
+      
+      // Check for submit buttons
+      const submitButton = target.closest('button[type="submit"]')
+      if (submitButton) {
         startLoading()
         // Complete after reasonable delay
         setTimeout(completeLoading, 2000)
+        return
+      }
+      
+      // Check for tab buttons - buttons that are not submit buttons and are used for tab navigation
+      const button = target.closest('button')
+      if (button && button.type !== 'submit') {
+        // Check if it's a tab button by looking for tab navigation context
+        // Tab buttons are typically in nav elements
+        const isInNav = button.closest('nav') !== null
+        
+        // Check for common tab button text patterns
+        const buttonText = button.textContent?.toLowerCase().trim() || ''
+        const isTabButtonText = 
+          buttonText.includes('business') ||
+          buttonText.includes('employer') ||
+          buttonText.includes('employee') ||
+          buttonText.includes('review received') ||
+          buttonText.includes('reviews received') ||
+          buttonText.includes('reviews given') ||
+          buttonText.includes('review given')
+        
+        // Check if button is in a tab-like container (flex container, typically used for tabs)
+        const parent = button.parentElement
+        const isInTabContainer = parent && parent.classList.contains('flex')
+        
+        // If in nav (tab navigation) OR has tab button text in a flex container, show loading
+        if (isInNav || (isInTabContainer && isTabButtonText)) {
+          startLoading()
+          // Tab switching is instant, so complete quickly
+          setTimeout(completeLoading, 300)
+        }
       }
     }
 
