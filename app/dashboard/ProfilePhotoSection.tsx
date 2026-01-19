@@ -14,17 +14,9 @@ interface ProfilePhotoSectionProps {
     email: string
     verified: boolean
   }
-  ratings?: {
-    ratings: {
-      OUTSTANDING: number
-      DELIVERED_AS_EXPECTED: number
-      GOT_NOTHING_NICE_TO_SAY: number
-    }
-    total: number
-  }
 }
 
-export default function ProfilePhotoSection({ user, ratings }: ProfilePhotoSectionProps) {
+export default function ProfilePhotoSection({ user }: ProfilePhotoSectionProps) {
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -194,54 +186,30 @@ export default function ProfilePhotoSection({ user, ratings }: ProfilePhotoSecti
         <h3 className="text-xl font-semibold mb-4">Profile Photo</h3>
         
         <div className="flex flex-col items-center">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="relative">
-              {user.photoUrl ? (
-                <img
-                  src={user.photoUrl}
-                  alt={`${user.firstName} ${user.lastName}`}
-                  className="w-32 h-32 rounded-lg object-cover border-2 border-gray-300"
-                />
-              ) : (
-                <div className="w-32 h-32 rounded-lg bg-gray-200 flex items-center justify-center border-2 border-gray-300">
-                  <span className="text-gray-500 text-4xl">
-                    {user.firstName[0]}{user.lastName[0]}
-                  </span>
-                </div>
-              )}
-              {/* Verification status badge */}
-              <div className="absolute -top-2 -right-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  user.verified 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {user.verified ? '✓ Verified' : '⚠ Not Verified'}
+          <div className="relative mb-4">
+            {user.photoUrl ? (
+              <img
+                src={user.photoUrl}
+                alt={`${user.firstName} ${user.lastName}`}
+                className="w-32 h-32 rounded-lg object-cover border-2 border-gray-300"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-lg bg-gray-200 flex items-center justify-center border-2 border-gray-300">
+                <span className="text-gray-500 text-4xl">
+                  {user.firstName[0]}{user.lastName[0]}
                 </span>
               </div>
-            </div>
-            
-            {/* Ratings in vertical format */}
-            {ratings && ratings.ratings && (
-              <div className="flex flex-col gap-2 text-sm">
-                <div className="text-green-600">
-                  <div className="font-semibold">Outstanding</div>
-                  <div className="text-lg">{ratings.ratings.OUTSTANDING || 0}</div>
-                </div>
-                <div className="text-yellow-600">
-                  <div className="font-semibold">No issue</div>
-                  <div className="text-lg">{ratings.ratings.DELIVERED_AS_EXPECTED || 0}</div>
-                </div>
-                <div className="text-red-600">
-                  <div className="font-semibold">Nothing nice</div>
-                  <div className="text-lg">{ratings.ratings.GOT_NOTHING_NICE_TO_SAY || 0}</div>
-                </div>
-                <div className="text-gray-600 pt-2 border-t border-gray-300">
-                  <div className="font-semibold">Total</div>
-                  <div className="text-lg">{ratings.total || 0}</div>
-                </div>
-              </div>
             )}
+            {/* Verification status badge */}
+            <div className="absolute -top-2 -right-2">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                user.verified 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {user.verified ? '✓ Verified' : '⚠ Not Verified'}
+              </span>
+            </div>
           </div>
           
           {error && (

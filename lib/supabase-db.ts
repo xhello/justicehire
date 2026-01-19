@@ -10,7 +10,6 @@ export interface SupabaseUser {
   firstName: string
   lastName: string
   email: string
-  password?: string | null
   socialUrl?: string | null
   photoUrl?: string | null
   state?: string | null
@@ -198,7 +197,6 @@ export const supabaseDb = {
             firstName: data.firstName,
             lastName: data.lastName,
             email: data.email,
-            password: data.password || null,
             socialUrl: data.socialUrl || null,
             photoUrl: data.photoUrl || null,
             state: data.state || null,

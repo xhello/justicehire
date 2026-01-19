@@ -187,7 +187,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
             <div className="flex gap-4">
               <Link
                 href="/signup"
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-lg shadow-sm transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
               >
                 Sign Up
               </Link>
