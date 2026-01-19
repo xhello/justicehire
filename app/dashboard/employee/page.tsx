@@ -5,7 +5,6 @@ import { logout } from '@/app/actions/auth'
 import { prisma } from '@/lib/prisma'
 import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from '../ReviewsTabs'
-import { getAggregatedRatings } from '@/app/actions/review'
 
 export default async function EmployeeDashboard() {
   const user = await getCurrentUser()
@@ -20,20 +19,34 @@ export default async function EmployeeDashboard() {
 
   // Employees can access dashboard even if not verified (can verify from dashboard)
 
-  // Get user's rating breakdown
-  let userRatings
+  // Get user's rating breakdown directly
+  let userRatings = {
+    ratings: {
+      OUTSTANDING: 0,
+      DELIVERED_AS_EXPECTED: 0,
+      GOT_NOTHING_NICE_TO_SAY: 0,
+    },
+    total: 0,
+  }
+  
   try {
-    userRatings = await getAggregatedRatings(user.id)
+    const reviewsReceived = await prisma.reviews.findMany({
+      targetUserId: user.id,
+    })
+
+    reviewsReceived.forEach((review: any) => {
+      if (review.rating === 'OUTSTANDING') {
+        userRatings.ratings.OUTSTANDING++
+      } else if (review.rating === 'DELIVERED_AS_EXPECTED') {
+        userRatings.ratings.DELIVERED_AS_EXPECTED++
+      } else if (review.rating === 'GOT_NOTHING_NICE_TO_SAY') {
+        userRatings.ratings.GOT_NOTHING_NICE_TO_SAY++
+      }
+    })
+
+    userRatings.total = reviewsReceived.length
   } catch (error) {
     console.error('Error fetching user ratings:', error)
-    userRatings = {
-      ratings: {
-        OUTSTANDING: 0,
-        DELIVERED_AS_EXPECTED: 0,
-        GOT_NOTHING_NICE_TO_SAY: 0,
-      },
-      total: 0,
-    }
   }
 
   // Get all reviews the employee has given
