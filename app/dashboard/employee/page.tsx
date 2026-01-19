@@ -81,7 +81,7 @@ export default async function EmployeeDashboard() {
             <div className="flex items-center gap-4">
               <Link 
                 href={`/employee/${user.id}`}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+                className="flex items-center"
               >
                 {user.photoUrl ? (
                   <img
@@ -96,12 +96,11 @@ export default async function EmployeeDashboard() {
                     </span>
                   </div>
                 )}
-                {user.firstName} {user.lastName}
               </Link>
               <form action={logout}>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-lg shadow-sm transition-colors"
                 >
                   Logout
                 </button>

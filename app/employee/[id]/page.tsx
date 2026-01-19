@@ -140,7 +140,7 @@ export default async function EmployeeProfilePage({
               {user ? (
                 <Link
                   href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-lg shadow-sm transition-colors"
                 >
                   Dashboard
                 </Link>
@@ -148,7 +148,7 @@ export default async function EmployeeProfilePage({
                 <>
                   <Link
                     href="/signup"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-lg shadow-sm transition-colors"
                   >
                     Sign Up
                   </Link>
