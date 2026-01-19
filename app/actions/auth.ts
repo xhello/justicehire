@@ -372,9 +372,9 @@ export async function forgotPassword(formData: FormData) {
 
     // Send password reset email
     const resend = new Resend('re_9yQ4yVuX_MT1MTmhBbSsB2m6soEBmVxXQ')
-    // Use VERCEL_URL in production, localhost in development
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
+    // Use justhire.com domain for reset password links
+    const baseUrl = process.env.NODE_ENV === 'production'
+      ? 'https://justhire.com'
       : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
     
