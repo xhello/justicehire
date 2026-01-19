@@ -25,7 +25,7 @@ export default function TypeButtons({ selectedType = 'business', counts }: TypeB
     if (city) newParams.set('city', city)
     newParams.set('category', newType)
     
-    router.push(`/?${newParams.toString()}`)
+    router.push(`/?${newParams.toString()}`, { scroll: false })
   }
 
   return (
