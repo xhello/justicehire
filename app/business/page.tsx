@@ -77,7 +77,7 @@ export default async function BusinessSearchPage({
             citiesByState={citiesByState}
             selectedState={params.state}
             selectedCity={params.city}
-            selectedCategory={params.category}
+            selectedType={params.category || 'business'}
           />
         </div>
 
