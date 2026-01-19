@@ -73,7 +73,7 @@ export default async function EmployerDashboard() {
               </Link>
               <Link
                 href="/"
-                className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md transition-colors flex items-center justify-center"
+                className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors flex items-center justify-center"
                 title="Search"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
