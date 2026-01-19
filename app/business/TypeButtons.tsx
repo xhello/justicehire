@@ -28,7 +28,7 @@ export default function TypeButtons({ selectedType = 'business' }: TypeButtonsPr
       <button
         type="button"
         onClick={() => handleTypeChange('business')}
-        className={`w-1/3 px-4 py-2 rounded-md font-medium transition-colors ${
+        className={`flex-1 py-2 px-2 rounded-md font-medium transition-colors ${
           selectedType === 'business'
             ? 'bg-blue-600 text-white'
             : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
@@ -39,7 +39,7 @@ export default function TypeButtons({ selectedType = 'business' }: TypeButtonsPr
       <button
         type="button"
         onClick={() => handleTypeChange('employer')}
-        className={`w-1/3 px-4 py-2 rounded-md font-medium transition-colors ${
+        className={`flex-1 py-2 px-2 rounded-md font-medium transition-colors ${
           selectedType === 'employer'
             ? 'bg-blue-600 text-white'
             : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
@@ -50,7 +50,7 @@ export default function TypeButtons({ selectedType = 'business' }: TypeButtonsPr
       <button
         type="button"
         onClick={() => handleTypeChange('employees')}
-        className={`w-1/3 px-4 py-2 rounded-md font-medium transition-colors ${
+        className={`flex-1 py-2 px-2 rounded-md font-medium transition-colors ${
           selectedType === 'employees'
             ? 'bg-blue-600 text-white'
             : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
