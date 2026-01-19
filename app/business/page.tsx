@@ -4,6 +4,8 @@ import { getCurrentUser } from '@/lib/auth'
 import Link from 'next/link'
 import BusinessFilters from './BusinessFilters'
 import BusinessImage from './BusinessImage'
+import TypeButtons from './TypeButtons'
+import { Suspense } from 'react'
 
 export default async function BusinessSearchPage({
   searchParams,
@@ -226,6 +228,13 @@ export default async function BusinessSearchPage({
               })}
             </div>
           )}
+        </div>
+
+        {/* Type buttons below results */}
+        <div className="bg-white rounded-lg shadow p-6 mt-8">
+          <Suspense fallback={<div className="flex gap-2"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
+            <TypeButtons selectedType={params.category || 'business'} />
+          </Suspense>
         </div>
       </main>
     </div>

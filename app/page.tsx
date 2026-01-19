@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/auth'
 import BusinessFilters from './business/BusinessFilters'
 import BusinessImage from './business/BusinessImage'
 import SuccessBanner from '@/components/SuccessBanner'
+import TypeButtons from './business/TypeButtons'
 
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic'
@@ -260,7 +261,14 @@ export default async function Home({
             </div>
           )}
         </div>
+
+        {/* Type buttons below results */}
+        <div className="bg-white rounded-lg shadow p-6 mt-8">
+          <Suspense fallback={<div className="flex gap-2"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
+            <TypeButtons selectedType={params.category || 'business'} />
+          </Suspense>
+        </div>
       </main>
     </div>
-    )
+  )
 }

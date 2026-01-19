@@ -7,7 +7,7 @@ interface BusinessFiltersProps {
   citiesByState: Record<string, string[]>
   selectedState?: string
   selectedCity?: string
-  selectedType?: string
+  selectedType?: string // Keep for handleSubmit to preserve type in URL
 }
 
 export default function BusinessFilters({
@@ -19,7 +19,6 @@ export default function BusinessFilters({
   const router = useRouter()
   const [state, setState] = useState(selectedState || '')
   const [city, setCity] = useState(selectedCity || '')
-  const [type, setType] = useState(selectedType || 'business')
   const [filteredCities, setFilteredCities] = useState<string[]>([])
 
   // Update cities when state changes
@@ -46,63 +45,14 @@ export default function BusinessFilters({
     const params = new URLSearchParams()
     if (state) params.set('state', state)
     if (city) params.set('city', city)
-    if (type) params.set('category', type)
+    if (selectedType) params.set('category', selectedType)
     params.set('success', encodeURIComponent('searching as we speak'))
     // Always redirect to home page for search
     router.push(`/?${params.toString()}`)
   }
 
-  const handleTypeChange = (newType: string) => {
-    setType(newType)
-    const params = new URLSearchParams()
-    if (state) params.set('state', state)
-    if (city) params.set('city', city)
-    params.set('category', newType)
-    params.set('success', encodeURIComponent('searching as we speak'))
-    router.push(`/?${params.toString()}`)
-  }
-
   return (
-    <div className="space-y-4">
-      {/* Type selection buttons */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => handleTypeChange('business')}
-          className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-            type === 'business'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Business
-        </button>
-        <button
-          type="button"
-          onClick={() => handleTypeChange('employer')}
-          className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-            type === 'employer'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Employers
-        </button>
-        <button
-          type="button"
-          onClick={() => handleTypeChange('employees')}
-          className={`flex-1 px-4 py-2 rounded-md font-medium transition-colors ${
-            type === 'employees'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Employees
-        </button>
-      </div>
-
-      {/* Filters */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
             State
@@ -156,6 +106,5 @@ export default function BusinessFilters({
           </button>
         </div>
       </form>
-    </div>
   )
 }
