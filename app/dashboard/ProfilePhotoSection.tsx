@@ -222,23 +222,23 @@ export default function ProfilePhotoSection({ user, ratings }: ProfilePhotoSecti
             </div>
             
             {/* Ratings in vertical format */}
-            {ratings && ratings.total > 0 && (
+            {ratings && ratings.ratings && (
               <div className="flex flex-col gap-2 text-sm">
                 <div className="text-green-600">
                   <div className="font-semibold">Outstanding</div>
-                  <div className="text-lg">{ratings.ratings.OUTSTANDING}</div>
+                  <div className="text-lg">{ratings.ratings.OUTSTANDING || 0}</div>
                 </div>
                 <div className="text-yellow-600">
                   <div className="font-semibold">No issue</div>
-                  <div className="text-lg">{ratings.ratings.DELIVERED_AS_EXPECTED}</div>
+                  <div className="text-lg">{ratings.ratings.DELIVERED_AS_EXPECTED || 0}</div>
                 </div>
                 <div className="text-red-600">
                   <div className="font-semibold">Nothing nice</div>
-                  <div className="text-lg">{ratings.ratings.GOT_NOTHING_NICE_TO_SAY}</div>
+                  <div className="text-lg">{ratings.ratings.GOT_NOTHING_NICE_TO_SAY || 0}</div>
                 </div>
                 <div className="text-gray-600 pt-2 border-t border-gray-300">
                   <div className="font-semibold">Total</div>
-                  <div className="text-lg">{ratings.total}</div>
+                  <div className="text-lg">{ratings.total || 0}</div>
                 </div>
               </div>
             )}

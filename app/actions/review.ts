@@ -177,25 +177,38 @@ export async function createReviewAction(formData: FormData): Promise<void> {
 }
 
 export async function getAggregatedRatings(userId: string) {
-  const reviews = await prisma.reviews.findMany({
-    targetUserId: userId,
-  })
+  try {
+    const reviews = await prisma.reviews.findMany({
+      targetUserId: userId,
+    })
 
-  const ratings = {
-    OUTSTANDING: 0,
-    DELIVERED_AS_EXPECTED: 0,
-    GOT_NOTHING_NICE_TO_SAY: 0,
-  }
-
-  reviews.forEach((review: any) => {
-    if (review.rating && review.rating in ratings) {
-      ratings[review.rating as keyof typeof ratings]++
+    const ratings = {
+      OUTSTANDING: 0,
+      DELIVERED_AS_EXPECTED: 0,
+      GOT_NOTHING_NICE_TO_SAY: 0,
     }
-  })
 
-  return {
-    ratings,
-    total: reviews.length,
+    reviews.forEach((review: any) => {
+      if (review.rating && review.rating in ratings) {
+        ratings[review.rating as keyof typeof ratings]++
+      }
+    })
+
+    return {
+      ratings,
+      total: reviews.length,
+    }
+  } catch (error) {
+    console.error('Error in getAggregatedRatings:', error)
+    // Return default ratings on error
+    return {
+      ratings: {
+        OUTSTANDING: 0,
+        DELIVERED_AS_EXPECTED: 0,
+        GOT_NOTHING_NICE_TO_SAY: 0,
+      },
+      total: 0,
+    }
   }
 }
 

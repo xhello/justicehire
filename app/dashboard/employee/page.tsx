@@ -21,7 +21,20 @@ export default async function EmployeeDashboard() {
   // Employees can access dashboard even if not verified (can verify from dashboard)
 
   // Get user's rating breakdown
-  const userRatings = await getAggregatedRatings(user.id)
+  let userRatings
+  try {
+    userRatings = await getAggregatedRatings(user.id)
+  } catch (error) {
+    console.error('Error fetching user ratings:', error)
+    userRatings = {
+      ratings: {
+        OUTSTANDING: 0,
+        DELIVERED_AS_EXPECTED: 0,
+        GOT_NOTHING_NICE_TO_SAY: 0,
+      },
+      total: 0,
+    }
+  }
 
   // Get all reviews the employee has given
   const reviewsGiven = await prisma.reviews.findMany({
