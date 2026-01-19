@@ -18,9 +18,13 @@ export default async function BusinessDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const user = await getCurrentUser()
-  const business = await getBusinessDetails(id)
-  const businessReviews = await getBusinessReviews(id)
+  
+  // Parallel fetch: user, business details, and business reviews
+  const [user, business, businessReviews] = await Promise.all([
+    getCurrentUser(),
+    getBusinessDetails(id),
+    getBusinessReviews(id),
+  ])
   
   // Calculate average ratings for the three fields
   const payCompetitiveValues = businessReviews
@@ -34,13 +38,13 @@ export default async function BusinessDetailPage({
     .filter((v: any): v is number => typeof v === 'number' && v > 0)
   
   const avgPayCompetitive = payCompetitiveValues.length > 0
-    ? (payCompetitiveValues.reduce((sum, v) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
+    ? (payCompetitiveValues.reduce((sum: number, v: number) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
     : null
   const avgWorkload = workloadValues.length > 0
-    ? (workloadValues.reduce((sum, v) => sum + v, 0) / workloadValues.length).toFixed(1)
+    ? (workloadValues.reduce((sum: number, v: number) => sum + v, 0) / workloadValues.length).toFixed(1)
     : null
   const avgFlexibility = flexibilityValues.length > 0
-    ? (flexibilityValues.reduce((sum, v) => sum + v, 0) / flexibilityValues.length).toFixed(1)
+    ? (flexibilityValues.reduce((sum: number, v: number) => sum + v, 0) / flexibilityValues.length).toFixed(1)
     : null
   
   const hasRatings = avgPayCompetitive || avgWorkload || avgFlexibility

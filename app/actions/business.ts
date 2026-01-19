@@ -4,6 +4,31 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
+// Helper function to calculate average ratings
+function calculateAvgRatings(reviews: any[]) {
+  const payCompetitiveValues = reviews
+    .map((r: any) => r.payCompetitive)
+    .filter((v: any): v is number => typeof v === 'number' && v > 0)
+  const workloadValues = reviews
+    .map((r: any) => r.workload)
+    .filter((v: any): v is number => typeof v === 'number' && v > 0)
+  const flexibilityValues = reviews
+    .map((r: any) => r.flexibility)
+    .filter((v: any): v is number => typeof v === 'number' && v > 0)
+  
+  return {
+    payCompetitive: payCompetitiveValues.length > 0
+      ? (payCompetitiveValues.reduce((sum: number, v: number) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
+      : null,
+    workload: workloadValues.length > 0
+      ? (workloadValues.reduce((sum: number, v: number) => sum + v, 0) / workloadValues.length).toFixed(1)
+      : null,
+    flexibility: flexibilityValues.length > 0
+      ? (flexibilityValues.reduce((sum: number, v: number) => sum + v, 0) / flexibilityValues.length).toFixed(1)
+      : null,
+  }
+}
+
 export async function listBusinesses(filters: {
   state?: string
   city?: string
@@ -23,50 +48,29 @@ export async function listBusinesses(filters: {
     where.category = filters.category
   }
 
-  const businesses = await prisma.businesses.findMany(where)
-  const reviews = await prisma.reviews.findMany({})
+  // Parallel fetch: businesses and only BUSINESS reviews (not ALL reviews)
+  const [businesses, reviews] = await Promise.all([
+    prisma.businesses.findMany(where),
+    prisma.reviews.findMany({ targetType: 'BUSINESS' }),
+  ])
   
-  // Add review counts and average ratings
+  // Group reviews by businessId for O(1) lookup
+  const reviewsByBusinessId = new Map<string, any[]>()
+  reviews.forEach((r: any) => {
+    if (r.businessId && r.targetUserId === null) {
+      const existing = reviewsByBusinessId.get(r.businessId) || []
+      existing.push(r)
+      reviewsByBusinessId.set(r.businessId, existing)
+    }
+  })
+  
+  // Add review counts and average ratings using Map lookup
   const businessesWithCounts = businesses.map((business: any) => {
-    const businessReviews = reviews.filter((r: any) => 
-      r.businessId === business.id && 
-      r.targetType === 'BUSINESS' && 
-      r.targetUserId === null
-    )
-    
-    const reviewCount = businessReviews.length
-    
-    // Calculate average ratings for the three fields
-    const payCompetitiveValues = businessReviews
-      .map((r: any) => r.payCompetitive)
-      .filter((v: any): v is number => typeof v === 'number' && v > 0)
-    const workloadValues = businessReviews
-      .map((r: any) => r.workload)
-      .filter((v: any): v is number => typeof v === 'number' && v > 0)
-    const flexibilityValues = businessReviews
-      .map((r: any) => r.flexibility)
-      .filter((v: any): v is number => typeof v === 'number' && v > 0)
-    
-    const avgPayCompetitive = payCompetitiveValues.length > 0
-      ? (payCompetitiveValues.reduce((sum: number, v: number) => sum + v, 0) / payCompetitiveValues.length).toFixed(1)
-      : null
-    const avgWorkload = workloadValues.length > 0
-      ? (workloadValues.reduce((sum: number, v: number) => sum + v, 0) / workloadValues.length).toFixed(1)
-      : null
-    const avgFlexibility = flexibilityValues.length > 0
-      ? (flexibilityValues.reduce((sum: number, v: number) => sum + v, 0) / flexibilityValues.length).toFixed(1)
-      : null
-    
+    const businessReviews = reviewsByBusinessId.get(business.id) || []
     return {
       ...business,
-      _count: {
-        reviews: reviewCount,
-      },
-      avgRatings: {
-        payCompetitive: avgPayCompetitive,
-        workload: avgWorkload,
-        flexibility: avgFlexibility,
-      },
+      _count: { reviews: businessReviews.length },
+      avgRatings: calculateAvgRatings(businessReviews),
     }
   })
   
@@ -121,90 +125,82 @@ export async function getCitiesByState() {
 }
 
 export async function getBusinessDetails(businessId: string) {
-  const business = await prisma.businesses.findUnique({ id: businessId })
+  // Parallel fetch: business, reviews, and employer profiles
+  const [business, allReviews, employerProfiles] = await Promise.all([
+    prisma.businesses.findUnique({ id: businessId }),
+    prisma.reviews.findMany({ businessId }),
+    (async () => {
+      try {
+        const { supabaseAdmin } = await import('@/lib/supabase')
+        const { data } = await supabaseAdmin
+          .from('EmployerProfile')
+          .select('userId, businessId')
+          .eq('businessId', businessId)
+        return data || []
+      } catch (err) {
+        console.error('Error fetching employer profiles:', err)
+        return []
+      }
+    })(),
+  ])
 
   if (!business) {
     return null
-  }
-
-  // Get all reviews for this business
-  const allReviews = await prisma.reviews.findMany({ businessId })
-
-  // Get all employer profiles for this business
-  let employerProfiles: any[] = []
-  try {
-  const { supabaseAdmin } = await import('@/lib/supabase')
-    const { data } = await supabaseAdmin
-    .from('EmployerProfile')
-    .select('userId, businessId')
-    .eq('businessId', businessId)
-    employerProfiles = data || []
-  } catch (err) {
-    console.error('Error fetching employer profiles:', err)
   }
   
   if (!employerProfiles || employerProfiles.length === 0) {
     return {
       ...business,
       employers: [],
-      _count: {
-        reviews: allReviews.length,
-      },
+      _count: { reviews: allReviews.length },
     }
   }
 
-  // Get all users who are employers for this business
-  const employerUserIds = employerProfiles.filter((p: any) => p?.userId).map((p: any) => p.userId)
+  // Get employer users
+  const employerUserIds = new Set(employerProfiles.filter((p: any) => p?.userId).map((p: any) => p.userId))
   const allUsers = await prisma.users.findMany({})
-  const employerUsers = allUsers.filter(
-    (u: any) => u.role === 'EMPLOYER' && employerUserIds.includes(u.id)
-  )
+  const employerUsers = allUsers.filter((u: any) => u.role === 'EMPLOYER' && employerUserIds.has(u.id))
 
-  // Get aggregated ratings for each employer
-  const employers = await Promise.all(
-    employerUsers.map(async (user: any) => {
-      const reviews = await prisma.reviews.findMany({
-        targetUserId: user.id,
-        targetType: 'EMPLOYER',
-        businessId: business.id,
-      })
+  // Group employer reviews by targetUserId for O(1) lookup (avoids N+1)
+  const employerReviewsByUserId = new Map<string, any[]>()
+  allReviews.forEach((r: any) => {
+    if (r.targetType === 'EMPLOYER' && r.targetUserId) {
+      const existing = employerReviewsByUserId.get(r.targetUserId) || []
+      existing.push(r)
+      employerReviewsByUserId.set(r.targetUserId, existing)
+    }
+  })
 
-      const ratings = {
-        OUTSTANDING: 0,
-        DELIVERED_AS_EXPECTED: 0,
-        GOT_NOTHING_NICE_TO_SAY: 0,
-      }
-
-      reviews.forEach((review: any) => {
-        if (review.rating && review.rating in ratings) {
-          ratings[review.rating as keyof typeof ratings]++
-        }
-      })
-
-      return {
-        id: `profile-${user.id}`,
-        userId: user.id,
-        businessId: business.id,
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          photoUrl: user.photoUrl,
-          position: user.position,
-        },
-        ratings,
-        reviewCount: reviews.length,
+  // Build employer data using Map lookup (no more N+1 queries!)
+  const employers = employerUsers.map((user: any) => {
+    const reviews = employerReviewsByUserId.get(user.id) || []
+    const ratings = { OUTSTANDING: 0, DELIVERED_AS_EXPECTED: 0, GOT_NOTHING_NICE_TO_SAY: 0 }
+    
+    reviews.forEach((review: any) => {
+      if (review.rating && review.rating in ratings) {
+        ratings[review.rating as keyof typeof ratings]++
       }
     })
-  )
 
-  const reviewCount = allReviews.length
+    return {
+      id: `profile-${user.id}`,
+      userId: user.id,
+      businessId: business.id,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        photoUrl: user.photoUrl,
+        position: user.position,
+      },
+      ratings,
+      reviewCount: reviews.length,
+    }
+  })
 
   return {
     ...business,
     employers,
-    _count: {
-      reviews: reviewCount,
-    },
+    _count: { reviews: allReviews.length },
   }
 }

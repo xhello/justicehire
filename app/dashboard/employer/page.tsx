@@ -19,73 +19,63 @@ export default async function EmployerDashboard() {
 
   // Employers can access dashboard even if not verified (verified: false by default)
 
-  // Get all reviews that this employer has left (reviews given)
-  const employerReviewsGiven = await prisma.reviews.findMany({
-    reviewerId: user.id,
+  // Parallel fetch: reviews given and received
+  const [employerReviewsGiven, employerReviewsReceived] = await Promise.all([
+    prisma.reviews.findMany({ reviewerId: user.id }),
+    prisma.reviews.findMany({ targetUserId: user.id, targetType: 'EMPLOYER' }),
+  ])
+  
+  // Collect IDs we need to fetch (only what's necessary)
+  const businessIds = new Set<string>()
+  const userIds = new Set<string>()
+  
+  employerReviewsGiven.forEach((r: any) => {
+    if (r.businessId) businessIds.add(r.businessId)
+    if (r.targetUserId) userIds.add(r.targetUserId)
+  })
+  employerReviewsReceived.forEach((r: any) => {
+    if (r.businessId) businessIds.add(r.businessId)
+    if (r.reviewerId) userIds.add(r.reviewerId)
   })
   
-  // Get all reviews that this employer has received (reviews received)
-  const employerReviewsReceived = await prisma.reviews.findMany({
-    targetUserId: user.id,
-    targetType: 'EMPLOYER',
-  })
+  // Fetch only needed businesses and users in parallel
+  const [allBusinesses, allUsers] = await Promise.all([
+    businessIds.size > 0 ? prisma.businesses.findMany({}) : Promise.resolve([]),
+    userIds.size > 0 ? prisma.users.findMany({}) : Promise.resolve([]),
+  ])
   
-  // Get all businesses and users for display
-  const allBusinesses = await prisma.businesses.findMany({})
-  const allUsers = await prisma.users.findMany({})
+  // Create lookup maps for O(1) access
+  const businessMap = new Map<string, any>(allBusinesses.map((b: any) => [b.id, b]))
+  const userMap = new Map<string, any>(allUsers.map((u: any) => [u.id, u]))
   
-  // Enrich reviews given with business and target user information
+  // Enrich reviews given with business and target user information (using Map for O(1) lookup)
   const reviewsGivenWithDetails = employerReviewsGiven.map((review: any) => {
-    const business = allBusinesses.find((b: any) => b.id === review.businessId)
-    const targetUser = review.targetUserId 
-      ? allUsers.find((u: any) => u.id === review.targetUserId)
-      : null
+    const business: any = review.businessId ? businessMap.get(review.businessId) : null
+    const targetUser: any = review.targetUserId ? userMap.get(review.targetUserId) : null
     
     return {
       ...review,
       business: business
-        ? {
-            id: business.id,
-            name: business.name,
-            photoUrl: business.photoUrl,
-          }
+        ? { id: business.id, name: business.name, photoUrl: business.photoUrl }
         : null,
       reviewer: targetUser
-        ? {
-            id: targetUser.id,
-            firstName: targetUser.firstName,
-            lastName: targetUser.lastName,
-            role: targetUser.role,
-            photoUrl: targetUser.photoUrl,
-          }
+        ? { id: targetUser.id, firstName: targetUser.firstName, lastName: targetUser.lastName, role: targetUser.role, photoUrl: targetUser.photoUrl }
         : null,
     }
   })
   
-  // Enrich reviews received with business and reviewer information
+  // Enrich reviews received with business and reviewer information (using Map for O(1) lookup)
   const reviewsReceivedWithDetails = employerReviewsReceived.map((review: any) => {
-    const business = allBusinesses.find((b: any) => b.id === review.businessId)
-    const reviewer = review.reviewerId 
-      ? allUsers.find((u: any) => u.id === review.reviewerId)
-      : null
+    const business: any = review.businessId ? businessMap.get(review.businessId) : null
+    const reviewer: any = review.reviewerId ? userMap.get(review.reviewerId) : null
     
     return {
       ...review,
       business: business
-        ? {
-            id: business.id,
-            name: business.name,
-            photoUrl: business.photoUrl,
-          }
+        ? { id: business.id, name: business.name, photoUrl: business.photoUrl }
         : null,
       reviewer: reviewer
-        ? {
-            id: reviewer.id,
-            firstName: reviewer.firstName,
-            lastName: reviewer.lastName,
-            role: reviewer.role,
-            photoUrl: reviewer.photoUrl,
-          }
+        ? { id: reviewer.id, firstName: reviewer.firstName, lastName: reviewer.lastName, role: reviewer.role, photoUrl: reviewer.photoUrl }
         : null,
     }
   })

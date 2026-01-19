@@ -200,24 +200,30 @@ export async function getAggregatedRatings(userId: string) {
 }
 
 export async function getUserProfile(userId: string) {
-  const user = await prisma.users.findUnique({ id: userId })
+  // Parallel fetch: user and reviews (for ratings)
+  const [user, reviews] = await Promise.all([
+    prisma.users.findUnique({ id: userId }),
+    prisma.reviews.findMany({ targetUserId: userId }),
+  ])
 
   if (!user) {
     return null
   }
 
-  const aggregatedRatings = await getAggregatedRatings(userId)
+  // Calculate ratings inline (no need for separate function call)
+  const ratings = { OUTSTANDING: 0, DELIVERED_AS_EXPECTED: 0, GOT_NOTHING_NICE_TO_SAY: 0 }
+  reviews.forEach((review: any) => {
+    if (review.rating && review.rating in ratings) {
+      ratings[review.rating as keyof typeof ratings]++
+    }
+  })
 
-  // Get business info if employer
+  // Get business info if employer (only if needed)
   let businessInfo = null
   if (user.role === 'EMPLOYER' && user.employerProfile) {
     const business = await prisma.businesses.findUnique({ id: user.employerProfile.businessId })
     if (business) {
-      businessInfo = {
-        id: business.id,
-        name: business.name,
-        address: business.address,
-      }
+      businessInfo = { id: business.id, name: business.name, address: business.address }
     }
   }
 
@@ -228,11 +234,9 @@ export async function getUserProfile(userId: string) {
     photoUrl: user.photoUrl,
     role: user.role,
     socialUrl: user.socialUrl,
-    employerProfile: businessInfo
-      ? {
-          business: businessInfo,
-        }
-      : undefined,
-    ...aggregatedRatings,
+    position: user.position, // Include position to avoid extra query
+    employerProfile: businessInfo ? { business: businessInfo } : undefined,
+    ratings,
+    total: reviews.length,
   }
 }

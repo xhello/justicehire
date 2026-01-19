@@ -12,12 +12,15 @@ export default async function EmployerProfilePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const user = await getCurrentUser()
-  const employer = await getUserProfile(id)
   
-  // Get employer's position from user data
-  const employerUser = await prisma.users.findUnique({ id: employer?.id || '' })
-  const employerPosition = employerUser?.position || null
+  // Parallel fetch: user, employer profile
+  const [user, employer] = await Promise.all([
+    getCurrentUser(),
+    getUserProfile(id),
+  ])
+  
+  // getUserProfile already fetches user data including position, no need for extra query
+  const employerPosition = employer?.position || null
 
   if (!employer || employer.role !== 'EMPLOYER') {
     return (
@@ -33,7 +36,6 @@ export default async function EmployerProfilePage({
   }
 
   // Check if current user can review this employer
-  // Both employees and employers can review employers
   const canReview =
     user &&
     user.verified &&
@@ -41,8 +43,6 @@ export default async function EmployerProfilePage({
     user.id !== employer.id
 
   // Get the reviewer's business ID
-  // For employees: use the target employer's business ID
-  // For employers: use their own business ID
   let reviewerBusinessId: string | null = null
   if (user && user.role === 'EMPLOYER' && user.employerProfile) {
     reviewerBusinessId = user.employerProfile.business.id
@@ -50,36 +50,33 @@ export default async function EmployerProfilePage({
     reviewerBusinessId = employer.employerProfile.business.id
   }
 
-  // Get existing review (if any) to allow updating
-  const existingReview =
+  // Parallel fetch: existing review + all reviews for this employer
+  const [existingReview, allReviews] = await Promise.all([
     canReview && reviewerBusinessId
-      ? await prisma.reviews.findFirst({
+      ? prisma.reviews.findFirst({
           reviewerId: user.id,
           targetUserId: employer.id,
           businessId: reviewerBusinessId,
         })
-      : null
+      : Promise.resolve(null),
+    prisma.reviews.findMany({
+      targetUserId: employer.id,
+      targetType: 'EMPLOYER',
+    }),
+  ])
   
-  // Get all reviews for this employer to display
-  const allReviews = await prisma.reviews.findMany({
-    targetUserId: employer.id,
-    targetType: 'EMPLOYER',
+  // Get all reviewer IDs and fetch users in one query (avoids N+1)
+  const reviewerIds = [...new Set(allReviews.map((r: any) => r.reviewerId).filter(Boolean))]
+  const reviewers = reviewerIds.length > 0 ? await prisma.users.findMany({}) : []
+  const reviewerMap = new Map<string, any>(reviewers.map((u: any) => [u.id, u]))
+  
+  const reviewsWithUsers = allReviews.map((review: any) => {
+    const reviewer: any = review.reviewerId ? reviewerMap.get(review.reviewerId) : null
+    return {
+      ...review,
+      reviewer: reviewer ? { role: reviewer.role } : null,
+    }
   })
-  
-  // Get reviewer information for each review (only for role)
-  const reviewsWithUsers = await Promise.all(
-    allReviews.map(async (review: any) => {
-      const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
-      return {
-        ...review,
-        reviewer: reviewer
-          ? {
-              role: reviewer.role,
-            }
-          : null,
-      }
-    })
-  )
 
   return (
     <div className="min-h-screen bg-gray-50">

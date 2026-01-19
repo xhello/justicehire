@@ -42,108 +42,77 @@ export default async function EmployeeProfilePage({
   // For employers: use their business
   // For employees: find a business both have reviewed, or any business the reviewer has reviewed
   let reviewBusinessId: string | null = null
+  let existingReview: any = null
+  let reviewsWithUsers: any[] = []
   
-  if (canReview) {
-    try {
+  try {
+    // Parallel fetch: reviews for display + reviews by current user and target employee (if applicable)
+    const fetchPromises: Promise<any>[] = [
+      prisma.reviews.findMany({ targetUserId: employee.id, targetType: 'EMPLOYEE' }),
+    ]
+    
+    // Only fetch these if user can potentially review
+    if (user && user.role === 'EMPLOYEE') {
+      fetchPromises.push(prisma.reviews.findMany({ reviewerId: user.id }))
+      fetchPromises.push(prisma.reviews.findMany({ reviewerId: employee.id }))
+    }
+    
+    const results = await Promise.all(fetchPromises)
+    const employeeReviews = results[0] || []
+    const userReviewsResult = results[1]
+    const targetReviewsResult = results[2]
+    
+    // Determine reviewBusinessId
+    if (canReview) {
       if (user.role === 'EMPLOYER' && user.employerProfile?.business?.id) {
         reviewBusinessId = user.employerProfile.business.id
-      } else if (user.role === 'EMPLOYEE') {
-        // Find businesses both employees have reviewed
-        // Business reviews have targetType: 'BUSINESS' and targetUserId: null
-        const allReviews = await prisma.reviews.findMany({
-          reviewerId: user.id,
-        })
-        const reviewerBusinessReviews = allReviews.filter((r: any) => 
+      } else if (user.role === 'EMPLOYEE' && userReviewsResult) {
+        const reviewerBusinessReviews = userReviewsResult.filter((r: any) => 
           r.targetType === 'BUSINESS' && r.targetUserId === null && r.businessId
         )
-        
-        const allTargetReviews = await prisma.reviews.findMany({
-          reviewerId: employee.id,
-        })
-        const targetBusinessReviews = allTargetReviews.filter((r: any) => 
+        const targetBusinessReviews = (targetReviewsResult || []).filter((r: any) => 
           r.targetType === 'BUSINESS' && r.targetUserId === null && r.businessId
         )
         
         const reviewerBusinessIds = new Set<string>(reviewerBusinessReviews.map((r: any) => r.businessId as string).filter(Boolean))
         const targetBusinessIds = new Set<string>(targetBusinessReviews.map((r: any) => r.businessId as string).filter(Boolean))
         
-        // Find common business
-        const commonBusinessId = Array.from(reviewerBusinessIds).find((bid: string) => 
-          targetBusinessIds.has(bid)
-        )
+        const commonBusinessId = Array.from(reviewerBusinessIds).find((bid: string) => targetBusinessIds.has(bid))
         
         if (commonBusinessId) {
           reviewBusinessId = commonBusinessId
         } else if (reviewerBusinessReviews.length > 0 && reviewerBusinessReviews[0].businessId) {
-          // Use any business the reviewer has reviewed
           reviewBusinessId = reviewerBusinessReviews[0].businessId as string
         } else {
-          // Fallback: get first business from database
           const businesses = await prisma.businesses.findMany({})
-          const firstBusiness = businesses.length > 0 ? businesses[0] : null
-          reviewBusinessId = firstBusiness?.id || null
+          reviewBusinessId = businesses.length > 0 ? businesses[0]?.id || null : null
         }
       }
-    } catch (error) {
-      console.error('Error finding review business ID:', error)
-      // Continue without reviewBusinessId - user won't be able to review
-      reviewBusinessId = null
     }
-  }
-
-  // Get existing review (if any) to allow updating
-  let existingReview = null
-  if (canReview && reviewBusinessId && user) {
-    try {
+    
+    // Get existing review if applicable
+    if (canReview && reviewBusinessId && user) {
       existingReview = await prisma.reviews.findFirst({
         reviewerId: user.id,
         targetUserId: employee.id,
         businessId: reviewBusinessId,
       })
-    } catch (error) {
-      console.error('Error fetching existing review:', error)
-      existingReview = null
     }
-  }
-  
-  // Get all reviews for this employee to display
-  let allReviews: any[] = []
-  try {
-    allReviews = await prisma.reviews.findMany({
-      targetUserId: employee.id,
-      targetType: 'EMPLOYEE',
+    
+    // Get all reviewer IDs and fetch users in one query (avoids N+1)
+    const reviewerIds = [...new Set(employeeReviews.map((r: any) => r.reviewerId).filter(Boolean))]
+    const reviewers = reviewerIds.length > 0 ? await prisma.users.findMany({}) : []
+    const reviewerMap = new Map<string, any>(reviewers.map((u: any) => [u.id, u]))
+    
+    reviewsWithUsers = employeeReviews.map((review: any) => {
+      const reviewer: any = review.reviewerId ? reviewerMap.get(review.reviewerId) : null
+      return {
+        ...review,
+        reviewer: reviewer ? { role: reviewer.role } : null,
+      }
     })
   } catch (error) {
-    console.error('Error fetching reviews:', error)
-    allReviews = []
-  }
-  
-  // Get reviewer information for each review (only for role)
-  let reviewsWithUsers: any[] = []
-  try {
-    reviewsWithUsers = await Promise.all(
-      allReviews.map(async (review: any) => {
-        try {
-          const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
-          return {
-            ...review,
-            reviewer: reviewer
-              ? {
-                  role: reviewer.role,
-                }
-              : null,
-          }
-        } catch (error) {
-          console.error('Error fetching reviewer:', error)
-          return {
-            ...review,
-            reviewer: null,
-          }
-        }
-      })
-    )
-  } catch (error) {
-    console.error('Error processing reviews with users:', error)
+    console.error('Error fetching review data:', error)
     reviewsWithUsers = []
   }
 

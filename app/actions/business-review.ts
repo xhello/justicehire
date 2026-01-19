@@ -140,29 +140,30 @@ export async function getBusinessReviews(businessId: string) {
     targetType: 'BUSINESS',
   })
 
-  // Debug: Log first review to see what fields are present
-  if (reviews.length > 0) {
-    console.log('DEBUG: First review fields:', Object.keys(reviews[0]))
-    console.log('DEBUG: First review data:', JSON.stringify(reviews[0], null, 2))
+  if (reviews.length === 0) {
+    return []
   }
 
-  // Get reviewer information
-  const reviewsWithUsers = await Promise.all(
-    reviews.map(async (review: any) => {
-      const reviewer = await prisma.users.findUnique({ id: review.reviewerId })
-      return {
-        ...review,
-        reviewer: reviewer
-          ? {
-              firstName: reviewer.firstName,
-              lastName: reviewer.lastName,
-              photoUrl: reviewer.photoUrl,
-              role: reviewer.role,
-            }
-          : null,
-      }
-    })
-  )
+  // Get all reviewer IDs and fetch users in ONE query (avoids N+1)
+  const reviewerIds = [...new Set(reviews.map((r: any) => r.reviewerId).filter(Boolean))]
+  const reviewers = reviewerIds.length > 0 ? await prisma.users.findMany({}) : []
+  const reviewerMap = new Map<string, any>(reviewers.map((u: any) => [u.id, u]))
+
+  // Map reviews with reviewer info using O(1) lookup
+  const reviewsWithUsers = reviews.map((review: any) => {
+    const reviewer: any = review.reviewerId ? reviewerMap.get(review.reviewerId) : null
+    return {
+      ...review,
+      reviewer: reviewer
+        ? {
+            firstName: reviewer.firstName,
+            lastName: reviewer.lastName,
+            photoUrl: reviewer.photoUrl,
+            role: reviewer.role,
+          }
+        : null,
+    }
+  })
 
   return reviewsWithUsers
 }
