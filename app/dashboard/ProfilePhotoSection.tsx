@@ -14,10 +14,15 @@ interface ProfilePhotoSectionProps {
     email: string
     verified: boolean
   }
-  ratingCount?: number
+  ratingStats?: {
+    total: number
+    outstanding: number
+    noIssue: number
+    nothingNice: number
+  }
 }
 
-export default function ProfilePhotoSection({ user, ratingCount }: ProfilePhotoSectionProps) {
+export default function ProfilePhotoSection({ user, ratingStats }: ProfilePhotoSectionProps) {
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -213,18 +218,6 @@ export default function ProfilePhotoSection({ user, ratingCount }: ProfilePhotoS
             </div>
           </div>
           
-          {/* Rating count */}
-          {ratingCount !== undefined && (
-            <div className="mb-4 text-center">
-              <p className="text-sm font-medium text-gray-700">
-                Ratings Received
-              </p>
-              <p className="text-2xl font-bold text-blue-600">
-                {ratingCount}
-              </p>
-            </div>
-          )}
-          
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm w-full">
               {error}
@@ -248,6 +241,31 @@ export default function ProfilePhotoSection({ user, ratingCount }: ProfilePhotoS
           <p className="mt-2 text-xs text-gray-500 text-center">
             Click to upload a new photo
           </p>
+
+          {/* Rating Stats Section (for employers) */}
+          {ratingStats && (
+            <div className="mt-6 w-full border-t pt-4">
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Rating Stats</h4>
+              <div className="space-y-2">
+                <div className="text-sm">
+                  <span className="font-medium text-gray-700">Total Reviews: </span>
+                  <span className="text-gray-900">{ratingStats.total}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-green-600 font-medium">Outstanding: </span>
+                  <span className="text-gray-900">{ratingStats.outstanding}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-yellow-600 font-medium">No issue: </span>
+                  <span className="text-gray-900">{ratingStats.noIssue}</span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-red-600 font-medium">Nothing nice to say: </span>
+                  <span className="text-gray-900">{ratingStats.nothingNice}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Email verification/update section */}
           <div className="mt-6 w-full border-t pt-4">

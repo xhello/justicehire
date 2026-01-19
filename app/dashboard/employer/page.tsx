@@ -103,6 +103,12 @@ export default async function EmployerDashboard() {
     return dateB - dateA
   })
 
+  // Calculate rating stats from reviews received
+  const totalReviews = reviewsReceivedWithDetails.length
+  const outstandingCount = reviewsReceivedWithDetails.filter((r: any) => r.rating === 'OUTSTANDING').length
+  const noIssueCount = reviewsReceivedWithDetails.filter((r: any) => r.rating === 'DELIVERED_AS_EXPECTED').length
+  const nothingNiceCount = reviewsReceivedWithDetails.filter((r: any) => r.rating === 'GOT_NOTHING_NICE_TO_SAY').length
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
@@ -179,7 +185,12 @@ export default async function EmployerDashboard() {
                 email: user.email,
                 verified: user.verified,
               }}
-              ratingCount={employerReviewsReceived.length}
+              ratingStats={{
+                total: totalReviews,
+                outstanding: outstandingCount,
+                noIssue: noIssueCount,
+                nothingNice: nothingNiceCount,
+              }}
             />
           </div>
           
