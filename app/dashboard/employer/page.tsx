@@ -111,7 +111,7 @@ export default async function EmployerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
@@ -169,7 +169,8 @@ export default async function EmployerDashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="pt-16">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Employer Dashboard</h2>
         </div>
@@ -224,6 +225,7 @@ export default async function EmployerDashboard() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   )
 }

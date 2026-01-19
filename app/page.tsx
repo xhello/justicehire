@@ -55,7 +55,7 @@ export default async function Home({
       <Suspense fallback={null}>
         <SuccessBanner />
       </Suspense>
-      <nav className="bg-white shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <Link href="/" className="text-2xl font-bold text-blue-600">
@@ -90,11 +90,12 @@ export default async function Home({
         </div>
       </nav>
 
-      <Suspense fallback={null}>
-        <SuccessBanner />
-      </Suspense>
+      <div className="pt-16">
+        <Suspense fallback={null}>
+          <SuccessBanner />
+        </Suspense>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Anonymous, Verified Reviews for Hospitality
@@ -280,6 +281,7 @@ export default async function Home({
           </div>
         </div>
       </footer>
+      </div>
     </div>
     )
 }

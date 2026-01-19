@@ -152,7 +152,7 @@ export default async function EmployeeProfilePage({
       <Suspense fallback={null}>
         <SuccessBanner />
       </Suspense>
-      <nav className="bg-white shadow-sm">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center gap-4">
@@ -198,7 +198,8 @@ export default async function EmployeeProfilePage({
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="pt-16">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex items-center gap-6 mb-6">
             {employee.photoUrl ? (
@@ -335,6 +336,7 @@ export default async function EmployeeProfilePage({
           </div>
         )}
       </main>
+      </div>
     </div>
   )
   } catch (error) {
