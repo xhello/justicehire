@@ -79,7 +79,6 @@ export default async function BusinessSearchPage({
             citiesByState={citiesByState}
             selectedState={params.state}
             selectedCity={params.city}
-            selectedType={params.category || 'business'}
           />
         </div>
 
@@ -87,6 +86,9 @@ export default async function BusinessSearchPage({
           <h3 className="text-xl font-semibold mb-4">
             Results ({results.length})
           </h3>
+          <Suspense fallback={<div className="flex gap-2 mb-4"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
+            <TypeButtons selectedType={params.category || 'business'} />
+          </Suspense>
           {results.length === 0 ? (
             <p className="text-gray-700">No results found.</p>
           ) : (
@@ -228,13 +230,6 @@ export default async function BusinessSearchPage({
               })}
             </div>
           )}
-        </div>
-
-        {/* Type buttons below results */}
-        <div className="bg-white rounded-lg shadow p-6 mt-8">
-          <Suspense fallback={<div className="flex gap-2"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
-            <TypeButtons selectedType={params.category || 'business'} />
-          </Suspense>
         </div>
       </main>
     </div>

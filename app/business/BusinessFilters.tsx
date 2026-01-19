@@ -1,22 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface BusinessFiltersProps {
   citiesByState: Record<string, string[]>
   selectedState?: string
   selectedCity?: string
-  selectedType?: string // Keep for handleSubmit to preserve type in URL
 }
 
 export default function BusinessFilters({
   citiesByState,
   selectedState,
   selectedCity,
-  selectedType,
 }: BusinessFiltersProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [state, setState] = useState(selectedState || '')
   const [city, setCity] = useState(selectedCity || '')
   const [filteredCities, setFilteredCities] = useState<string[]>([])
@@ -42,13 +41,16 @@ export default function BusinessFilters({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const params = new URLSearchParams()
-    if (state) params.set('state', state)
-    if (city) params.set('city', city)
-    if (selectedType) params.set('category', selectedType)
-    params.set('success', encodeURIComponent('searching as we speak'))
+    const params = new URLSearchParams(window.location.search)
+    // Preserve existing category/type from URL
+    const existingCategory = params.get('category') || 'business'
+    const newParams = new URLSearchParams()
+    if (state) newParams.set('state', state)
+    if (city) newParams.set('city', city)
+    newParams.set('category', existingCategory)
+    newParams.set('success', encodeURIComponent('searching as we speak'))
     // Always redirect to home page for search
-    router.push(`/?${params.toString()}`)
+    router.push(`/?${newParams.toString()}`)
   }
 
   return (
