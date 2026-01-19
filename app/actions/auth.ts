@@ -372,9 +372,9 @@ export async function forgotPassword(formData: FormData) {
 
     // Send password reset email
     const resend = new Resend('re_9yQ4yVuX_MT1MTmhBbSsB2m6soEBmVxXQ')
-    // Use justhire.com domain for reset password links
+    // Use justicehire.com domain for reset password links
     const baseUrl = process.env.NODE_ENV === 'production'
-      ? 'https://justhire.com'
+      ? 'https://justicehire.com'
       : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const resetUrl = `${baseUrl}/reset-password?token=${token}`
     
