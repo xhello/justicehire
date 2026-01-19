@@ -11,6 +11,7 @@ import SuccessBanner from '@/components/SuccessBanner'
 import BusinessReviewFormClient from './BusinessReviewFormClient'
 import Tabs from './Tabs'
 import ReviewFormClient from './ReviewFormClient'
+import { timeAgo } from '@/lib/timeAgo'
 
 export default async function BusinessDetailPage({
   params,
@@ -239,7 +240,7 @@ export default async function BusinessDetailPage({
                               <p className="text-sm text-gray-600 capitalize font-medium">{review.reviewer?.role?.toLowerCase() || 'Reviewer'}</p>
                             </div>
                             <span className="text-xs text-gray-500">
-                              {new Date(review.createdAt).toLocaleDateString()}
+                              {timeAgo(review.createdAt)}
                             </span>
                           </div>
                           

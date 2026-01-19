@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createReviewAction } from '@/app/actions/review'
 import { prisma } from '@/lib/prisma'
 import SuccessBanner from '@/components/SuccessBanner'
+import { timeAgo } from '@/lib/timeAgo'
 
 export default async function EmployeeProfilePage({
   params,
@@ -278,7 +279,7 @@ export default async function EmployeeProfilePage({
                       <p className="text-sm text-gray-600 capitalize font-medium">{review.reviewer?.role?.toLowerCase() || 'Reviewer'}</p>
                     </div>
                     <span className="text-xs text-gray-500">
-                      {new Date(review.createdAt).toLocaleDateString()}
+                      {timeAgo(review.createdAt)}
                     </span>
                   </div>
                   

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { timeAgo } from '@/lib/timeAgo'
 
 interface Review {
   id: string
@@ -224,7 +225,7 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                   </div>
                 </div>
                 <span className="text-xs text-gray-500 ml-4">
-                  {new Date(review.createdAt).toLocaleDateString()}
+                  {timeAgo(review.createdAt)}
                 </span>
               </div>
               
