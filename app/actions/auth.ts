@@ -15,7 +15,7 @@ const signupEmployeeSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
   phoneNumber: z.string().min(1, 'Phone number is required'),
-  photoUrl: z.string().min(1, 'Photo is required'),
+  photoUrl: z.string().optional().or(z.literal('')),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -31,7 +31,7 @@ const signupEmployerSchema = z.object({
   city: z.string().min(1),
   businessId: z.string().min(1),
   position: z.enum(['owner', 'manager', 'supervisor on duty']),
-  photoUrl: z.string().min(1, 'Photo is required'),
+  photoUrl: z.string().optional().or(z.literal('')),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -69,7 +69,7 @@ export async function signupEmployee(formData: FormData) {
       email: validated.email,
       password: hashedPassword,
       socialUrl: validated.phoneNumber,
-      photoUrl: validated.photoUrl,
+      photoUrl: validated.photoUrl || null,
       verified: false, // User needs to verify email later
     })
 
@@ -136,7 +136,7 @@ export async function signupEmployer(formData: FormData) {
       state: validated.state,
       city: validated.city,
       position: validated.position,
-      photoUrl: validated.photoUrl,
+      photoUrl: validated.photoUrl || null,
       verified: false, // User needs to verify email later
       employerProfile: {
         businessId: validated.businessId,

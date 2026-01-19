@@ -107,7 +107,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
       return
     }
     
-    // Use cropped image if available, otherwise show error
+    // Add photo if available
     if (croppedImage) {
       // Check if base64 string is too large (max 1.5MB base64)
       if (croppedImage.length > 1.5 * 1024 * 1024) {
@@ -117,42 +117,42 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
       }
 
       formData.set('photoUrl', croppedImage)
-      
-      try {
-        let result
-        if (role === 'EMPLOYEE') {
-          result = await signupEmployee(formData)
-        } else {
-          result = await signupEmployer(formData)
-        }
-
-        if (result?.error) {
-          setError(result.error)
-          setLoading(false)
-        } else if (result?.success && result?.redirect) {
-          // Redirect to dashboard on success
-          router.push(result.redirect)
-        }
-      } catch (err: any) {
-        // NEXT_REDIRECT is a special error thrown by Next.js redirect() function
-        // We should ignore it as it's the expected behavior for redirects
-        // The error can have different structures, so check multiple properties
-        const isRedirectError = 
-          err?.digest?.startsWith('NEXT_REDIRECT') ||
-          err?.message?.includes('NEXT_REDIRECT') ||
-          err?.digest?.includes('redirect') ||
-          (err?.name === 'NEXT_REDIRECT')
-        
-        if (isRedirectError) {
-          // Redirect is happening, don't show error - let Next.js handle the redirect
-          return
-        }
-        console.error('Signup error:', err)
-        setError('An error occurred. Please try again. If the issue persists, try using a smaller photo.')
-        setLoading(false)
-      }
     } else {
-      setError('Please upload and adjust a photo')
+      // Photo is optional, set empty string if not provided
+      formData.set('photoUrl', '')
+    }
+    
+    try {
+      let result
+      if (role === 'EMPLOYEE') {
+        result = await signupEmployee(formData)
+      } else {
+        result = await signupEmployer(formData)
+      }
+
+      if (result?.error) {
+        setError(result.error)
+        setLoading(false)
+      } else if (result?.success && result?.redirect) {
+        // Redirect to dashboard on success
+        router.push(result.redirect)
+      }
+    } catch (err: any) {
+      // NEXT_REDIRECT is a special error thrown by Next.js redirect() function
+      // We should ignore it as it's the expected behavior for redirects
+      // The error can have different structures, so check multiple properties
+      const isRedirectError = 
+        err?.digest?.startsWith('NEXT_REDIRECT') ||
+        err?.message?.includes('NEXT_REDIRECT') ||
+        err?.digest?.includes('redirect') ||
+        (err?.name === 'NEXT_REDIRECT')
+      
+      if (isRedirectError) {
+        // Redirect is happening, don't show error - let Next.js handle the redirect
+        return
+      }
+      console.error('Signup error:', err)
+      setError('An error occurred. Please try again. If the issue persists, try using a smaller photo.')
       setLoading(false)
     }
   }
@@ -431,7 +431,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
 
             <div>
               <label htmlFor="photo" className="block text-sm font-medium text-gray-700">
-                Photo <span className="text-red-500">*</span>
+                Photo (Optional)
               </label>
               <input
                 id="photo"
@@ -441,7 +441,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
                 onChange={handleFileChange}
                 className="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
-              <p className="mt-1 text-xs text-gray-500">Upload a profile photo (JPG, PNG, etc.)</p>
+              <p className="mt-1 text-xs text-gray-500">Upload a profile photo (JPG, PNG, etc.) - Optional</p>
               {croppedImage && (
                 <div className="mt-2">
                   <img
