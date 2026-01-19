@@ -112,6 +112,11 @@ export default async function EmployeeProfilePage({
         reviewer: reviewer ? { role: reviewer.role } : null,
       }
     })
+    
+    // Sort by most recent first
+    reviewsWithUsers.sort((a: any, b: any) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
   } catch (error) {
     console.error('Error fetching review data:', error)
     reviewsWithUsers = []

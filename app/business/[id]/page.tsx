@@ -21,11 +21,16 @@ export default async function BusinessDetailPage({
   const { id } = await params
   
   // Parallel fetch: user, business details, and business reviews
-  const [user, business, businessReviews] = await Promise.all([
+  const [user, business, fetchedReviews] = await Promise.all([
     getCurrentUser(),
     getBusinessDetails(id),
     getBusinessReviews(id),
   ])
+  
+  // Sort reviews by most recent first
+  const businessReviews = [...fetchedReviews].sort((a: any, b: any) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
   
   // Calculate average ratings for the three fields
   const payCompetitiveValues = businessReviews

@@ -78,6 +78,11 @@ export default async function EmployerProfilePage({
       reviewer: reviewer ? { role: reviewer.role } : null,
     }
   })
+  
+  // Sort by most recent first
+  reviewsWithUsers.sort((a: any, b: any) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
