@@ -1,36 +1,46 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 
 export default function TopLoadingBar() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const pathname = usePathname()
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isLoadingRef = useRef(false)
 
+  // Complete loading when route changes (navigation completed)
   useEffect(() => {
-    // Reset on route change
-    setLoading(false)
-    setProgress(0)
+    if (isLoadingRef.current) {
+      // Route changed, complete the loading bar
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current)
+        progressIntervalRef.current = null
+      }
+      isLoadingRef.current = false
+      setProgress(100)
+      completeTimeoutRef.current = setTimeout(() => {
+        setLoading(false)
+        setProgress(0)
+      }, 300)
+    }
   }, [pathname])
 
   useEffect(() => {
-    let progressInterval: NodeJS.Timeout | null = null
-    let completeTimeout: NodeJS.Timeout | null = null
-    let isLoading = false
-
     const startLoading = () => {
-      if (isLoading) return // Already loading
+      if (isLoadingRef.current) return // Already loading
       
-      isLoading = true
+      isLoadingRef.current = true
       setLoading(true)
       setProgress(0)
       
       // Animate progress
-      progressInterval = setInterval(() => {
+      progressIntervalRef.current = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 85) {
-            return 85 // Stop at 85% until form completes
+            return 85 // Stop at 85% until action completes
           }
           // Fast initial progress, then slower
           const increment = prev < 50 ? 15 : 5
@@ -40,18 +50,18 @@ export default function TopLoadingBar() {
     }
 
     const completeLoading = () => {
-      if (progressInterval) {
-        clearInterval(progressInterval)
-        progressInterval = null
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current)
+        progressIntervalRef.current = null
       }
       
-      isLoading = false
+      isLoadingRef.current = false
       
       // Complete to 100%
       setProgress(100)
       
       // Hide after animation
-      completeTimeout = setTimeout(() => {
+      completeTimeoutRef.current = setTimeout(() => {
         setLoading(false)
         setProgress(0)
       }, 300)
@@ -69,6 +79,20 @@ export default function TopLoadingBar() {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement
       
+      // Check for links (navigation to other pages)
+      const link = target.closest('a')
+      if (link) {
+        const href = link.getAttribute('href')
+        // Only show loading for internal navigation links
+        if (href && href.startsWith('/') && !href.startsWith('//')) {
+          startLoading()
+          // Navigation will complete when pathname changes
+          // Fallback timeout in case navigation doesn't happen
+          setTimeout(completeLoading, 3000)
+          return
+        }
+      }
+      
       // Check for submit buttons
       const submitButton = target.closest('button[type="submit"]')
       if (submitButton) {
@@ -78,34 +102,13 @@ export default function TopLoadingBar() {
         return
       }
       
-      // Check for tab buttons - buttons that are not submit buttons and are used for tab navigation
+      // Check for any other buttons (tab buttons, action buttons, etc.)
       const button = target.closest('button')
       if (button && button.type !== 'submit') {
-        // Check if it's a tab button by looking for tab navigation context
-        // Tab buttons are typically in nav elements
-        const isInNav = button.closest('nav') !== null
-        
-        // Check for common tab button text patterns
-        const buttonText = button.textContent?.toLowerCase().trim() || ''
-        const isTabButtonText = 
-          buttonText.includes('business') ||
-          buttonText.includes('employer') ||
-          buttonText.includes('employee') ||
-          buttonText.includes('review received') ||
-          buttonText.includes('reviews received') ||
-          buttonText.includes('reviews given') ||
-          buttonText.includes('review given')
-        
-        // Check if button is in a tab-like container (flex container, typically used for tabs)
-        const parent = button.parentElement
-        const isInTabContainer = parent && parent.classList.contains('flex')
-        
-        // If in nav (tab navigation) OR has tab button text in a flex container, show loading
-        if (isInNav || (isInTabContainer && isTabButtonText)) {
-          startLoading()
-          // Tab switching is instant, so complete quickly
-          setTimeout(completeLoading, 300)
-        }
+        startLoading()
+        // Quick completion for instant actions like tab switching
+        setTimeout(completeLoading, 300)
+        return
       }
     }
 
@@ -116,8 +119,8 @@ export default function TopLoadingBar() {
     return () => {
       document.removeEventListener('submit', handleSubmit, true)
       document.removeEventListener('click', handleClick, true)
-      if (progressInterval) clearInterval(progressInterval)
-      if (completeTimeout) clearTimeout(completeTimeout)
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current)
+      if (completeTimeoutRef.current) clearTimeout(completeTimeoutRef.current)
     }
   }, [])
 
