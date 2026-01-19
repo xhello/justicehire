@@ -101,7 +101,7 @@ export default async function Home({
           </h2>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
             A platform where employees and employers in the hospitality industry can leave
-            anonymous, verified reviews on each other. Reviews are completely anonymous to
+            anonymous, verified reviews on each other and companies. Reviews are completely anonymous to
             both the public and the reviewed party.
           </p>
         </div>
