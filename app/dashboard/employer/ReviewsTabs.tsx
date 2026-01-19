@@ -34,7 +34,7 @@ interface ReviewsTabsProps {
 }
 
 export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTabsProps) {
-  const [activeTab, setActiveTab] = useState<'given' | 'received'>('given')
+  const [activeTab, setActiveTab] = useState<'given' | 'received'>('received')
 
   const getRatingLabel = (rating: string | null) => {
     if (!rating) return null
@@ -96,16 +96,6 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center gap-4 mb-4 border-b border-gray-200 pb-2">
         <button
-          onClick={() => setActiveTab('given')}
-          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-            activeTab === 'given'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
-          }`}
-        >
-          Reviews Given
-        </button>
-        <button
           onClick={() => setActiveTab('received')}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             activeTab === 'received'
@@ -114,6 +104,16 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
           }`}
         >
           Review Received
+        </button>
+        <button
+          onClick={() => setActiveTab('given')}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            activeTab === 'given'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
+          }`}
+        >
+          Reviews Given
         </button>
       </div>
 
