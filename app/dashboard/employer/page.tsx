@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from '../ReviewsTabs'
+import { getAggregatedRatings } from '@/app/actions/review'
 
 export default async function EmployerDashboard() {
   const user = await getCurrentUser()
@@ -18,6 +19,9 @@ export default async function EmployerDashboard() {
   }
 
   // Employers can access dashboard even if not verified (verified: false by default)
+
+  // Get user's rating breakdown
+  const userRatings = await getAggregatedRatings(user.id)
 
   // Get all reviews that this employer has given
   const reviewsGiven = await prisma.reviews.findMany({
@@ -175,7 +179,7 @@ export default async function EmployerDashboard() {
               photoUrl: user.photoUrl,
               email: user.email,
               verified: user.verified,
-            }} />
+            }} ratings={userRatings} />
           </div>
           
           <div className="lg:col-span-2 space-y-6">
