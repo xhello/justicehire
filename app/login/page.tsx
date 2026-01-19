@@ -24,7 +24,13 @@ export default function LoginPage() {
         setLoading(false)
       }
       // If successful, login will redirect
-    } catch (err) {
+    } catch (err: any) {
+      // Next.js redirect() throws a special error that we should ignore
+      // Check if it's a redirect error by looking for the digest property
+      if (err?.digest?.startsWith('NEXT_REDIRECT')) {
+        // This is a redirect, not an actual error - let it propagate
+        throw err
+      }
       setError('An error occurred. Please try again.')
       setLoading(false)
     }
