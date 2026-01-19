@@ -197,7 +197,7 @@ export default async function BusinessDetailPage({
           tabs={[
             {
               id: 'reviews',
-              label: 'Business Reviews',
+              label: `Business Reviews (${businessReviews.length})`,
               content: (
                 <>
                   {user && user.verified && (
@@ -302,7 +302,7 @@ export default async function BusinessDetailPage({
             },
             {
               id: 'employers',
-              label: 'Employers',
+              label: `Employers (${business.employers.length})`,
               content: (
                 <>
                   {business.employers.length === 0 ? (

@@ -4,9 +4,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 
 interface TypeButtonsProps {
   selectedType?: string
+  counts?: {
+    business: number
+    employer: number
+    employees: number
+  }
 }
 
-export default function TypeButtons({ selectedType = 'business' }: TypeButtonsProps) {
+export default function TypeButtons({ selectedType = 'business', counts }: TypeButtonsProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -34,7 +39,7 @@ export default function TypeButtons({ selectedType = 'business' }: TypeButtonsPr
             : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
         }`}
       >
-        Business
+        Business {counts && `(${counts.business})`}
       </button>
       <button
         type="button"
@@ -45,7 +50,7 @@ export default function TypeButtons({ selectedType = 'business' }: TypeButtonsPr
             : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
         }`}
       >
-        Employers
+        Employers {counts && `(${counts.employer})`}
       </button>
       <button
         type="button"
@@ -56,7 +61,7 @@ export default function TypeButtons({ selectedType = 'business' }: TypeButtonsPr
             : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
         }`}
       >
-        Employees
+        Employees {counts && `(${counts.employees})`}
       </button>
     </div>
   )

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { getCitiesByState } from './actions/business'
-import { searchResults } from './actions/search'
+import { searchResults, getCategoryCounts } from './actions/search'
 import { getCurrentUser } from '@/lib/auth'
 import BusinessFilters from './business/BusinessFilters'
 import BusinessImage from './business/BusinessImage'
@@ -16,7 +16,7 @@ export default async function Home({
 }: {
   searchParams: Promise<{ state?: string; city?: string; category?: string }>
 }) {
-  let params, user, results, citiesByState
+  let params, user, results, citiesByState, categoryCounts
   
   try {
     params = await searchParams
@@ -25,29 +25,43 @@ export default async function Home({
   }
   
   try {
-    user = await getCurrentUser()
+    // Parallel fetch: user, results, cities, and category counts
+    const [userResult, resultsResult, citiesResult, countsResult] = await Promise.all([
+      getCurrentUser().catch((err) => {
+        console.error('Error getting current user:', err)
+        return null
+      }),
+      searchResults({
+        state: params.state,
+        city: params.city,
+        category: params.category,
+      }).catch((err) => {
+        console.error('Error getting search results:', err)
+        return []
+      }),
+      getCitiesByState().catch((err) => {
+        console.error('Error getting cities by state:', err)
+        return {}
+      }),
+      getCategoryCounts({
+        state: params.state,
+        city: params.city,
+      }).catch((err) => {
+        console.error('Error getting category counts:', err)
+        return { business: 0, employer: 0, employees: 0 }
+      }),
+    ])
+    
+    user = userResult
+    results = resultsResult
+    citiesByState = citiesResult
+    categoryCounts = countsResult
   } catch (err) {
-    console.error('Error getting current user:', err)
+    console.error('Error fetching data:', err)
     user = null
-  }
-  
-  try {
-    results = await searchResults({
-      state: params.state,
-      city: params.city,
-      category: params.category,
-    })
-  } catch (err) {
-    console.error('Error getting search results:', err)
     results = []
-  }
-  
-  // Get cities grouped by state for the filter component
-  try {
-    citiesByState = await getCitiesByState()
-  } catch (err) {
-    console.error('Error getting cities by state:', err)
     citiesByState = {}
+    categoryCounts = { business: 0, employer: 0, employees: 0 }
   }
 
   return (
@@ -116,11 +130,8 @@ export default async function Home({
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-xl font-semibold mb-4">
-            Results ({results.length})
-          </h3>
           <Suspense fallback={<div className="flex gap-2 mb-4"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
-            <TypeButtons selectedType={params.category || 'business'} />
+            <TypeButtons selectedType={params.category || 'business'} counts={categoryCounts} />
           </Suspense>
           {results.length === 0 ? (
             <p className="text-gray-700">No results found.</p>

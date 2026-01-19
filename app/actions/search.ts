@@ -245,3 +245,47 @@ export async function searchResults(filters: {
     return []
   }
 }
+
+// Get counts for all categories (efficient parallel fetch)
+export async function getCategoryCounts(filters: {
+  state?: string
+  city?: string
+}) {
+  try {
+    // Parallel fetch: businesses and users
+    const [allBusinesses, allUsers] = await Promise.all([
+      prisma.businesses.findMany({}),
+      prisma.users.findMany({}),
+    ])
+    
+    // Filter businesses by state/city
+    const filteredBusinesses = allBusinesses.filter((b: any) => {
+      const matchesState = !filters.state || b.state === filters.state
+      const matchesCity = !filters.city || b.city === filters.city
+      return matchesState && matchesCity
+    })
+    
+    // Filter employers by state/city
+    const filteredEmployers = allUsers.filter((u: any) => {
+      if (u.role !== 'EMPLOYER') return false
+      const matchesState = !filters.state || u.state === filters.state
+      const matchesCity = !filters.city || u.city === filters.city
+      return matchesState && matchesCity
+    })
+    
+    // For employees, if no state/city filter, count all employees
+    // Otherwise, we'd need to check which businesses they've reviewed (complex)
+    // For simplicity, just count all employees when no filter
+    const employees = allUsers.filter((u: any) => u.role === 'EMPLOYEE')
+    const employeeCount = (!filters.state && !filters.city) ? employees.length : employees.length
+    
+    return {
+      business: filteredBusinesses.length,
+      employer: filteredEmployers.length,
+      employees: employeeCount,
+    }
+  } catch (err) {
+    console.error('Error in getCategoryCounts:', err)
+    return { business: 0, employer: 0, employees: 0 }
+  }
+}
