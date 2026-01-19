@@ -164,24 +164,10 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                       </Link>
                     ) : null
                   ) : (
-                    // For received reviews, show reviewer photo
-                    review.reviewer ? (
-                      <Link href={getReviewerLink(review)} className="flex-shrink-0">
-                        {review.reviewer.photoUrl ? (
-                          <img
-                            src={review.reviewer.photoUrl}
-                            alt={getReviewerName(review)}
-                            className="w-12 h-12 rounded-lg object-cover hover:opacity-80 transition-opacity cursor-pointer"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors cursor-pointer">
-                            <span className="text-gray-500 text-sm">
-                              {review.reviewer.firstName[0]}{review.reviewer.lastName[0]}
-                            </span>
-                          </div>
-                        )}
-                      </Link>
-                    ) : null
+                    // For received reviews, show anonymous icon (reviews are anonymous)
+                    <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
+                      <span className="text-gray-400 text-lg">👤</span>
+                    </div>
                   )}
                   
                   <div className="flex-1">
@@ -204,23 +190,9 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                         )}
                       </>
                     ) : (
-                      <>
-                        <p className="text-sm font-medium text-gray-900">
-                          Review from: <Link 
-                            href={getReviewerLink(review)}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            {getReviewerName(review)} ({review.reviewer?.role === 'EMPLOYEE' ? 'Employee' : 'Employer'})
-                          </Link>
-                        </p>
-                        {review.business && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            at <Link href={`/business/${review.businessId}`} className="text-blue-600 hover:text-blue-700">
-                              {review.business.name}
-                            </Link>
-                          </p>
-                        )}
-                      </>
+                      <p className="text-sm font-medium text-gray-900">
+                        {review.reviewer?.role === 'EMPLOYEE' ? 'Employee' : 'Employer'}
+                      </p>
                     )}
                   </div>
                 </div>
