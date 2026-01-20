@@ -155,10 +155,10 @@ export default async function EmployerDashboard() {
                     <img 
                       src={user.photoUrl} 
                       alt="Profile" 
-                      className="w-6 h-6 rounded-full object-cover"
+                      className="w-6 h-6 rounded-md object-cover"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
                       <span className="text-blue-600 text-xs font-semibold">
                         {user.firstName?.[0]?.toUpperCase() || 'U'}
                       </span>
