@@ -321,18 +321,18 @@ export default async function BusinessDetailPage({
               ),
             },
             {
-              id: 'employers',
-              label: `Employers (${business.employers.length})`,
+              id: 'employees',
+              label: `Employees (${business.employees.length})`,
               content: (
                 <>
-                  {business.employers.length === 0 ? (
-                    <p className="text-gray-700">No employers registered for this business.</p>
+                  {business.employees.length === 0 ? (
+                    <p className="text-gray-700">No employees registered for this business.</p>
                   ) : (
                     <div className="space-y-6">
-                      {business.employers.map((employer: any) => (
-                        <EmployerCard
-                          key={employer.id}
-                          employer={employer}
+                      {business.employees.map((employee: any) => (
+                        <EmployeeCard
+                          key={employee.id}
+                          employee={employee}
                           businessId={business.id}
                           user={user}
                         />
@@ -351,56 +351,55 @@ export default async function BusinessDetailPage({
   )
 }
 
-async function EmployerCard({
-  employer,
+async function EmployeeCard({
+  employee,
   businessId,
   user,
 }: {
-  employer: any
+  employee: any
   businessId: string
   user: any
 }) {
   const canReview =
     user &&
     user.verified &&
-    user.role === 'EMPLOYEE' &&
-    user.id !== employer.userId
+    user.id !== employee.userId
 
   // Get existing review (if any) to allow updating
   const existingReview = canReview
     ? await prisma.reviews.findFirst({
         reviewerId: user.id,
-        targetUserId: employer.userId,
+        targetUserId: employee.userId,
         businessId,
       })
     : null
 
   return (
     <div className="border rounded-lg p-4">
-      <Link href={`/employer/${employer.userId}`} className="block">
+      <Link href={`/employee/${employee.userId}`} className="block">
         <div className="flex items-center justify-between mb-4 hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-4">
-            {employer.user.photoUrl ? (
+            {employee.user.photoUrl ? (
               <img
-                src={employer.user.photoUrl}
-                alt={`${employer.user.firstName} ${employer.user.lastName}`}
+                src={employee.user.photoUrl}
+                alt={`${employee.user.firstName} ${employee.user.lastName}`}
                 className="w-16 h-16 rounded-lg object-cover"
               />
             ) : (
               <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
                 <span className="text-gray-500 text-xl">
-                  {employer.user.firstName[0]}{employer.user.lastName[0]}
+                  {employee.user.firstName[0]}{employee.user.lastName[0]}
                 </span>
               </div>
             )}
             <div>
               <h3 className="text-xl font-semibold text-blue-600 hover:text-blue-700">
-                {employer.user.firstName} {employer.user.lastName}
+                {employee.user.firstName} {employee.user.lastName}
               </h3>
-              {employer.user.position && (
-                <p className="text-sm text-gray-700">{employer.user.position}</p>
+              {employee.user.position && (
+                <p className="text-sm text-gray-700 capitalize">{employee.user.position}</p>
               )}
-              <p className="text-sm text-gray-700">{employer.reviewCount} reviews</p>
+              <p className="text-sm text-gray-700">{employee.reviewCount} reviews</p>
             </div>
           </div>
         </div>
@@ -411,13 +410,13 @@ async function EmployerCard({
           <h4 className="font-medium mb-2">Rating Breakdown:</h4>
           <div className="space-y-1 text-sm">
             <p className="text-green-600">
-              Outstanding: {employer.ratings.OUTSTANDING}
+              Outstanding: {employee.ratings.OUTSTANDING}
             </p>
             <p className="text-yellow-600">
-              No issue: {employer.ratings.DELIVERED_AS_EXPECTED}
+              No issue: {employee.ratings.DELIVERED_AS_EXPECTED}
             </p>
             <p className="text-red-600">
-              Nothing nice to say: {employer.ratings.GOT_NOTHING_NICE_TO_SAY}
+              Nothing nice to say: {employee.ratings.GOT_NOTHING_NICE_TO_SAY}
             </p>
           </div>
         </div>
@@ -429,9 +428,9 @@ async function EmployerCard({
 
       {canReview && (
         <ReviewFormClient
-          targetUserId={employer.userId}
+          targetUserId={employee.userId}
           businessId={businessId}
-          targetType="EMPLOYER"
+          targetType="EMPLOYEE"
           existingReview={existingReview}
         />
       )}

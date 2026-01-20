@@ -151,29 +151,29 @@ export async function getBusinessDetails(businessId: string) {
   if (!employerProfiles || employerProfiles.length === 0) {
     return {
       ...business,
-      employers: [],
+      employees: [],
       _count: { reviews: allReviews.length },
     }
   }
 
-  // Get employer users
-  const employerUserIds = new Set(employerProfiles.filter((p: any) => p?.userId).map((p: any) => p.userId))
+  // Get employees who work at this business (users with employer profiles)
+  const employeeUserIds = new Set(employerProfiles.filter((p: any) => p?.userId).map((p: any) => p.userId))
   const allUsers = await prisma.users.findMany({})
-  const employerUsers = allUsers.filter((u: any) => u.role === 'EMPLOYER' && employerUserIds.has(u.id))
+  const employeeUsers = allUsers.filter((u: any) => employeeUserIds.has(u.id))
 
-  // Group employer reviews by targetUserId for O(1) lookup (avoids N+1)
-  const employerReviewsByUserId = new Map<string, any[]>()
+  // Group employee reviews by targetUserId for O(1) lookup (avoids N+1)
+  const employeeReviewsByUserId = new Map<string, any[]>()
   allReviews.forEach((r: any) => {
-    if (r.targetType === 'EMPLOYER' && r.targetUserId) {
-      const existing = employerReviewsByUserId.get(r.targetUserId) || []
+    if (r.targetType === 'EMPLOYEE' && r.targetUserId) {
+      const existing = employeeReviewsByUserId.get(r.targetUserId) || []
       existing.push(r)
-      employerReviewsByUserId.set(r.targetUserId, existing)
+      employeeReviewsByUserId.set(r.targetUserId, existing)
     }
   })
 
-  // Build employer data using Map lookup (no more N+1 queries!)
-  const employers = employerUsers.map((user: any) => {
-    const reviews = employerReviewsByUserId.get(user.id) || []
+  // Build employee data using Map lookup (no more N+1 queries!)
+  const employees = employeeUsers.map((user: any) => {
+    const reviews = employeeReviewsByUserId.get(user.id) || []
     const ratings = { OUTSTANDING: 0, DELIVERED_AS_EXPECTED: 0, GOT_NOTHING_NICE_TO_SAY: 0 }
     
     reviews.forEach((review: any) => {
@@ -200,7 +200,7 @@ export async function getBusinessDetails(businessId: string) {
 
   return {
     ...business,
-    employers,
+    employees,
     _count: { reviews: allReviews.length },
   }
 }
