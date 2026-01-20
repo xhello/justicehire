@@ -259,14 +259,14 @@ export default async function Home({
                         <h4 className="font-semibold text-lg truncate">
                           {item.firstName} {item.lastName}
                         </h4>
-                        {item.position && item.businessName ? (
+                        {item.businessName ? (
                           <p className="text-sm text-gray-700">
-                            <span className="capitalize">{item.position}</span> at {item.businessName}
+                            {item.position ? (
+                              <><span className="capitalize">{item.position}</span> at {item.businessName}</>
+                            ) : (
+                              <>Working at {item.businessName}</>
+                            )}
                           </p>
-                        ) : item.position ? (
-                          <p className="text-sm text-gray-700 capitalize">{item.position}</p>
-                        ) : item.businessName ? (
-                          <p className="text-sm text-gray-700">{item.businessName}</p>
                         ) : (
                           <p className="text-sm text-gray-700">Employee</p>
                         )}

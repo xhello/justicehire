@@ -156,12 +156,13 @@ export default async function EmployerProfilePage({
               <h1 className="text-3xl font-bold text-gray-900">
                 {employer.firstName} {employer.lastName}
               </h1>
-              <p className="text-lg text-gray-700">Employer</p>
-              {employerPosition && (
-                <p className="text-sm text-gray-600">{employerPosition}</p>
-              )}
-              {employer.employerProfile && (
-                <p className="text-sm text-gray-600">
+              {employer.employerProfile?.business ? (
+                <p className="text-lg text-gray-700">
+                  {employerPosition ? (
+                    <><span className="capitalize">{employerPosition}</span> at{' '}</>
+                  ) : (
+                    <>Working at{' '}</>
+                  )}
                   <Link 
                     href={`/business/${employer.employerProfile.business.id}`}
                     className="text-blue-600 hover:text-blue-700 hover:underline"
@@ -169,6 +170,8 @@ export default async function EmployerProfilePage({
                     {employer.employerProfile.business.name}
                   </Link>
                 </p>
+              ) : (
+                <p className="text-lg text-gray-700">Employee</p>
               )}
             </div>
           </div>
