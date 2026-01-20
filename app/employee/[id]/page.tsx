@@ -148,8 +148,21 @@ export default async function EmployeeProfilePage({
               {user ? (
                 <Link
                   href="/dashboard/employee"
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
                 >
+                  {user.photoUrl ? (
+                    <img 
+                      src={user.photoUrl} 
+                      alt="Profile" 
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-semibold">
+                        {user.firstName?.[0]?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
                   Dashboard
                 </Link>
               ) : (
