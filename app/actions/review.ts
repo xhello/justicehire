@@ -200,10 +200,23 @@ export async function getAggregatedRatings(userId: string) {
 }
 
 export async function getUserProfile(userId: string) {
-  // Parallel fetch: user and reviews (for ratings)
-  const [user, reviews] = await Promise.all([
+  // Parallel fetch: user, reviews, and employer profile
+  const [user, reviews, employerProfile] = await Promise.all([
     prisma.users.findUnique({ id: userId }),
     prisma.reviews.findMany({ targetUserId: userId }),
+    (async () => {
+      try {
+        const { supabaseAdmin } = await import('@/lib/supabase')
+        const { data } = await supabaseAdmin
+          .from('EmployerProfile')
+          .select('userId, businessId')
+          .eq('userId', userId)
+          .single()
+        return data
+      } catch (err) {
+        return null
+      }
+    })(),
   ])
 
   if (!user) {
@@ -218,10 +231,10 @@ export async function getUserProfile(userId: string) {
     }
   })
 
-  // Get business info if user has an employer profile (employees who have a position at a business)
+  // Get business info if user has an employer profile
   let businessInfo = null
-  if (user.employerProfile) {
-    const business = await prisma.businesses.findUnique({ id: user.employerProfile.businessId })
+  if (employerProfile?.businessId) {
+    const business = await prisma.businesses.findUnique({ id: employerProfile.businessId })
     if (business) {
       businessInfo = { id: business.id, name: business.name, address: business.address }
     }
@@ -234,7 +247,7 @@ export async function getUserProfile(userId: string) {
     photoUrl: user.photoUrl,
     role: user.role,
     socialUrl: user.socialUrl,
-    position: user.position, // Include position to avoid extra query
+    position: user.position,
     employerProfile: businessInfo ? { business: businessInfo } : undefined,
     ratings,
     total: reviews.length,
