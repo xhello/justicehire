@@ -97,7 +97,7 @@ export async function searchResults(filters: {
       ])
 
       // Pre-filter businesses by state/city if specified
-      let filteredBusinessIds = new Set<string>()
+      const filteredBusinessIds = new Set<string>()
       if (filters.state || filters.city) {
         allBusinesses.forEach((b: any) => {
           const matchesState = !filters.state || b.state === filters.state

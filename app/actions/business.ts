@@ -1,8 +1,6 @@
 'use server'
 
-import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
 
 // Helper function to calculate average ratings
 function calculateAvgRatings(reviews: any[]) {

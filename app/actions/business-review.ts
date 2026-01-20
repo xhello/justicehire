@@ -4,7 +4,6 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 const createBusinessReviewSchema = z.object({
   businessId: z.string(),
@@ -87,7 +86,7 @@ export async function createBusinessReview(
           message: validated.message || null,
         })
       }
-    } catch (error) {
+    } catch {
       // If update fails, delete old and create new
       await prisma.reviews.deleteMany({
         reviewerId: user.id,

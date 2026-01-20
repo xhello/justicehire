@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   try {
     const cities = await getUniqueCities(state)
     return NextResponse.json({ cities })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ cities: [] }, { status: 500 })
   }
 }

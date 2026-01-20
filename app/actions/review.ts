@@ -114,7 +114,7 @@ export async function createReview(
           },
         })
       }
-    } catch (error) {
+    } catch {
       // If update fails, delete old and create new
       await prisma.reviews.deleteMany({
         reviewerId: user.id,
@@ -213,7 +213,7 @@ export async function getUserProfile(userId: string) {
           .eq('userId', userId)
           .single()
         return data
-      } catch (err) {
+      } catch {
         return null
       }
     })(),
