@@ -166,7 +166,7 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                   ) : null}
                   
                   <div className="flex-1">
-                    {activeTab === 'given' && (
+                    {activeTab === 'given' ? (
                       <>
                         <p className="text-sm font-medium text-gray-900">
                           Review for: <Link 
@@ -184,13 +184,11 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                           </p>
                         )}
                       </>
-                    )}
-                    {activeTab === 'received' && review.targetType !== 'BUSINESS' && (
-                      <div className="text-sm">
-                        <span className="text-gray-700">Rating: </span>
-                        {getRatingLabel(review.rating)}
-                      </div>
-                    )}
+                    ) : review.targetType !== 'BUSINESS' ? (
+                      <p className="text-sm text-gray-700">
+                        Rating: {getRatingLabel(review.rating)}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
                 <span className="text-xs text-gray-500 ml-4">
@@ -234,13 +232,15 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                     </div>
                   )}
                 </div>
-              ) : activeTab === 'given' ? (
-                <div className="mt-2">
-                  <p className="text-sm text-gray-700">
-                    Rating: {getRatingLabel(review.rating)}
-                  </p>
-                </div>
-              ) : null}
+              ) : (
+                activeTab === 'received' ? null : (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-700">
+                      Rating: {getRatingLabel(review.rating)}
+                    </p>
+                  </div>
+                )
+              )}
               
               {review.message && (
                 <div className="mt-3 pt-3 border-t">
