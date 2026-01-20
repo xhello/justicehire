@@ -237,7 +237,11 @@ export default async function BusinessDetailPage({
                     {businessReviews.length === 0 ? (
                       <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
                     ) : (
-                      businessReviews.map((review: any, index: number) => {
+                      (() => {
+                        // Find the first review that has a comment
+                        const firstReviewWithCommentIndex = businessReviews.findIndex((r: any) => r.message)
+                        
+                        return businessReviews.map((review: any, index: number) => {
                         // Debug: Log review data
                         if (process.env.NODE_ENV === 'development') {
                           console.log('Review data:', {
@@ -250,8 +254,8 @@ export default async function BusinessDetailPage({
                           })
                         }
                         
-                        // Show full content for logged-in users OR the first review
-                        const showFullContent = !!user || index === 0
+                        // Show full content for logged-in users OR the first review with a comment
+                        const showFullContent = !!user || index === firstReviewWithCommentIndex
                         
                         return (
                         <div key={review.id} className="border rounded-lg p-4">
@@ -316,7 +320,7 @@ export default async function BusinessDetailPage({
                               <p className="text-sm text-gray-600">
                                 Only verified users can read review contents.
                               </p>
-                              <p className="text-sm text-gray-600 mt-2">
+                              <p className="text-sm text-gray-600 mt-1">
                                 Please <a href="/signup" className="text-blue-600 hover:underline">sign up</a> and verify your email address to read full reviews. You can verify your email from your dashboard.
                               </p>
                             </div>
@@ -324,6 +328,7 @@ export default async function BusinessDetailPage({
                         </div>
                         )
                       })
+                      })()
                     )}
                   </div>
                 </>

@@ -284,49 +284,54 @@ export default async function EmployerProfilePage({
           <div className="bg-white rounded-lg shadow p-6 mt-8">
             <h2 className="text-2xl font-semibold mb-4">All Reviews</h2>
             <div className="space-y-4">
-              {reviewsWithUsers.map((review: any, index: number) => {
-                // Show full content for logged-in users OR the first review
-                const showFullContent = !!user || index === 0
+              {(() => {
+                // Find the first review that has a comment
+                const firstReviewWithCommentIndex = reviewsWithUsers.findIndex((r: any) => r.message)
                 
-                return (
-                <div key={review.id} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-700">Rating:</span>
-                      {review.rating === 'OUTSTANDING' && (
-                        <span className="text-green-600 font-medium">Outstanding</span>
-                      )}
-                      {review.rating === 'DELIVERED_AS_EXPECTED' && (
-                        <span className="text-yellow-600 font-medium">No issue</span>
-                      )}
-                      {review.rating === 'GOT_NOTHING_NICE_TO_SAY' && (
-                        <span className="text-red-600 font-medium">Nothing nice to say</span>
-                      )}
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {timeAgo(review.createdAt)}
-                    </span>
-                  </div>
+                return reviewsWithUsers.map((review: any, index: number) => {
+                  // Show full content for logged-in users OR the first review with a comment
+                  const showFullContent = !!user || index === firstReviewWithCommentIndex
                   
-                  {showFullContent ? (
-                    review.message && (
-                      <div className="mt-3 pt-3 border-t">
-                        <p className="text-sm font-medium text-gray-700 mb-1">Additional Comments:</p>
-                        <p className="text-gray-700">{review.message}</p>
+                  return (
+                  <div key={review.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-700">Rating:</span>
+                        {review.rating === 'OUTSTANDING' && (
+                          <span className="text-green-600 font-medium">Outstanding</span>
+                        )}
+                        {review.rating === 'DELIVERED_AS_EXPECTED' && (
+                          <span className="text-yellow-600 font-medium">No issue</span>
+                        )}
+                        {review.rating === 'GOT_NOTHING_NICE_TO_SAY' && (
+                          <span className="text-red-600 font-medium">Nothing nice to say</span>
+                        )}
                       </div>
-                    )
-                  ) : (
-                    <div className="mt-3 pt-3 border-t bg-gray-50 rounded p-3">
-                      <p className="text-sm text-gray-600">
-                        Only verified users can read review contents.
-                      </p>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Please <a href="/signup" className="text-blue-600 hover:underline">sign up</a> and verify your email address to read full reviews. You can verify your email from your dashboard.
-                      </p>
+                      <span className="text-xs text-gray-500">
+                        {timeAgo(review.createdAt)}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )})}
+                    
+                    {showFullContent ? (
+                      review.message && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Additional Comments:</p>
+                          <p className="text-gray-700">{review.message}</p>
+                        </div>
+                      )
+                    ) : (
+                      <div className="mt-3 pt-3 border-t bg-gray-50 rounded p-3">
+                        <p className="text-sm text-gray-600">
+                          Only verified users can read review contents.
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Please <a href="/signup" className="text-blue-600 hover:underline">sign up</a> and verify your email address to read full reviews. You can verify your email from your dashboard.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )})
+              })()}
             </div>
           </div>
         )}

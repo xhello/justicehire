@@ -324,9 +324,13 @@ export default async function EmployeeProfilePage({
           <div className="bg-white rounded-lg shadow p-6 mt-8">
             <h2 className="text-2xl font-semibold mb-4">All Reviews</h2>
             <div className="space-y-4">
-              {reviewsWithUsers.map((review: any, index: number) => {
-                // Show full content for logged-in users OR the first review
-                const showFullContent = !!user || index === 0
+              {(() => {
+                // Find the first review that has a comment
+                const firstReviewWithCommentIndex = reviewsWithUsers.findIndex((r: any) => r.message)
+                
+                return reviewsWithUsers.map((review: any, index: number) => {
+                // Show full content for logged-in users OR the first review with a comment
+                const showFullContent = !!user || index === firstReviewWithCommentIndex
                 
                 return (
                 <div key={review.id} className="border rounded-lg p-4">
@@ -359,13 +363,14 @@ export default async function EmployeeProfilePage({
                       <p className="text-sm text-gray-600">
                         Only verified users can read review contents.
                       </p>
-                      <p className="text-sm text-gray-600 mt-2">
+                      <p className="text-sm text-gray-600 mt-1">
                         Please <a href="/signup" className="text-blue-600 hover:underline">sign up</a> and verify your email address to read full reviews. You can verify your email from your dashboard.
                       </p>
                     </div>
                   )}
                 </div>
-              )})}
+              )})
+              })()}
             </div>
           </div>
         )}
