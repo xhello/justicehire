@@ -193,7 +193,7 @@ export default async function EmployeeDashboard() {
             
             {userBusiness && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Business</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Workplace</h3>
                 <Link 
                   href={`/business/${userBusiness.id}`}
                   className="block hover:bg-gray-50 rounded-lg transition-colors"
