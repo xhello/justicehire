@@ -23,7 +23,7 @@ export default async function EmployeeProfilePage({
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Employee not found</h1>
-            <Link href="/dashboard/employer" className="text-blue-600 hover:text-blue-700">
+            <Link href="/dashboard/employee" className="text-blue-600 hover:text-blue-700">
               Back to dashboard
             </Link>
           </div>
@@ -147,7 +147,7 @@ export default async function EmployeeProfilePage({
             <div className="flex gap-4 items-center">
               {user ? (
                 <Link
-                  href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
+                  href="/dashboard/employee"
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
                 >
                   Dashboard

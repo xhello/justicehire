@@ -13,11 +13,7 @@ export default async function EmployeeDashboard() {
     redirect('/login')
   }
 
-  if (user.role !== 'EMPLOYEE') {
-    redirect('/dashboard/employer')
-  }
-
-  // Employees can access dashboard even if not verified (can verify from dashboard)
+  // All users can access the employee dashboard
 
   // Parallel fetch: reviews given and received
   const [employeeReviewsGiven, employeeReviewsReceived] = await Promise.all([

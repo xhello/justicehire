@@ -6,7 +6,6 @@ interface TypeButtonsProps {
   selectedType?: string
   counts?: {
     business: number
-    employer: number
     employees: number
   }
 }
@@ -40,17 +39,6 @@ export default function TypeButtons({ selectedType = 'business', counts }: TypeB
         }`}
       >
         Business {counts && `(${counts.business})`}
-      </button>
-      <button
-        type="button"
-        onClick={() => handleTypeChange('employer')}
-        className={`px-3 py-2 rounded-md font-medium transition-colors ${
-          selectedType === 'employer'
-            ? 'bg-blue-600 text-white'
-            : 'bg-white text-blue-600 border-2 border-blue-600 hover:bg-blue-50'
-        }`}
-      >
-        Employers {counts && `(${counts.employer})`}
       </button>
       <button
         type="button"

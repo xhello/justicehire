@@ -21,7 +21,7 @@ function VerifySuccessContent() {
         if (prev <= 1) {
           clearInterval(timer)
           // Redirect to dashboard
-          router.push(role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer')
+          router.push('/dashboard/employee')
           return 0
         }
         return prev - 1
@@ -32,7 +32,7 @@ function VerifySuccessContent() {
   }, [role, router])
 
   const handleContinue = () => {
-    router.push(role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer')
+    router.push('/dashboard/employee')
   }
 
   return (

@@ -145,7 +145,7 @@ export async function signupEmployer(formData: FormData) {
 
     // Create session and return success with redirect path
     await createSession(user.id)
-    return { success: true, redirect: '/dashboard/employer' }
+    return { success: true, redirect: '/dashboard/employee' }
   } catch (error: any) {
     console.error('Error creating pending signup:', error)
     // Check if it's a table not found error
@@ -344,12 +344,8 @@ export async function login(formData: FormData) {
   // Create session
   await createSession(user.id)
 
-  // Redirect based on role
-  if (user.role === 'EMPLOYEE') {
-    redirect('/dashboard/employee')
-  } else {
-    redirect('/dashboard/employer')
-  }
+  // All users go to employee dashboard
+  redirect('/dashboard/employee')
 }
 
 export async function forgotPassword(formData: FormData) {

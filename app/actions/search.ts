@@ -76,89 +76,6 @@ export async function searchResults(filters: {
       })
       return businessesWithCounts
       
-    } else if (category === 'employer') {
-      // Fetch employers with filters
-      const where: any = { role: 'EMPLOYER' }
-      if (filters.state) where.state = filters.state
-      if (filters.city) where.city = filters.city
-
-      // Parallel fetch all needed data
-      const [employers, employerReviews, allBusinesses, employerProfiles] = await Promise.all([
-        prisma.users.findMany(where),
-        prisma.reviews.findMany({ targetType: 'EMPLOYER' }),
-        prisma.businesses.findMany({}),
-        (async () => {
-          try {
-            const { supabaseAdmin } = await import('@/lib/supabase')
-            const { data } = await supabaseAdmin
-              .from('EmployerProfile')
-              .select('userId, businessId')
-            return data || []
-          } catch (err) {
-            console.error('Error fetching employer profiles:', err)
-            return []
-          }
-        })(),
-      ])
-      
-      // Create lookup maps for O(1) access
-      const userIdToBusinessId = new Map<string, string>()
-      employerProfiles.forEach((profile: any) => {
-        userIdToBusinessId.set(profile.userId, profile.businessId)
-      })
-      
-      const businessIdToName = new Map<string, string>()
-      allBusinesses.forEach((b: any) => {
-        businessIdToName.set(b.id, b.name)
-      })
-      
-      // Group reviews by targetUserId and reviewerId
-      const reviewsByTargetId = new Map<string, any[]>()
-      const reviewsByReviewerId = new Map<string, number>()
-      employerReviews.forEach((r: any) => {
-        if (r.targetUserId) {
-          const existing = reviewsByTargetId.get(r.targetUserId) || []
-          existing.push(r)
-          reviewsByTargetId.set(r.targetUserId, existing)
-        }
-        if (r.reviewerId) {
-          reviewsByReviewerId.set(r.reviewerId, (reviewsByReviewerId.get(r.reviewerId) || 0) + 1)
-        }
-      })
-
-      const employersWithData = employers.map((employer: any) => {
-        const businessId = userIdToBusinessId.get(employer.id)
-        const businessName = businessId ? businessIdToName.get(businessId) || null : null
-        const reviewsReceived = reviewsByTargetId.get(employer.id) || []
-        const reviewsWrittenCount = reviewsByReviewerId.get(employer.id) || 0
-
-        const ratings = { OUTSTANDING: 0, DELIVERED_AS_EXPECTED: 0, GOT_NOTHING_NICE_TO_SAY: 0 }
-        reviewsReceived.forEach((review: any) => {
-          if (review.rating && review.rating in ratings) {
-            ratings[review.rating as keyof typeof ratings]++
-          }
-        })
-
-        return {
-          id: employer.id,
-          type: 'employer' as const,
-          firstName: employer.firstName,
-          lastName: employer.lastName,
-          photoUrl: employer.photoUrl,
-          state: employer.state,
-          city: employer.city,
-          position: employer.position,
-          businessName,
-          _count: { reviews: reviewsReceived.length, reviewsWritten: reviewsWrittenCount },
-          ratings,
-        }
-      })
-
-      employersWithData.sort((a: any, b: any) => 
-        `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
-      )
-      return employersWithData
-      
     } else if (category === 'employees') {
       // Parallel fetch all needed data
       const [allEmployees, allReviews, allBusinesses] = await Promise.all([
@@ -265,27 +182,16 @@ export async function getCategoryCounts(filters: {
       return matchesState && matchesCity
     })
     
-    // Filter employers by state/city
-    const filteredEmployers = allUsers.filter((u: any) => {
-      if (u.role !== 'EMPLOYER') return false
-      const matchesState = !filters.state || u.state === filters.state
-      const matchesCity = !filters.city || u.city === filters.city
-      return matchesState && matchesCity
-    })
-    
-    // For employees, if no state/city filter, count all employees
-    // Otherwise, we'd need to check which businesses they've reviewed (complex)
-    // For simplicity, just count all employees when no filter
+    // Count all employees (all users are now employees)
     const employees = allUsers.filter((u: any) => u.role === 'EMPLOYEE')
-    const employeeCount = (!filters.state && !filters.city) ? employees.length : employees.length
+    const employeeCount = employees.length
     
     return {
       business: filteredBusinesses.length,
-      employer: filteredEmployers.length,
       employees: employeeCount,
     }
   } catch (err) {
     console.error('Error in getCategoryCounts:', err)
-    return { business: 0, employer: 0, employees: 0 }
+    return { business: 0, employees: 0 }
   }
 }

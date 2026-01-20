@@ -48,7 +48,7 @@ export default async function Home({
         city: params.city,
       }).catch((err) => {
         console.error('Error getting category counts:', err)
-        return { business: 0, employer: 0, employees: 0 }
+        return { business: 0, employees: 0 }
       }),
     ])
     
@@ -61,7 +61,7 @@ export default async function Home({
     user = null
     results = []
     citiesByState = {}
-    categoryCounts = { business: 0, employer: 0, employees: 0 }
+    categoryCounts = { business: 0, employees: 0 }
   }
 
   return (
@@ -78,7 +78,7 @@ export default async function Home({
             <div className="flex gap-4 items-center">
               {user ? (
                 <Link
-                  href={user.role === 'EMPLOYEE' ? '/dashboard/employee' : '/dashboard/employer'}
+                  href="/dashboard/employee"
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
                 >
                   Dashboard
