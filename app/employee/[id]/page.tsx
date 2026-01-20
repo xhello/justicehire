@@ -189,19 +189,29 @@ export default async function EmployeeProfilePage({
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex items-center gap-6 mb-6">
-            {employee.photoUrl ? (
-              <img
-                src={employee.photoUrl}
-                alt={`${employee.firstName} ${employee.lastName}`}
-                className="w-24 h-24 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500 text-3xl">
-                  {employee.firstName[0]}{employee.lastName[0]}
+            <div className="relative">
+              {employee.photoUrl ? (
+                <img
+                  src={employee.photoUrl}
+                  alt={`${employee.firstName} ${employee.lastName}`}
+                  className="w-24 h-24 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500 text-3xl">
+                    {employee.firstName[0]}{employee.lastName[0]}
+                  </span>
+                </div>
+              )}
+              {employee.verified && (
+                <span className="absolute -top-2 -right-2 bg-green-100 text-green-700 text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Verified
                 </span>
-              </div>
-            )}
+              )}
+            </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {employee.firstName} {employee.lastName}
