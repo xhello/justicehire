@@ -244,9 +244,7 @@ export default async function EmployeeProfilePage({
                   </p>
                 </div>
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
-                  Only verified users can see review stats.{' '}
-                  <Link href="/signup" className="font-medium underline hover:text-blue-800">Sign up</Link> or{' '}
-                  <Link href="/login" className="font-medium underline hover:text-blue-800">log in</Link> to view.
+                  Only verified users can see review stats.
                 </div>
               </div>
             )}
