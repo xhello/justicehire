@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from './ReviewsTabs'
 import WorkplaceFinder from './WorkplaceFinder'
+import WorkplaceCard from './WorkplaceCard'
 
 export default async function EmployeeDashboard() {
   const user = await getCurrentUser()
@@ -193,24 +194,16 @@ export default async function EmployeeDashboard() {
             />
             
             {userBusiness ? (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Workplace</h3>
-                <Link 
-                  href={`/business/${userBusiness.id}`}
-                  className="block hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <h4 className="text-lg font-medium text-blue-600 hover:text-blue-700">
-                    {userBusiness.name}
-                  </h4>
-                  <p className="text-sm text-gray-700">{userBusiness.address}</p>
-                  <p className="text-sm text-gray-600">{userBusiness.city}, {userBusiness.state}</p>
-                  {user.position && (
-                    <p className="text-sm text-gray-600 mt-2 capitalize">
-                      Position: <span className="font-medium">{user.position}</span>
-                    </p>
-                  )}
-                </Link>
-              </div>
+              <WorkplaceCard 
+                business={{
+                  id: userBusiness.id,
+                  name: userBusiness.name,
+                  address: userBusiness.address,
+                  city: userBusiness.city,
+                  state: userBusiness.state,
+                }}
+                position={user.position}
+              />
             ) : (
               <WorkplaceFinder userId={user.id} />
             )}
