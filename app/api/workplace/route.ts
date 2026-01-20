@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { userId, businessId, position, state, city } = body
+    const { userId, businessId, state, city } = body
 
     // Verify user is setting their own workplace
     if (user.id !== userId) {
@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
         .insert({ userId, businessId })
     }
 
-    // Update user's position and location
+    // Update user's location
     await prisma.users.update(
       { id: userId },
-      { position, state, city }
+      { state, city }
     )
 
     return NextResponse.json({ success: true })

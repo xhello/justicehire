@@ -16,7 +16,6 @@ export default function WorkplaceFinder({ userId }: WorkplaceFinderProps) {
   const [selectedState, setSelectedState] = useState('')
   const [selectedCity, setSelectedCity] = useState('')
   const [selectedBusinessId, setSelectedBusinessId] = useState('')
-  const [selectedPosition, setSelectedPosition] = useState('')
   
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [availableBusinesses, setAvailableBusinesses] = useState<any[]>([])
@@ -84,7 +83,6 @@ export default function WorkplaceFinder({ userId }: WorkplaceFinderProps) {
         body: JSON.stringify({
           userId,
           businessId: selectedBusinessId,
-          position: selectedPosition,
           state: selectedState,
           city: selectedCity,
         }),
@@ -230,24 +228,6 @@ export default function WorkplaceFinder({ userId }: WorkplaceFinderProps) {
                     </select>
                   </div>
 
-                  <div>
-                    <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1">
-                      Position
-                    </label>
-                    <select
-                      id="position"
-                      value={selectedPosition}
-                      onChange={(e) => setSelectedPosition(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select position</option>
-                      <option value="owner">Owner</option>
-                      <option value="manager">Manager</option>
-                      <option value="supervisor on duty">Supervisor on Duty</option>
-                    </select>
-                  </div>
-
                   <div className="flex gap-3 pt-4">
                     <button
                       type="button"
@@ -258,7 +238,7 @@ export default function WorkplaceFinder({ userId }: WorkplaceFinderProps) {
                     </button>
                     <button
                       type="submit"
-                      disabled={loading || !selectedBusinessId || !selectedPosition}
+                      disabled={loading || !selectedBusinessId}
                       className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? 'Saving...' : 'Save Workplace'}
