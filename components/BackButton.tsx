@@ -1,13 +1,30 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import { useCallback } from 'react'
 
 export default function BackButton() {
   const router = useRouter()
+  const pathname = usePathname()
+
+  const handleBack = useCallback(() => {
+    const currentPath = pathname
+    
+    // Go back once
+    router.back()
+    
+    // Check after a short delay if we're still on the same page
+    setTimeout(() => {
+      if (window.location.pathname === currentPath) {
+        // Still on same page, go back again
+        router.back()
+      }
+    }, 100)
+  }, [router, pathname])
 
   return (
     <button
-      onClick={() => router.back()}
+      onClick={handleBack}
       className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors flex items-center justify-center"
       title="Go back"
     >
