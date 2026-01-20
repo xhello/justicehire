@@ -405,7 +405,7 @@ async function EmployeeCard({
         </div>
       </Link>
 
-      {user?.verified ? (
+      {user ? (
         <div className="mt-4">
           <h4 className="font-medium mb-2">Rating Breakdown:</h4>
           <div className="space-y-1 text-sm">
@@ -421,8 +421,16 @@ async function EmployeeCard({
           </div>
         </div>
       ) : (
-        <div className="mt-4 text-sm text-gray-600">
-          <p>Sign up and verify to see rating breakdown</p>
+        <div className="mt-4">
+          <h4 className="font-medium mb-2">Rating Breakdown:</h4>
+          <div className="space-y-1 text-sm blur-sm select-none">
+            <p className="text-green-600">Outstanding: 0</p>
+            <p className="text-yellow-600">No issue: 0</p>
+            <p className="text-red-600">Nothing nice to say: 0</p>
+          </div>
+          <p className="mt-2 text-xs text-blue-600">
+            Only verified users can see review stats
+          </p>
         </div>
       )}
 

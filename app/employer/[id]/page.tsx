@@ -182,17 +182,38 @@ export default async function EmployerProfilePage({
             <p className="text-sm text-gray-600 mb-2">
               Total Reviews: <span className="font-semibold text-gray-900">{employer.total}</span>
             </p>
-            <div className="flex gap-4 text-sm">
-              <p className="text-green-600">
-                Outstanding: <span className="font-semibold">{employer.ratings.OUTSTANDING}</span>
-              </p>
-              <p className="text-yellow-600">
-                No issue: <span className="font-semibold">{employer.ratings.DELIVERED_AS_EXPECTED}</span>
-              </p>
-              <p className="text-red-600">
-                Nothing nice to say: <span className="font-semibold">{employer.ratings.GOT_NOTHING_NICE_TO_SAY}</span>
-              </p>
-            </div>
+            {user ? (
+              <div className="flex gap-4 text-sm">
+                <p className="text-green-600">
+                  Outstanding: <span className="font-semibold">{employer.ratings.OUTSTANDING}</span>
+                </p>
+                <p className="text-yellow-600">
+                  No issue: <span className="font-semibold">{employer.ratings.DELIVERED_AS_EXPECTED}</span>
+                </p>
+                <p className="text-red-600">
+                  Nothing nice to say: <span className="font-semibold">{employer.ratings.GOT_NOTHING_NICE_TO_SAY}</span>
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
+                <div className="flex gap-4 text-sm blur-sm select-none">
+                  <p className="text-green-600">
+                    Outstanding: <span className="font-semibold">0</span>
+                  </p>
+                  <p className="text-yellow-600">
+                    No issue: <span className="font-semibold">0</span>
+                  </p>
+                  <p className="text-red-600">
+                    Nothing nice to say: <span className="font-semibold">0</span>
+                  </p>
+                </div>
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                  Only verified users can see review stats.{' '}
+                  <Link href="/signup" className="font-medium underline hover:text-blue-800">Sign up</Link> or{' '}
+                  <Link href="/login" className="font-medium underline hover:text-blue-800">log in</Link> to view.
+                </div>
+              </div>
+            )}
           </div>
           {canReview && reviewerBusinessId ? (
             <ReviewForm
