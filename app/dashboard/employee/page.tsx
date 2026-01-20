@@ -15,11 +15,30 @@ export default async function EmployeeDashboard() {
 
   // All users can access the employee dashboard
 
-  // Parallel fetch: reviews given and received
-  const [employeeReviewsGiven, employeeReviewsReceived] = await Promise.all([
+  // Parallel fetch: reviews given, received, and employer profile
+  const [employeeReviewsGiven, employeeReviewsReceived, employerProfile] = await Promise.all([
     prisma.reviews.findMany({ reviewerId: user.id }),
     prisma.reviews.findMany({ targetUserId: user.id, targetType: 'EMPLOYEE' }),
+    (async () => {
+      try {
+        const { supabaseAdmin } = await import('@/lib/supabase')
+        const { data } = await supabaseAdmin
+          .from('EmployerProfile')
+          .select('userId, businessId')
+          .eq('userId', user.id)
+          .single()
+        return data
+      } catch (err) {
+        return null
+      }
+    })(),
   ])
+  
+  // Get user's business if they have an employer profile
+  let userBusiness = null
+  if (employerProfile?.businessId) {
+    userBusiness = await prisma.businesses.findUnique({ id: employerProfile.businessId })
+  }
   
   // Collect IDs we need to fetch (only what's necessary)
   const businessIds = new Set<string>()
@@ -154,7 +173,7 @@ export default async function EmployeeDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             <ProfilePhotoSection 
               user={{
                 id: user.id,
@@ -171,6 +190,27 @@ export default async function EmployeeDashboard() {
                 nothingNice: nothingNiceCount,
               }}
             />
+            
+            {userBusiness && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Business</h3>
+                <Link 
+                  href={`/business/${userBusiness.id}`}
+                  className="block hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <h4 className="text-lg font-medium text-blue-600 hover:text-blue-700">
+                    {userBusiness.name}
+                  </h4>
+                  <p className="text-sm text-gray-700">{userBusiness.address}</p>
+                  <p className="text-sm text-gray-600">{userBusiness.city}, {userBusiness.state}</p>
+                  {user.position && (
+                    <p className="text-sm text-gray-600 mt-2 capitalize">
+                      Position: <span className="font-medium">{user.position}</span>
+                    </p>
+                  )}
+                </Link>
+              </div>
+            )}
           </div>
           
           <div className="lg:col-span-2">
