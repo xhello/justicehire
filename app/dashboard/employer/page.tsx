@@ -119,25 +119,6 @@ export default async function EmployerDashboard() {
               </Link>
             </div>
             <div className="flex items-center gap-4">
-              <Link 
-                href={`/employer/${user.id}`}
-                className="flex items-center gap-2"
-                title={`${user.firstName} ${user.lastName}`}
-              >
-                {user.photoUrl ? (
-                  <img
-                    src={user.photoUrl}
-                    alt={`${user.firstName} ${user.lastName}`}
-                    className="w-8 h-8 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500 text-xs">
-                      {user.firstName[0]}{user.lastName[0]}
-                    </span>
-                  </div>
-                )}
-              </Link>
               {user.employerProfile && (
                 <Link 
                   href={`/business/${user.employerProfile.business.id}`}
