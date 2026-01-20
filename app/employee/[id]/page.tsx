@@ -195,14 +195,24 @@ export default async function EmployeeProfilePage({
                 {employee.firstName} {employee.lastName}
               </h1>
               {employee.position && employee.employerProfile?.business ? (
-                <div className="text-lg text-gray-700">
-                  <p className="capitalize">{employee.position}</p>
-                  <p>{employee.employerProfile.business.name}</p>
-                </div>
+                <p className="text-lg text-gray-700">
+                  <span className="capitalize">{employee.position}</span> at{' '}
+                  <Link 
+                    href={`/business/${employee.employerProfile.business.id}`}
+                    className="text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    {employee.employerProfile.business.name}
+                  </Link>
+                </p>
               ) : employee.position ? (
                 <p className="text-lg text-gray-700 capitalize">{employee.position}</p>
               ) : employee.employerProfile?.business ? (
-                <p className="text-lg text-gray-700">{employee.employerProfile.business.name}</p>
+                <Link 
+                  href={`/business/${employee.employerProfile.business.id}`}
+                  className="text-lg text-blue-600 hover:text-blue-700 hover:underline"
+                >
+                  {employee.employerProfile.business.name}
+                </Link>
               ) : (
                 <p className="text-lg text-gray-700">Employee</p>
               )}
