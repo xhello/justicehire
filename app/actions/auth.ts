@@ -41,7 +41,7 @@ export async function signupEmployee(formData: FormData) {
   const data = {
     firstName: formData.get('firstName') as string,
     lastName: formData.get('lastName') as string,
-    email: formData.get('email') as string,
+    email: (formData.get('email') as string)?.toLowerCase().trim(),
     password: formData.get('password') as string,
     confirmPassword: formData.get('confirmPassword') as string,
     phoneNumber: formData.get('phoneNumber') as string,
@@ -50,7 +50,7 @@ export async function signupEmployee(formData: FormData) {
 
   const validated = signupEmployeeSchema.parse(data)
 
-  // Check if user already exists
+  // Check if user already exists (email already normalized to lowercase)
   const existing = await prisma.users.findUnique({ email: validated.email })
 
   if (existing) {
@@ -308,12 +308,15 @@ export async function verifyEmailOtp(formData: FormData) {
 }
 
 export async function login(formData: FormData) {
-  const email = formData.get('email') as string
+  const rawEmail = formData.get('email') as string
   const password = formData.get('password') as string
 
-  if (!email || !z.string().email().safeParse(email).success) {
+  if (!rawEmail || !z.string().email().safeParse(rawEmail).success) {
     return { error: 'Invalid email' }
   }
+
+  // Normalize email to lowercase for case-insensitive login
+  const email = rawEmail.toLowerCase().trim()
 
   if (!password) {
     return { error: 'Password is required' }
@@ -349,11 +352,14 @@ export async function login(formData: FormData) {
 }
 
 export async function forgotPassword(formData: FormData) {
-  const email = formData.get('email') as string
+  const rawEmail = formData.get('email') as string
 
-  if (!email || !z.string().email().safeParse(email).success) {
+  if (!rawEmail || !z.string().email().safeParse(rawEmail).success) {
     return { error: 'Invalid email' }
   }
+
+  // Normalize email to lowercase
+  const email = rawEmail.toLowerCase().trim()
 
   const user = await prisma.users.findUnique({ email })
 
