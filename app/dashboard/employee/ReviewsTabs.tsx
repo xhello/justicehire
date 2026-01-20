@@ -163,15 +163,10 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                         )}
                       </Link>
                     ) : null
-                  ) : (
-                    // For received reviews, show anonymous icon (reviews are anonymous)
-                    <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <span className="text-gray-400 text-lg">👤</span>
-                    </div>
-                  )}
+                  ) : null}
                   
                   <div className="flex-1">
-                    {activeTab === 'given' ? (
+                    {activeTab === 'given' && (
                       <>
                         <p className="text-sm font-medium text-gray-900">
                           Review for: <Link 
@@ -189,10 +184,6 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                           </p>
                         )}
                       </>
-                    ) : (
-                      <p className="text-sm font-medium text-gray-900">
-                        {review.reviewer?.role === 'EMPLOYEE' ? 'Employee' : 'Employer'}
-                      </p>
                     )}
                   </div>
                 </div>

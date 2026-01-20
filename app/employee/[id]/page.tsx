@@ -332,9 +332,6 @@ export default async function EmployeeProfilePage({
                 return (
                 <div key={review.id} className="border rounded-lg p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-sm text-gray-600 capitalize font-medium">{review.reviewer?.role?.toLowerCase() || 'Reviewer'}</p>
-                    </div>
                     <span className="text-xs text-gray-500">
                       {timeAgo(review.createdAt)}
                     </span>
