@@ -1,45 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { signupEmployee, signupEmployer } from '../actions/auth'
+import { useState } from 'react'
+import { signupEmployee } from '../actions/auth'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import ImageCropper from '@/components/ImageCropper'
 
-export default function SignupForm({ businesses }: { businesses: any[] }) {
-  const [role, setRole] = useState<'EMPLOYEE' | 'EMPLOYER'>('EMPLOYEE')
+export default function SignupForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
-  const [selectedState, setSelectedState] = useState<string>('')
-  const [availableCities, setAvailableCities] = useState<string[]>([])
-  const [loadingCities, setLoadingCities] = useState(false)
   const router = useRouter()
-
-  // Fetch cities when state changes
-  useEffect(() => {
-    const fetchCities = async () => {
-      if (selectedState) {
-        setLoadingCities(true)
-        try {
-          const response = await fetch(`/api/cities?state=${selectedState}`)
-          const data = await response.json()
-          setAvailableCities(data.cities || [])
-        } catch (err) {
-          console.error('Error fetching cities:', err)
-          setAvailableCities([])
-        } finally {
-          setLoadingCities(false)
-        }
-      } else {
-        setAvailableCities([])
-      }
-    }
-
-    fetchCities()
-  }, [selectedState])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -123,12 +96,7 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
     }
     
     try {
-      let result
-      if (role === 'EMPLOYEE') {
-        result = await signupEmployee(formData)
-      } else {
-        result = await signupEmployer(formData)
-      }
+      const result = await signupEmployee(formData)
 
       if (result?.error) {
         setError(result.error)
@@ -217,31 +185,6 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
           </p>
         </div>
 
-        <div className="flex gap-4 mb-6">
-          <button
-            type="button"
-            onClick={() => setRole('EMPLOYEE')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium ${
-              role === 'EMPLOYEE'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Employee
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('EMPLOYER')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium ${
-              role === 'EMPLOYER'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Employer
-          </button>
-        </div>
-
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -320,115 +263,19 @@ export default function SignupForm({ businesses }: { businesses: any[] }) {
               />
             </div>
 
-            {role === 'EMPLOYEE' && (
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  placeholder="(555) 123-4567"
-                  required
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            )}
-
-            {role === 'EMPLOYER' && (
-              <>
-                <div>
-                  <label htmlFor="state" className="block text-sm font-medium text-gray-700">
-                    State
-                  </label>
-                  <select
-                    id="state"
-                    name="state"
-                    required
-                    value={selectedState}
-                    onChange={(e) => {
-                      setSelectedState(e.target.value)
-                      // Reset city when state changes
-                      const citySelect = document.getElementById('city') as HTMLSelectElement
-                      if (citySelect) {
-                        citySelect.value = ''
-                      }
-                    }}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select state</option>
-                    <option value="CA">California</option>
-                    <option value="OR">Oregon</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                    City
-                  </label>
-                  <select
-                    id="city"
-                    name="city"
-                    required
-                    disabled={!selectedState || loadingCities}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {!selectedState 
-                        ? 'Select state first' 
-                        : loadingCities 
-                        ? 'Loading cities...' 
-                        : 'Select city'}
-                    </option>
-                    {availableCities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                  {!selectedState && (
-                    <p className="mt-1 text-xs text-gray-500">Please select a state first</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="businessId" className="block text-sm font-medium text-gray-700">
-                    Business
-                  </label>
-                  <select
-                    id="businessId"
-                    name="businessId"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select business</option>
-                    {businesses.map((business: any) => (
-                      <option key={business.id} value={business.id}>
-                        {business.name} - {business.city}, {business.state}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="position" className="block text-sm font-medium text-gray-700">
-                    Position
-                  </label>
-                  <select
-                    id="position"
-                    name="position"
-                    required
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select position</option>
-                    <option value="owner">Owner</option>
-                    <option value="manager">Manager</option>
-                    <option value="supervisor on duty">Supervisor on Duty</option>
-                  </select>
-                </div>
-              </>
-            )}
+            <div>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="phoneNumber"
+                name="phoneNumber"
+                type="tel"
+                placeholder="(555) 123-4567"
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
             <div>
               <label htmlFor="photo" className="block text-sm font-medium text-gray-700">
