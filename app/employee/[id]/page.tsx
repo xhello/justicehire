@@ -7,6 +7,7 @@ import { createReviewAction } from '@/app/actions/review'
 import { prisma } from '@/lib/prisma'
 import SuccessBanner from '@/components/SuccessBanner'
 import { timeAgo } from '@/lib/timeAgo'
+import BackButton from '@/components/BackButton'
 
 export default async function EmployeeProfilePage({
   params,
@@ -130,10 +131,8 @@ export default async function EmployeeProfilePage({
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-bold text-blue-600">
-                Justice Hire
-              </Link>
+            <div className="flex items-center gap-2">
+              <BackButton />
               <Link
                 href="/"
                 className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors flex items-center justify-center"
