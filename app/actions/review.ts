@@ -248,6 +248,7 @@ export async function getUserProfile(userId: string) {
     role: user.role,
     socialUrl: user.socialUrl,
     position: user.position,
+    verified: user.verified,
     employerProfile: businessInfo ? { business: businessInfo } : undefined,
     ratings,
     total: reviews.length,
