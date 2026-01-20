@@ -129,7 +129,15 @@ export default function WorkplaceFinder({ userId }: WorkplaceFinderProps) {
               onClick={() => setIsOpen(false)}
             />
             
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden">
+              {/* Loading indicator bar */}
+              {(loadingCities || loadingBusinesses || loading) && (
+                <div className="absolute top-0 left-0 right-0 h-1 bg-blue-100 overflow-hidden">
+                  <div className="h-full bg-blue-600 animate-loading-bar" />
+                </div>
+              )}
+              
+              <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold text-gray-900">Find Your Workplace</h3>
                 <button
@@ -246,10 +254,26 @@ export default function WorkplaceFinder({ userId }: WorkplaceFinderProps) {
                   </div>
                 </form>
               )}
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes loading-bar {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-loading-bar {
+          animation: loading-bar 1s ease-in-out infinite;
+          width: 50%;
+        }
+      `}</style>
     </>
   )
 }
