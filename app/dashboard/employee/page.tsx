@@ -5,6 +5,7 @@ import { logout } from '@/app/actions/auth'
 import { prisma } from '@/lib/prisma'
 import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from './ReviewsTabs'
+import WorkplaceFinder from './WorkplaceFinder'
 
 export default async function EmployeeDashboard() {
   const user = await getCurrentUser()
@@ -191,7 +192,7 @@ export default async function EmployeeDashboard() {
               }}
             />
             
-            {userBusiness && (
+            {userBusiness ? (
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Workplace</h3>
                 <Link 
@@ -210,6 +211,8 @@ export default async function EmployeeDashboard() {
                   )}
                 </Link>
               </div>
+            ) : (
+              <WorkplaceFinder userId={user.id} />
             )}
           </div>
           
