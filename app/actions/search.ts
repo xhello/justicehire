@@ -77,11 +77,23 @@ export async function searchResults(filters: {
       return businessesWithCounts
       
     } else if (category === 'employees') {
-      // Parallel fetch all needed data
-      const [allEmployees, allReviews, allBusinesses] = await Promise.all([
+      // Parallel fetch all needed data including employer profiles and all businesses
+      const [allEmployees, allReviews, allBusinesses, employerProfiles] = await Promise.all([
         prisma.users.findMany({ role: 'EMPLOYEE' }),
         prisma.reviews.findMany({}),
-        filters.state || filters.city ? prisma.businesses.findMany({}) : Promise.resolve([]),
+        prisma.businesses.findMany({}),
+        (async () => {
+          try {
+            const { supabaseAdmin } = await import('@/lib/supabase')
+            const { data } = await supabaseAdmin
+              .from('EmployerProfile')
+              .select('userId, businessId')
+            return data || []
+          } catch (err) {
+            console.error('Error fetching employer profiles:', err)
+            return []
+          }
+        })(),
       ])
 
       // Pre-filter businesses by state/city if specified
@@ -95,6 +107,17 @@ export async function searchResults(filters: {
           }
         })
       }
+
+      // Create lookup maps for employer profiles and businesses
+      const userIdToBusinessId = new Map<string, string>()
+      employerProfiles.forEach((profile: any) => {
+        userIdToBusinessId.set(profile.userId, profile.businessId)
+      })
+      
+      const businessIdToName = new Map<string, string>()
+      allBusinesses.forEach((b: any) => {
+        businessIdToName.set(b.id, b.name)
+      })
 
       // Group reviews by reviewerId and targetUserId for O(1) lookup
       const reviewsByReviewerId = new Map<string, any[]>()
@@ -136,6 +159,10 @@ export async function searchResults(filters: {
           }
         })
 
+        // Get business association if employee has one
+        const businessId = userIdToBusinessId.get(employee.id)
+        const businessName = businessId ? businessIdToName.get(businessId) || null : null
+
         return {
           id: employee.id,
           type: 'employee' as const,
@@ -143,6 +170,8 @@ export async function searchResults(filters: {
           lastName: employee.lastName,
           photoUrl: employee.photoUrl,
           socialUrl: employee.socialUrl,
+          position: employee.position || null,
+          businessName,
           _count: { reviews: reviewsReceived.length, reviewsWritten: employeeReviews.length },
           ratings,
           reviewedBusinessCount: reviewedBusinessIds.size,

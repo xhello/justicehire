@@ -194,7 +194,18 @@ export default async function EmployeeProfilePage({
               <h1 className="text-3xl font-bold text-gray-900">
                 {employee.firstName} {employee.lastName}
               </h1>
-              <p className="text-lg text-gray-700">Employee</p>
+              {employee.position && employee.employerProfile?.business ? (
+                <div className="text-lg text-gray-700">
+                  <p className="capitalize">{employee.position}</p>
+                  <p>{employee.employerProfile.business.name}</p>
+                </div>
+              ) : employee.position ? (
+                <p className="text-lg text-gray-700 capitalize">{employee.position}</p>
+              ) : employee.employerProfile?.business ? (
+                <p className="text-lg text-gray-700">{employee.employerProfile.business.name}</p>
+              ) : (
+                <p className="text-lg text-gray-700">Employee</p>
+              )}
             </div>
           </div>
         </div>

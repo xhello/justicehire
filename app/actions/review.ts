@@ -218,9 +218,9 @@ export async function getUserProfile(userId: string) {
     }
   })
 
-  // Get business info if employer (only if needed)
+  // Get business info if user has an employer profile (employees who have a position at a business)
   let businessInfo = null
-  if (user.role === 'EMPLOYER' && user.employerProfile) {
+  if (user.employerProfile) {
     const business = await prisma.businesses.findUnique({ id: user.employerProfile.businessId })
     if (business) {
       businessInfo = { id: business.id, name: business.name, address: business.address }
