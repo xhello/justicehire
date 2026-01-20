@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useFormState } from 'react-dom'
+import { useEffect, useState, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createReview } from '@/app/actions/review'
 
@@ -16,7 +15,7 @@ export default function ReviewFormClient({
   targetType: 'EMPLOYEE' | 'EMPLOYER'
   existingReview?: { rating: string; message?: string | null } | null
 }) {
-  const [state, formAction] = useFormState(createReview, null)
+  const [state, formAction] = useActionState(createReview, null)
   const router = useRouter()
   const [hasReview, setHasReview] = useState(!!existingReview)
   
