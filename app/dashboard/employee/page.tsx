@@ -7,7 +7,6 @@ import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from './ReviewsTabs'
 import WorkplaceFinder from './WorkplaceFinder'
 import WorkplaceCard from './WorkplaceCard'
-import BackButton from '@/components/BackButton'
 
 export default async function EmployeeDashboard() {
   const user = await getCurrentUser()
@@ -122,8 +121,10 @@ export default async function EmployeeDashboard() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <BackButton />
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700">
+                Justice Hire
+              </Link>
               <Link
                 href="/"
                 className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors flex items-center justify-center"

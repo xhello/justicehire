@@ -103,8 +103,8 @@ export default function SignupForm() {
         setError(result.error)
         setLoading(false)
       } else if (result?.success && result?.redirect) {
-        // Use replace to prevent going back to signup page
-        router.replace(result.redirect)
+        // Redirect to dashboard on success
+        router.push(result.redirect)
       }
     } catch (err: any) {
       // NEXT_REDIRECT is a special error thrown by Next.js redirect() function
