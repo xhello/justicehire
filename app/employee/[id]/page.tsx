@@ -359,7 +359,7 @@ export default async function EmployeeProfilePage({
                       <p className="text-sm text-gray-600">
                         Only verified users can read review contents.
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-600 mt-2">
                         Please <a href="/signup" className="text-blue-600 hover:underline">sign up</a> and verify your email address to read full reviews. You can verify your email from your dashboard.
                       </p>
                     </div>
