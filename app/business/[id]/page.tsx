@@ -423,10 +423,10 @@ async function EmployeeCard({
       ) : (
         <div className="mt-4">
           <h4 className="font-medium mb-2">Rating Breakdown:</h4>
-          <div className="space-y-1 text-sm blur-sm select-none">
-            <p className="text-green-600">Outstanding: 0</p>
-            <p className="text-yellow-600">No issue: 0</p>
-            <p className="text-red-600">Nothing nice to say: 0</p>
+          <div className="space-y-1 text-sm">
+            <p className="text-green-600">Outstanding: <span className="blur-sm select-none">0</span></p>
+            <p className="text-yellow-600">No issue: <span className="blur-sm select-none">0</span></p>
+            <p className="text-red-600">Nothing nice to say: <span className="blur-sm select-none">0</span></p>
           </div>
           <p className="mt-2 text-xs text-blue-600">
             Only verified users can see review stats

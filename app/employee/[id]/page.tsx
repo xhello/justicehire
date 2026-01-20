@@ -232,15 +232,15 @@ export default async function EmployeeProfilePage({
               </div>
             ) : (
               <div className="relative">
-                <div className="flex gap-4 text-sm blur-sm select-none">
+                <div className="flex gap-4 text-sm">
                   <p className="text-green-600">
-                    Outstanding: <span className="font-semibold">0</span>
+                    Outstanding: <span className="font-semibold blur-sm select-none">0</span>
                   </p>
                   <p className="text-yellow-600">
-                    No issue: <span className="font-semibold">0</span>
+                    No issue: <span className="font-semibold blur-sm select-none">0</span>
                   </p>
                   <p className="text-red-600">
-                    Nothing nice to say: <span className="font-semibold">0</span>
+                    Nothing nice to say: <span className="font-semibold blur-sm select-none">0</span>
                   </p>
                 </div>
                 <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
