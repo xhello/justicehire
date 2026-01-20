@@ -347,8 +347,8 @@ export async function login(formData: FormData) {
   // Create session
   await createSession(user.id)
 
-  // All users go to employee dashboard
-  redirect('/dashboard/employee')
+  // Return success - client will handle navigation with replace
+  return { success: true, redirect: '/dashboard/employee' }
 }
 
 export async function forgotPassword(formData: FormData) {

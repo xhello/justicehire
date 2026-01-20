@@ -23,8 +23,10 @@ export default function LoginPage() {
       if (result?.error) {
         setError(result.error)
         setLoading(false)
+      } else if (result?.success) {
+        // Use replace to prevent going back to login page
+        router.replace(result.redirect || '/dashboard/employee')
       }
-      // If successful, login will redirect
     } catch (err: any) {
       // Next.js redirect() throws a special error that we should ignore
       // Check if it's a redirect error by looking for the digest property
