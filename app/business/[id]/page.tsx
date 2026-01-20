@@ -225,7 +225,7 @@ export default async function BusinessDetailPage({
                     {businessReviews.length === 0 ? (
                       <p className="text-gray-700">No reviews yet. Be the first to review this business!</p>
                     ) : (
-                      businessReviews.map((review: any) => {
+                      businessReviews.map((review: any, index: number) => {
                         // Debug: Log review data
                         if (process.env.NODE_ENV === 'development') {
                           console.log('Review data:', {
@@ -237,6 +237,9 @@ export default async function BusinessDetailPage({
                             hasFields: !!(review.payCompetitive || review.workload || review.flexibility)
                           })
                         }
+                        
+                        // Show full content for logged-in users OR the first review
+                        const showFullContent = !!user || index === 0
                         
                         return (
                         <div key={review.id} className="border rounded-lg p-4">
@@ -292,10 +295,21 @@ export default async function BusinessDetailPage({
                               )}
                           </div>
                           
-                          {review.message && (
-                            <div className="mt-3 pt-3 border-t">
-                              <p className="text-sm font-medium text-gray-700 mb-1">Additional Comments:</p>
-                              <p className="text-gray-700">{review.message}</p>
+                          {showFullContent ? (
+                            review.message && (
+                              <div className="mt-3 pt-3 border-t">
+                                <p className="text-sm font-medium text-gray-700 mb-1">Additional Comments:</p>
+                                <p className="text-gray-700">{review.message}</p>
+                              </div>
+                            )
+                          ) : (
+                            <div className="mt-3 pt-3 border-t bg-gray-50 rounded p-3">
+                              <p className="text-sm text-gray-600">
+                                Only verified users can read review contents.
+                              </p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Please <a href="/signup" className="text-blue-600 hover:underline">sign up</a> and verify your email address to read full reviews. You can verify your email from your dashboard.
+                              </p>
                             </div>
                           )}
                         </div>
