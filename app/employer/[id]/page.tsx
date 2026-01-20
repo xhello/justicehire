@@ -291,22 +291,22 @@ export default async function EmployerProfilePage({
                 
                 return (
                 <div key={review.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm">
+                      <span className="text-gray-700">Rating: </span>
+                      {review.rating === 'OUTSTANDING' && (
+                        <span className="text-green-600 font-medium">Outstanding</span>
+                      )}
+                      {review.rating === 'DELIVERED_AS_EXPECTED' && (
+                        <span className="text-yellow-600 font-medium">No issue</span>
+                      )}
+                      {review.rating === 'GOT_NOTHING_NICE_TO_SAY' && (
+                        <span className="text-red-600 font-medium">Nothing nice to say</span>
+                      )}
+                    </div>
                     <span className="text-xs text-gray-500">
                       {timeAgo(review.createdAt)}
                     </span>
-                  </div>
-                  
-                  <div className="mt-2">
-                    {review.rating === 'OUTSTANDING' && (
-                      <p className="text-green-600 font-medium">Outstanding</p>
-                    )}
-                    {review.rating === 'DELIVERED_AS_EXPECTED' && (
-                      <p className="text-yellow-600 font-medium">No issue</p>
-                    )}
-                    {review.rating === 'GOT_NOTHING_NICE_TO_SAY' && (
-                      <p className="text-red-600 font-medium">Nothing nice to say</p>
-                    )}
                   </div>
                   
                   {showFullContent ? (

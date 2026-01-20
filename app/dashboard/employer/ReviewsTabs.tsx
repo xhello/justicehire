@@ -185,6 +185,12 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                         )}
                       </>
                     )}
+                    {activeTab === 'received' && review.targetType !== 'BUSINESS' && (
+                      <div className="text-sm">
+                        <span className="text-gray-700">Rating: </span>
+                        {getRatingLabel(review.rating)}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <span className="text-xs text-gray-500 ml-4">
@@ -228,13 +234,13 @@ export default function ReviewsTabs({ reviewsGiven, reviewsReceived }: ReviewsTa
                     </div>
                   )}
                 </div>
-              ) : (
+              ) : activeTab === 'given' ? (
                 <div className="mt-2">
                   <p className="text-sm text-gray-700">
                     Rating: {getRatingLabel(review.rating)}
                   </p>
                 </div>
-              )}
+              ) : null}
               
               {review.message && (
                 <div className="mt-3 pt-3 border-t">
