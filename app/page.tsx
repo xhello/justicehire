@@ -260,10 +260,9 @@ export default async function Home({
                           {item.firstName} {item.lastName}
                         </h4>
                         {item.position && item.businessName ? (
-                          <div className="text-sm text-gray-700">
-                            <p className="capitalize">{item.position}</p>
-                            <p>{item.businessName}</p>
-                          </div>
+                          <p className="text-sm text-gray-700">
+                            <span className="capitalize">{item.position}</span> at {item.businessName}
+                          </p>
                         ) : item.position ? (
                           <p className="text-sm text-gray-700 capitalize">{item.position}</p>
                         ) : item.businessName ? (
