@@ -25,6 +25,11 @@ export default async function Home({
     params = { state: undefined, city: undefined, category: undefined }
   }
   
+  // Default to California, Crescent City if no filters are set
+  const state = params.state || 'CA'
+  const city = params.city || 'Crescent City'
+  const category = params.category
+  
   try {
     // Parallel fetch: user, results, cities, and category counts
     const [userResult, resultsResult, citiesResult, countsResult] = await Promise.all([
@@ -33,9 +38,9 @@ export default async function Home({
         return null
       }),
       searchResults({
-        state: params.state,
-        city: params.city,
-        category: params.category,
+        state,
+        city,
+        category,
       }).catch((err) => {
         console.error('Error getting search results:', err)
         return []
@@ -45,8 +50,8 @@ export default async function Home({
         return {}
       }),
       getCategoryCounts({
-        state: params.state,
-        city: params.city,
+        state,
+        city,
       }).catch((err) => {
         console.error('Error getting category counts:', err)
         return { business: 0, employees: 0 }
@@ -141,14 +146,14 @@ export default async function Home({
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <BusinessFilters
             citiesByState={citiesByState}
-            selectedState={params.state}
-            selectedCity={params.city}
+            selectedState={state}
+            selectedCity={city}
           />
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
           <Suspense fallback={<div className="flex gap-2 mb-4"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
-            <TypeButtons selectedType={params.category || 'business'} counts={categoryCounts} />
+            <TypeButtons selectedType={category || 'business'} counts={categoryCounts} />
           </Suspense>
           {results.length === 0 ? (
             <p className="text-gray-700">No results found.</p>
