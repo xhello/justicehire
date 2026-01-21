@@ -130,7 +130,7 @@ export default function NotificationBell() {
 
       {isOpen && (
         <div className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 flex flex-col max-h-96">
-          <div className="p-3 border-b border-gray-200 flex-shrink-0">
+          <div className="p-3 border-b border-gray-200 flex-shrink-0 bg-white sticky top-0 z-10">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
             <p className="text-xs text-gray-500">Reviews on people & businesses you&apos;ve reviewed</p>
           </div>
@@ -180,17 +180,15 @@ export default function NotificationBell() {
             )}
           </div>
           
-          {notifications.length > 0 && (
-            <div className="p-2 border-t border-gray-200 flex-shrink-0">
-              <button
-                onClick={handleDismiss}
-                disabled={dismissing}
-                className="w-full py-2 px-4 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50"
-              >
-                {dismissing ? 'Marking...' : 'Up to date'}
-              </button>
-            </div>
-          )}
+          <div className="p-2 border-t border-gray-200 flex-shrink-0 bg-white">
+            <button
+              onClick={handleDismiss}
+              disabled={dismissing || notifications.length === 0}
+              className="w-full py-2 px-4 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors disabled:opacity-50"
+            >
+              {dismissing ? 'Marking...' : 'Up to date'}
+            </button>
+          </div>
         </div>
       )}
     </div>
