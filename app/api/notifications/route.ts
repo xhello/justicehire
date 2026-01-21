@@ -10,6 +10,15 @@ export async function GET() {
       return NextResponse.json({ notifications: [] })
     }
 
+    // Get user's notification dismissed timestamp
+    const { data: userData } = await supabaseAdmin
+      .from('User')
+      .select('notificationsDismissedAt')
+      .eq('id', user.id)
+      .single()
+
+    const dismissedAt = userData?.notificationsDismissedAt
+
     // Get all reviews the current user has given
     const { data: myReviews, error: myReviewsError } = await supabaseAdmin
       .from('Review')
@@ -38,11 +47,18 @@ export async function GET() {
 
     // Get reviews for users I've reviewed (excluding my own reviews)
     if (reviewedUserIds.size > 0) {
-      const { data: userReviews, error: userReviewsError } = await supabaseAdmin
+      let userReviewsQuery = supabaseAdmin
         .from('Review')
         .select('*')
         .in('targetUserId', Array.from(reviewedUserIds))
         .neq('reviewerId', user.id)
+      
+      // Filter by dismissed timestamp if exists
+      if (dismissedAt) {
+        userReviewsQuery = userReviewsQuery.gt('createdAt', dismissedAt)
+      }
+      
+      const { data: userReviews, error: userReviewsError } = await userReviewsQuery
 
       if (!userReviewsError && userReviews) {
         // Get user details for targets
@@ -72,12 +88,19 @@ export async function GET() {
 
     // Get reviews for businesses I've reviewed (excluding my own reviews)
     if (reviewedBusinessIds.size > 0) {
-      const { data: businessReviews, error: businessReviewsError } = await supabaseAdmin
+      let businessReviewsQuery = supabaseAdmin
         .from('Review')
         .select('*')
         .in('businessId', Array.from(reviewedBusinessIds))
         .eq('targetType', 'BUSINESS')
         .neq('reviewerId', user.id)
+      
+      // Filter by dismissed timestamp if exists
+      if (dismissedAt) {
+        businessReviewsQuery = businessReviewsQuery.gt('createdAt', dismissedAt)
+      }
+      
+      const { data: businessReviews, error: businessReviewsError } = await businessReviewsQuery
 
       if (!businessReviewsError && businessReviews) {
         // Get business details

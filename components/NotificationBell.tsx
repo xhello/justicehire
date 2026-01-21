@@ -50,6 +50,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [dismissing, setDismissing] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -75,6 +76,20 @@ export default function NotificationBell() {
       console.error('Failed to fetch notifications:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDismiss = async () => {
+    setDismissing(true)
+    try {
+      const res = await fetch('/api/notifications/dismiss', { method: 'POST' })
+      if (res.ok) {
+        setNotifications([])
+      }
+    } catch (error) {
+      console.error('Failed to dismiss notifications:', error)
+    } finally {
+      setDismissing(false)
     }
   }
 
@@ -114,52 +129,66 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
-          <div className="p-3 border-b border-gray-200">
+        <div className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 flex flex-col max-h-96">
+          <div className="p-3 border-b border-gray-200 flex-shrink-0">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
             <p className="text-xs text-gray-500">Reviews on people & businesses you&apos;ve reviewed</p>
           </div>
           
-          {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
-          ) : notifications.length === 0 ? (
-            <div className="p-4 text-center text-gray-500 text-sm">
-              No notifications yet
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {notifications.map((notification) => (
-                <Link
-                  key={notification.id}
-                  href={getTargetLink(notification)}
-                  className="block p-3 hover:bg-gray-50 transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 truncate">
-                        New review for <span className="font-medium">{notification.targetName}</span>
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {notification.type === 'business_review' ? (
-                          <span className="text-xs text-gray-500">Business</span>
-                        ) : (
-                          <span className="text-xs text-gray-500">Employee</span>
-                        )}
-                        {notification.rating && (
-                          <>
-                            <span className="text-gray-300">•</span>
-                            {getRatingLabel(notification.rating)}
-                          </>
-                        )}
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100" style={{ scrollbarWidth: 'thin' }}>
+            {loading ? (
+              <div className="p-4 text-center text-gray-500">Loading...</div>
+            ) : notifications.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 text-sm">
+                No new notifications
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {notifications.map((notification) => (
+                  <Link
+                    key={notification.id}
+                    href={getTargetLink(notification)}
+                    className="block p-3 hover:bg-gray-50 transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900 truncate">
+                          New review for <span className="font-medium">{notification.targetName}</span>
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {notification.type === 'business_review' ? (
+                            <span className="text-xs text-gray-500">Business</span>
+                          ) : (
+                            <span className="text-xs text-gray-500">Employee</span>
+                          )}
+                          {notification.rating && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              {getRatingLabel(notification.rating)}
+                            </>
+                          )}
+                        </div>
                       </div>
+                      <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
+                        {timeAgo(notification.createdAt)}
+                      </span>
                     </div>
-                    <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
-                      {timeAgo(notification.createdAt)}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {notifications.length > 0 && (
+            <div className="p-2 border-t border-gray-200 flex-shrink-0">
+              <button
+                onClick={handleDismiss}
+                disabled={dismissing}
+                className="w-full py-2 px-4 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50"
+              >
+                {dismissing ? 'Marking...' : 'Up to date'}
+              </button>
             </div>
           )}
         </div>
