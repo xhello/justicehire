@@ -129,10 +129,10 @@ export default async function Home({
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Anonymous, Verified Reviews for Hospitality
+            Anonymous, Verified Reviews for Workplace
           </h2>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            A platform where employees and employers in the hospitality industry can leave
+            A platform where employees and employers in their workplace can leave
             anonymous, verified reviews on each other and companies. Reviews are completely anonymous to
             both the public and the reviewed party.
           </p>
