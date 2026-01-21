@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 interface Notification {
   id: string
@@ -52,10 +53,16 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(true)
   const [dismissing, setDismissing] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     fetchNotifications()
   }, [])
+
+  // Close popup when navigating to a different page
+  useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
