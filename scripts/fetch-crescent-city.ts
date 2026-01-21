@@ -30,7 +30,7 @@ try {
 // Hardcoded credentials
 const supabaseUrl = 'https://hrynlmbegmdvmeeuhpdc.supabase.co'
 const supabaseServiceKey = 'sb_secret_r87zjoGJmDU5UFIVr853dQ_HGfQpAIY'
-const googleApiKey = 'AIzaSyBL93Gk1-09JMsgsRNng-BGnatZ6FFvG8Y'
+const googleApiKey = process.env.GOOGLE_PLACES_API_KEY || '' // Set your API key here
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
