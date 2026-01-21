@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import SuccessBanner from '@/components/SuccessBanner'
 import { timeAgo } from '@/lib/timeAgo'
 import BackButton from '@/components/BackButton'
+import NotificationBell from '@/components/NotificationBell'
 
 export default async function EmployeeProfilePage({
   params,
@@ -145,25 +146,28 @@ export default async function EmployeeProfilePage({
             </div>
             <div className="flex gap-4 items-center">
               {user ? (
-                <Link
-                  href="/dashboard/employee"
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
-                >
-                  {user.photoUrl ? (
-                    <img 
-                      src={user.photoUrl} 
-                      alt="Profile" 
-                      className="w-6 h-6 rounded-md object-cover"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
-                      <span className="text-blue-600 text-xs font-semibold">
-                        {user.firstName?.[0]?.toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  )}
-                  Dashboard
-                </Link>
+                <>
+                  <NotificationBell />
+                  <Link
+                    href="/dashboard/employee"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-blue-600 rounded-md shadow-md transition-colors"
+                  >
+                    {user.photoUrl ? (
+                      <img 
+                        src={user.photoUrl} 
+                        alt="Profile" 
+                        className="w-6 h-6 rounded-md object-cover"
+                      />
+                    ) : (
+                      <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+                        <span className="text-blue-600 text-xs font-semibold">
+                          {user.firstName?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                    )}
+                    Dashboard
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link

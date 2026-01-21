@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { logout } from '@/app/actions/auth'
 import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from './ReviewsTabs'
+import NotificationBell from '@/components/NotificationBell'
 
 export default async function EmployerDashboard() {
   const user = await getCurrentUser()
@@ -127,6 +128,7 @@ export default async function EmployerDashboard() {
                   {user.employerProfile.business.name}
                 </Link>
               )}
+              <NotificationBell />
               <form action={logout}>
                 <button
                   type="submit"

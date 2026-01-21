@@ -7,6 +7,7 @@ import ProfilePhotoSection from '../ProfilePhotoSection'
 import ReviewsTabs from './ReviewsTabs'
 import WorkplaceFinder from './WorkplaceFinder'
 import WorkplaceCard from './WorkplaceCard'
+import NotificationBell from '@/components/NotificationBell'
 
 export default async function EmployeeDashboard() {
   const user = await getCurrentUser()
@@ -136,6 +137,7 @@ export default async function EmployeeDashboard() {
               </Link>
             </div>
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <form action={logout}>
                 <button
                   type="submit"
