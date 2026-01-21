@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
@@ -11,9 +11,15 @@ export async function GET() {
     }
 
     // Get all reviews the current user has given
-    const myReviews = await prisma.reviews.findMany({
-      reviewerId: user.id,
-    })
+    const { data: myReviews, error: myReviewsError } = await supabaseAdmin
+      .from('Review')
+      .select('*')
+      .eq('reviewerId', user.id)
+
+    if (myReviewsError || !myReviews) {
+      console.error('Error fetching my reviews:', myReviewsError)
+      return NextResponse.json({ notifications: [] })
+    }
 
     // Get unique target user IDs and business IDs the user has reviewed
     const reviewedUserIds = new Set<string>()
@@ -28,66 +34,75 @@ export async function GET() {
       }
     })
 
-    // Get recent reviews for those users and businesses (not by current user)
     const notifications: any[] = []
 
-    // Get reviews for users I've reviewed
+    // Get reviews for users I've reviewed (excluding my own reviews)
     if (reviewedUserIds.size > 0) {
-      const userReviews = await prisma.reviews.findMany({
-        targetUserId: { in: Array.from(reviewedUserIds) },
-        reviewerId: { not: user.id },
-      })
+      const { data: userReviews, error: userReviewsError } = await supabaseAdmin
+        .from('Review')
+        .select('*')
+        .in('targetUserId', Array.from(reviewedUserIds))
+        .neq('reviewerId', user.id)
 
-      // Get user details for targets
-      const targetUsers = await prisma.users.findMany({
-        id: { in: Array.from(reviewedUserIds) },
-      })
-      const userMap = new Map(targetUsers.map((u: any) => [u.id, u]))
+      if (!userReviewsError && userReviews) {
+        // Get user details for targets
+        const { data: targetUsers } = await supabaseAdmin
+          .from('User')
+          .select('id, firstName, lastName')
+          .in('id', Array.from(reviewedUserIds))
 
-      userReviews.forEach((review: any) => {
-        const targetUser = userMap.get(review.targetUserId)
-        if (targetUser) {
-          notifications.push({
-            id: review.id,
-            type: 'user_review',
-            targetId: review.targetUserId,
-            targetName: `${targetUser.firstName} ${targetUser.lastName}`,
-            targetType: review.targetType,
-            rating: review.rating,
-            createdAt: review.createdAt,
-          })
-        }
-      })
+        const userMap = new Map((targetUsers || []).map((u: any) => [u.id, u]))
+
+        userReviews.forEach((review: any) => {
+          const targetUser = userMap.get(review.targetUserId)
+          if (targetUser) {
+            notifications.push({
+              id: review.id,
+              type: 'user_review',
+              targetId: review.targetUserId,
+              targetName: `${targetUser.firstName} ${targetUser.lastName}`,
+              targetType: review.targetType,
+              rating: review.rating,
+              createdAt: review.createdAt,
+            })
+          }
+        })
+      }
     }
 
-    // Get reviews for businesses I've reviewed
+    // Get reviews for businesses I've reviewed (excluding my own reviews)
     if (reviewedBusinessIds.size > 0) {
-      const businessReviews = await prisma.reviews.findMany({
-        businessId: { in: Array.from(reviewedBusinessIds) },
-        targetType: 'BUSINESS',
-        reviewerId: { not: user.id },
-      })
+      const { data: businessReviews, error: businessReviewsError } = await supabaseAdmin
+        .from('Review')
+        .select('*')
+        .in('businessId', Array.from(reviewedBusinessIds))
+        .eq('targetType', 'BUSINESS')
+        .neq('reviewerId', user.id)
 
-      // Get business details
-      const businesses = await prisma.businesses.findMany({
-        id: { in: Array.from(reviewedBusinessIds) },
-      })
-      const businessMap = new Map(businesses.map((b: any) => [b.id, b]))
+      if (!businessReviewsError && businessReviews) {
+        // Get business details
+        const { data: businesses } = await supabaseAdmin
+          .from('Business')
+          .select('id, name')
+          .in('id', Array.from(reviewedBusinessIds))
 
-      businessReviews.forEach((review: any) => {
-        const business = businessMap.get(review.businessId)
-        if (business) {
-          notifications.push({
-            id: review.id,
-            type: 'business_review',
-            targetId: review.businessId,
-            targetName: business.name,
-            targetType: 'BUSINESS',
-            rating: review.rating,
-            createdAt: review.createdAt,
-          })
-        }
-      })
+        const businessMap = new Map((businesses || []).map((b: any) => [b.id, b]))
+
+        businessReviews.forEach((review: any) => {
+          const business = businessMap.get(review.businessId)
+          if (business) {
+            notifications.push({
+              id: review.id,
+              type: 'business_review',
+              targetId: review.businessId,
+              targetName: business.name,
+              targetType: 'BUSINESS',
+              rating: review.rating,
+              createdAt: review.createdAt,
+            })
+          }
+        })
+      }
     }
 
     // Sort by latest first
