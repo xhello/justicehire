@@ -114,7 +114,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+        <div className="fixed sm:absolute left-4 right-4 sm:left-auto sm:right-0 top-16 sm:top-auto sm:mt-2 w-auto sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
           <div className="p-3 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900">Notifications</h3>
             <p className="text-xs text-gray-500">Reviews on people & businesses you&apos;ve reviewed</p>
