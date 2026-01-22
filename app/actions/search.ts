@@ -198,10 +198,11 @@ export async function getCategoryCounts(filters: {
   city?: string
 }) {
   try {
-    // Parallel fetch: businesses and users
-    const [allBusinesses, allUsers] = await Promise.all([
+    // Parallel fetch: businesses, users, and reviews
+    const [allBusinesses, allUsers, allReviews] = await Promise.all([
       prisma.businesses.findMany({}),
       prisma.users.findMany({}),
+      prisma.reviews.findMany({}),
     ])
     
     // Filter businesses by state/city
@@ -211,9 +212,38 @@ export async function getCategoryCounts(filters: {
       return matchesState && matchesCity
     })
     
-    // Count all employees (all users are now employees)
+    // Get filtered business IDs
+    const filteredBusinessIds = new Set(filteredBusinesses.map((b: any) => b.id))
+    
+    // Count employees who have reviewed businesses in the filtered location
     const employees = allUsers.filter((u: any) => u.role === 'EMPLOYEE')
-    const employeeCount = employees.length
+    
+    let employeeCount = 0
+    if (filters.state || filters.city) {
+      // Group reviews by reviewer
+      const reviewsByReviewerId = new Map<string, any[]>()
+      allReviews.forEach((r: any) => {
+        if (r.reviewerId && r.businessId) {
+          const existing = reviewsByReviewerId.get(r.reviewerId) || []
+          existing.push(r)
+          reviewsByReviewerId.set(r.reviewerId, existing)
+        }
+      })
+      
+      // Count employees who have reviewed a business in the filtered location
+      employees.forEach((employee: any) => {
+        const employeeReviews = reviewsByReviewerId.get(employee.id) || []
+        const hasReviewedFilteredBusiness = employeeReviews.some((r: any) => 
+          filteredBusinessIds.has(r.businessId)
+        )
+        if (hasReviewedFilteredBusiness) {
+          employeeCount++
+        }
+      })
+    } else {
+      // No filter, count all employees
+      employeeCount = employees.length
+    }
     
     return {
       business: filteredBusinesses.length,
