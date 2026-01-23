@@ -8,6 +8,7 @@ import BusinessImage from './business/BusinessImage'
 import SuccessBanner from '@/components/SuccessBanner'
 import TypeButtons from './business/TypeButtons'
 import NotificationBell from '@/components/NotificationBell'
+import AddEmployeeButton from '@/components/AddEmployeeButton'
 
 // Force dynamic rendering since we use searchParams
 export const dynamic = 'force-dynamic'
@@ -313,7 +314,7 @@ export default async function Home({
         </div>
       </main>
 
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="bg-white border-t border-gray-200 mt-12 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-600">
@@ -328,6 +329,10 @@ export default async function Home({
           </div>
         </div>
       </footer>
+      
+      {category === 'employees' && (
+        <AddEmployeeButton citiesByState={citiesByState} />
+      )}
       </div>
     </div>
     )
