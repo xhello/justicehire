@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import ImageCropper from '@/components/ImageCropper'
 
 interface AddEmployeeButtonProps {
@@ -9,9 +10,21 @@ interface AddEmployeeButtonProps {
 }
 
 export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }: AddEmployeeButtonProps) {
+  const searchParams = useSearchParams()
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [hasLoggedOut, setHasLoggedOut] = useState(false)
+  
+  // Auto-open form if addEmployee=true in URL (after logout redirect)
+  useEffect(() => {
+    if (searchParams.get('addEmployee') === 'true') {
+      setIsOpen(true)
+      // Clean up URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('addEmployee')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams])
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
@@ -165,12 +178,10 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
     setLoggingOut(true)
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
-      setHasLoggedOut(true)
-      setShowLogoutConfirm(false)
-      setIsOpen(true)
+      // Refresh page with parameter to reopen the form
+      window.location.href = '/?category=employees&addEmployee=true'
     } catch (err) {
       console.error('Logout failed:', err)
-    } finally {
       setLoggingOut(false)
     }
   }
