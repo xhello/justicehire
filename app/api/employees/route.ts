@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, businessId, position, photoUrl } = body
+    const { firstName, lastName, businessId, position, photoData } = body
 
     if (!firstName || !lastName) {
       return NextResponse.json(
@@ -13,6 +13,9 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // Use base64 photo data directly (same as signup)
+    const photoUrl = photoData && photoData.startsWith('data:image') ? photoData : null
 
     // Create the user
     const userId = uuidv4()
@@ -26,7 +29,7 @@ export async function POST(request: Request) {
         password: 'not-set',
         role: 'EMPLOYEE',
         verified: false,
-        photoUrl: photoUrl || null,
+        photoUrl,
         position: position || null,
       })
 

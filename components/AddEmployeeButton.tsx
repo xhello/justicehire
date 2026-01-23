@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ImageCropper from '@/components/ImageCropper'
 
 interface AddEmployeeButtonProps {
   citiesByState: Record<string, string[]>
@@ -10,6 +11,9 @@ interface AddEmployeeButtonProps {
 export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }: AddEmployeeButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [showCropper, setShowCropper] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [croppedImage, setCroppedImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingBusinesses, setLoadingBusinesses] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
@@ -22,7 +26,6 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
   const [selectedCity, setSelectedCity] = useState('')
   const [selectedBusiness, setSelectedBusiness] = useState('')
   const [position, setPosition] = useState('')
-  const [photoUrl, setPhotoUrl] = useState('')
   
   const [businesses, setBusinesses] = useState<{ id: string; name: string }[]>([])
   
@@ -46,10 +49,63 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
     }
   }, [selectedState, selectedCity])
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Check file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024
+      if (file.size > maxSize) {
+        setError('Photo is too large. Please choose a photo smaller than 10MB.')
+        e.target.value = ''
+        return
+      }
+
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file.')
+        e.target.value = ''
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+        setShowCropper(true)
+      }
+      reader.onerror = () => {
+        setError('Failed to read photo file. Please try again.')
+        e.target.value = ''
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleCropComplete = (croppedImageData: string) => {
+    setCroppedImage(croppedImageData)
+    setShowCropper(false)
+    setImagePreview(null)
+  }
+
+  const handleCropCancel = () => {
+    setShowCropper(false)
+    setImagePreview(null)
+    setCroppedImage(null)
+    const fileInput = document.getElementById('employee-photo') as HTMLInputElement
+    if (fileInput) {
+      fileInput.value = ''
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
+
+    // Check if base64 string is too large
+    if (croppedImage && croppedImage.length > 1.5 * 1024 * 1024) {
+      setError('Photo is too large. Please try a smaller photo or crop it more.')
+      setLoading(false)
+      return
+    }
 
     try {
       const res = await fetch('/api/employees', {
@@ -60,7 +116,7 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
           lastName,
           businessId: selectedBusiness || null,
           position: position || null,
-          photoUrl: photoUrl || null,
+          photoData: croppedImage || null,
         }),
       })
 
@@ -82,7 +138,7 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
         setSelectedCity('')
         setSelectedBusiness('')
         setPosition('')
-        setPhotoUrl('')
+        setCroppedImage(null)
         // Refresh page to show new employee
         window.location.reload()
       }, 1500)
@@ -116,6 +172,15 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
 
   return (
     <>
+      {showCropper && imagePreview && (
+        <ImageCropper
+          imageSrc={imagePreview}
+          onCrop={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={1}
+        />
+      )}
+      
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 text-center">
         <button
           onClick={handleButtonClick}
@@ -297,18 +362,30 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Photo URL
+                      Photo (Optional)
                     </label>
                     <input
-                      type="url"
-                      value={photoUrl}
-                      onChange={(e) => setPhotoUrl(e.target.value)}
-                      placeholder="https://example.com/photo.jpg"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      id="employee-photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Upload to imgbb.com and paste the direct link
+                      Upload a profile photo (JPG, PNG, etc.)
                     </p>
+                    {croppedImage && (
+                      <div className="mt-2 flex justify-center">
+                        <div>
+                          <img
+                            src={croppedImage}
+                            alt="Selected photo"
+                            className="w-24 h-24 rounded-lg object-cover border-2 border-blue-500"
+                          />
+                          <p className="mt-1 text-xs text-green-600 text-center">Photo selected ✓</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <button
