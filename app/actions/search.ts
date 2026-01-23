@@ -31,6 +31,7 @@ export async function searchResults(filters: {
   state?: string
   city?: string
   category?: string
+  everyone?: boolean
 }) {
   try {
     const category = filters.category?.toLowerCase()
@@ -141,8 +142,8 @@ export async function searchResults(filters: {
           employeeReviews.map((r: any) => r.businessId).filter(Boolean)
         )
 
-        // Filter by state/city if specified
-        if (filters.state || filters.city) {
+        // Filter by state/city if specified (unless everyone toggle is on)
+        if ((filters.state || filters.city) && !filters.everyone) {
           const hasReviewedFilteredBusiness = Array.from(reviewedBusinessIds).some((id: string) =>
             filteredBusinessIds.has(id)
           )
@@ -248,9 +249,10 @@ export async function getCategoryCounts(filters: {
     return {
       business: filteredBusinesses.length,
       employees: employeeCount,
+      totalEmployees: employees.length,
     }
   } catch (err) {
     console.error('Error in getCategoryCounts:', err)
-    return { business: 0, employees: 0 }
+    return { business: 0, employees: 0, totalEmployees: 0 }
   }
 }

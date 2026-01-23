@@ -15,20 +15,21 @@ export const dynamic = 'force-dynamic'
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ state?: string; city?: string; category?: string }>
+  searchParams: Promise<{ state?: string; city?: string; category?: string; everyone?: string }>
 }) {
-  let params, user, results, citiesByState, categoryCounts
+  let params, user, results, citiesByState, categoryCounts, totalEmployees = 0
   
   try {
     params = await searchParams
   } catch (err) {
-    params = { state: undefined, city: undefined, category: undefined }
+    params = { state: undefined, city: undefined, category: undefined, everyone: undefined }
   }
   
   // Default to California, Crescent City if no filters are set
   const state = params.state || 'CA'
   const city = params.city || 'Crescent City'
   const category = params.category
+  const showEveryone = params.everyone === 'true'
   
   try {
     // Parallel fetch: user, results, cities, and category counts
@@ -41,6 +42,7 @@ export default async function Home({
         state,
         city,
         category,
+        everyone: showEveryone,
       }).catch((err) => {
         console.error('Error getting search results:', err)
         return []
@@ -54,7 +56,7 @@ export default async function Home({
         city,
       }).catch((err) => {
         console.error('Error getting category counts:', err)
-        return { business: 0, employees: 0 }
+        return { business: 0, employees: 0, totalEmployees: 0 }
       }),
     ])
     
@@ -62,6 +64,7 @@ export default async function Home({
     results = resultsResult
     citiesByState = citiesResult
     categoryCounts = countsResult
+    totalEmployees = (countsResult as any).totalEmployees || 0
   } catch (err) {
     console.error('Error fetching data:', err)
     user = null
@@ -153,7 +156,7 @@ export default async function Home({
 
         <div className="bg-white rounded-lg shadow p-6">
           <Suspense fallback={<div className="flex gap-2 mb-4"><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div><div className="flex-1 h-10 bg-gray-200 rounded-md animate-pulse"></div></div>}>
-            <TypeButtons selectedType={category || 'business'} counts={categoryCounts} />
+            <TypeButtons selectedType={category || 'business'} counts={categoryCounts} totalEmployees={totalEmployees} showEveryone={showEveryone} />
           </Suspense>
           {results.length === 0 ? (
             <p className="text-gray-700">No results found.</p>
