@@ -1,41 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import ImageCropper from '@/components/ImageCropper'
 
 interface AddEmployeeButtonProps {
   citiesByState: Record<string, string[]>
-  isLoggedIn?: boolean
 }
 
-export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }: AddEmployeeButtonProps) {
-  const searchParams = useSearchParams()
+export default function AddEmployeeButton({ citiesByState }: AddEmployeeButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [hasLoggedOut, setHasLoggedOut] = useState(false)
-  
-  // Auto-open form if addEmployee=true in URL (after logout redirect)
-  useEffect(() => {
-    if (searchParams.get('addEmployee') === 'true') {
-      setIsOpen(true)
-      // Clean up URL
-      const url = new URL(window.location.href)
-      url.searchParams.delete('addEmployee')
-      window.history.replaceState({}, '', url.toString())
-    }
-  }, [searchParams])
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [loadingBusinesses, setLoadingBusinesses] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  
-  // Effective logged in state (considers if user logged out during this session)
-  const effectivelyLoggedIn = isLoggedIn && !hasLoggedOut
   
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -166,26 +146,6 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
     }
   }
 
-  const handleButtonClick = () => {
-    if (effectivelyLoggedIn) {
-      setShowLogoutConfirm(true)
-    } else {
-      setIsOpen(true)
-    }
-  }
-
-  const handleLogout = async () => {
-    setLoggingOut(true)
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      // Refresh page with parameter to reopen the form
-      window.location.href = '/?category=employees&addEmployee=true'
-    } catch (err) {
-      console.error('Logout failed:', err)
-      setLoggingOut(false)
-    }
-  }
-
   return (
     <>
       {showCropper && imagePreview && (
@@ -199,7 +159,7 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
       
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 text-center">
         <button
-          onClick={handleButtonClick}
+          onClick={() => setIsOpen(true)}
           className="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -208,35 +168,6 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
           Add an employee
         </button>
       </div>
-
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Would you like to log out?
-            </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Logging out will keep your submission anonymous.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                No
-              </button>
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {loggingOut ? 'Logging out...' : 'Yes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
