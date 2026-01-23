@@ -11,6 +11,7 @@ interface AddEmployeeButtonProps {
 export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }: AddEmployeeButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [hasLoggedOut, setHasLoggedOut] = useState(false)
   const [showCropper, setShowCropper] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
@@ -19,6 +20,9 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
   const [loggingOut, setLoggingOut] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  
+  // Effective logged in state (considers if user logged out during this session)
+  const effectivelyLoggedIn = isLoggedIn && !hasLoggedOut
   
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -150,7 +154,7 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
   }
 
   const handleButtonClick = () => {
-    if (isLoggedIn) {
+    if (effectivelyLoggedIn) {
       setShowLogoutConfirm(true)
     } else {
       setIsOpen(true)
@@ -161,6 +165,7 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
     setLoggingOut(true)
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
+      setHasLoggedOut(true)
       setShowLogoutConfirm(false)
       setIsOpen(true)
     } catch (err) {
