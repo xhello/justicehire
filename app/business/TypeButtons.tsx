@@ -41,10 +41,11 @@ export default function TypeButtons({ selectedType = 'business', counts, totalEm
     if (city) newParams.set('city', city)
     newParams.set('category', 'employees')
     
-    if (!showEveryone) {
-      newParams.set('everyone', 'true')
+    if (showEveryone) {
+      // Turn OFF - set everyone=false
+      newParams.set('everyone', 'false')
     }
-    // If already showing everyone, don't set the param (removes it)
+    // If turning ON, don't set the param (defaults to true)
     
     router.push(`/?${newParams.toString()}`, { scroll: false })
   }

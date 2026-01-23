@@ -29,7 +29,8 @@ export default async function Home({
   const state = params.state || 'CA'
   const city = params.city || 'Crescent City'
   const category = params.category
-  const showEveryone = params.everyone === 'true'
+  // Default everyone to true unless explicitly set to false
+  const showEveryone = params.everyone !== 'false'
   
   try {
     // Parallel fetch: user, results, cities, and category counts
