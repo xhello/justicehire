@@ -191,9 +191,6 @@ export default function AddEmployeeButton({ citiesByState, isLoggedIn = false }:
           </svg>
           Add an employee
         </button>
-        {isLoggedIn && (
-          <p className="text-xs text-gray-500 mt-1">log out to stay anonymous</p>
-        )}
       </div>
 
       {/* Logout Confirmation Modal */}
