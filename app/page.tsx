@@ -331,7 +331,7 @@ export default async function Home({
       </footer>
       
       {category === 'employees' && (
-        <AddEmployeeButton citiesByState={citiesByState} />
+        <AddEmployeeButton citiesByState={citiesByState} isLoggedIn={!!user} />
       )}
       </div>
     </div>
