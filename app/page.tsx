@@ -330,8 +330,8 @@ export default async function Home({
         </div>
       </footer>
       
-      {category === 'employees' && (user || params.addEmployee === 'true') && (
-        <AddEmployeeButton citiesByState={citiesByState} isLoggedIn={!!user} />
+      {category === 'employees' && !user && (
+        <AddEmployeeButton citiesByState={citiesByState} />
       )}
       </div>
     </div>
