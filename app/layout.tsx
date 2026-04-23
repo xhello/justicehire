@@ -1,36 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import TopLoadingBar from "@/components/TopLoadingBar";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "Justice Hire - Anonymous Reviews for Hospitality",
-  description: "An anonymous, verified review network for the hospitality industry",
+  title: "Company — Time, in person.",
+  description:
+    "A marketplace for verified people listing their time for in-person hangouts. Coffee, hikes, concerts, dinners.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <TopLoadingBar />
-        {children}
-      </body>
+      <body className="min-h-screen bg-cream text-ink">{children}</body>
     </html>
   );
 }
