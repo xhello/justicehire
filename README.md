@@ -2,6 +2,9 @@
 
 A marketplace for verified people listing their time for in-person hangouts. Coffee, hikes, concerts, dinners.
 
+<!-- deploy ping -->
+
+
 ## Stack
 
 Next.js 14 (App Router) · TypeScript · Tailwind · Supabase · SumUp · Resend
