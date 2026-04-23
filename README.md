@@ -2,7 +2,7 @@
 
 A marketplace for verified people listing their time for in-person hangouts. Coffee, hikes, concerts, dinners.
 
-<!-- deploy ping -->
+<!-- deploy ping 2 -->
 
 
 ## Stack
