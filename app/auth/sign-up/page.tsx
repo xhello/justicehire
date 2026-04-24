@@ -10,7 +10,8 @@ export default function SignUpPage() {
       <main className="mx-auto max-w-md px-6 py-16">
         <h1 className="font-display text-4xl">Create an account</h1>
         <p className="mt-2 text-sm text-muted">
-          Same flow as signing in. We&rsquo;ll create your account on first link click.
+          Sign in with your email and password. If you don&rsquo;t have an account yet,
+          use one of the demo accounts.
         </p>
         <div className="mt-8">
           <SignInForm />

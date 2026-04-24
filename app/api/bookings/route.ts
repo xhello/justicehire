@@ -43,13 +43,20 @@ export async function POST(request: Request) {
       .update({ status: "open" })
       .eq("id", claimed.id);
 
+  const demoMode = !process.env.SUMUP_CLIENT_ID;
+
   const { data: host } = await service
     .from("profiles")
     .select("id, display_name, hourly_rate_cents, sumup_email, sumup_merchant_code")
     .eq("id", claimed.host_id)
     .maybeSingle();
 
-  if (!host?.sumup_email || !host.sumup_merchant_code) {
+  if (!host) {
+    await releaseSlot();
+    return NextResponse.json({ error: "Host not found" }, { status: 404 });
+  }
+
+  if (!demoMode && (!host.sumup_email || !host.sumup_merchant_code)) {
     await releaseSlot();
     return NextResponse.json(
       { error: "Host hasn't finished payment setup" },
@@ -79,8 +86,8 @@ export async function POST(request: Request) {
       meeting_location: input.meeting_location,
       emergency_contact_phone: input.emergency_contact_phone,
       amount_cents: amount,
-      payment_status: "pending",
-      booking_status: "pending_payment",
+      payment_status: demoMode ? "paid" : "pending",
+      booking_status: demoMode ? "confirmed" : "pending_payment",
     })
     .select()
     .single();
@@ -90,11 +97,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? "Insert failed" }, { status: 500 });
   }
 
+  if (demoMode) {
+    return NextResponse.json({
+      booking_id: booking.id,
+      checkout_url: `/bookings/${booking.id}/confirm`,
+    });
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
   try {
     const checkout = await createCheckout({
       hostId: host.id,
-      hostEmail: host.sumup_email,
+      hostEmail: host.sumup_email!,
       bookingId: booking.id,
       amountCents: amount,
       description: `1 hour with ${host.display_name}`,
