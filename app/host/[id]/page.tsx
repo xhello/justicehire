@@ -78,6 +78,18 @@ export default async function HostPage({ params }: { params: { id: string } }) {
         <p className="text-xs uppercase tracking-[0.2em] text-muted">
           Host profile · {profile.city ?? "—"}
         </p>
+        {profile.neighborhoods && profile.neighborhoods.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {profile.neighborhoods.map((n) => (
+              <span
+                key={n}
+                className="border border-line px-2.5 py-0.5 text-xs text-muted"
+              >
+                {n}
+              </span>
+            ))}
+          </div>
+        )}
 
         <header className="mt-6 grid gap-12 border-b border-line pb-12 md:grid-cols-12">
           <div className="md:col-span-7">

@@ -77,9 +77,14 @@ export default function BookingForm({
             required
             className="w-full rounded-md border border-line bg-white px-4 py-2.5 text-sm"
           />
-          <p className="mt-2 text-xs text-muted">
-            First meetings must be in a public location.
-          </p>
+          <div className="mt-3 border-l-2 border-ink bg-white/60 px-4 py-3 text-xs leading-relaxed">
+            <p className="font-medium">First meetings must be in a public place.</p>
+            <p className="mt-1 text-muted">
+              Pick a cafe, restaurant, museum, or park — somewhere with other
+              people present. Hotels, private homes, and unlit areas are not
+              allowed and will be flagged.
+            </p>
+          </div>
         </Field>
 
         <button className="w-full rounded-md bg-ink px-4 py-3 text-sm text-cream hover:opacity-90">

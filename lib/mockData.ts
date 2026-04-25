@@ -6,6 +6,7 @@ export const mockProfile: Profile = {
   display_name: "Maren Holloway",
   age: 31,
   city: "San Francisco",
+  neighborhoods: ["Bernal Heights", "Mission", "Hayes Valley"],
   tagline:
     "Long walks, small museums, the kind of dinner that runs three hours.",
   bio: "Architect by day, amateur cartographer on weekends. I moved to SF in 2019 from a town you've never heard of in upstate New York, and I've spent the years since trying to find every staircase in the city. I'll happily show you my favorites — Filbert Steps for tourists, the Vulcan Stairway when you want to feel like you've left the city. I read more than I should and I'll usually pick the restaurant if you let me. Equally happy in a museum or a bar — although I'd prefer not to do both in the same evening.",

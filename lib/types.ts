@@ -4,6 +4,7 @@ export type Profile = {
   display_name: string | null;
   age: number | null;
   city: string | null;
+  neighborhoods: string[] | null;
   tagline: string | null;
   bio: string | null;
   photo_url: string | null;
