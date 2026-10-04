@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CalendarDays,
   ChevronLeft,
@@ -34,7 +34,9 @@ export function TripCalendar() {
   const [selected, setSelected] = useState(initialDate);
   const [view, setView] = useState<"month" | "list">("month");
   const [details, setDetails] = useState<Trip | null>(null);
+  const selectedPanel = useRef<HTMLElement>(null);
   useEffect(() => {
+    if (window.matchMedia("(max-width: 600px)").matches) setView("list");
     const now = getBarcelonaToday();
     setToday(now);
     setMonth(new Date(now.getFullYear(), now.getMonth(), 1, 12));
@@ -77,6 +79,18 @@ export function TripCalendar() {
     setMonth(new Date(today.getFullYear(), today.getMonth(), 1, 12));
     setSelected(today);
   }
+  function selectDate(date: Date) {
+    setSelected(date);
+    if (!window.matchMedia("(max-width: 600px)").matches) return;
+    const trip = getTripForDate(date);
+    if (trip && dateKey(date) >= dateKey(today)) {
+      setDetails(trip);
+    } else {
+      requestAnimationFrame(() => {
+        selectedPanel.current?.scrollIntoView({ block: "start" });
+      });
+    }
+  }
   return (
     <div className="calendar-layout">
       <div>
@@ -110,6 +124,7 @@ export function TripCalendar() {
                   onClick={() => setView("month")}
                 >
                   <CalendarDays size={17} />
+                  <span>Month</span>
                 </button>
                 <button
                   aria-label="List view"
@@ -117,6 +132,7 @@ export function TripCalendar() {
                   onClick={() => setView("list")}
                 >
                   <List size={17} />
+                  <span>List</span>
                 </button>
               </div>
             </div>
@@ -149,7 +165,7 @@ export function TripCalendar() {
                             className={`calendar-day ${dateKey(date) === dateKey(selected) ? "is-selected" : ""} ${dateKey(date) === dateKey(today) ? "is-today" : ""}`}
                             aria-label={`${displayDate(date)}${trip ? `: ${trip.name}, ${trip.start}` : ": no trip scheduled"}`}
                             aria-pressed={dateKey(date) === dateKey(selected)}
-                            onClick={() => setSelected(date)}
+                            onClick={() => selectDate(date)}
                           >
                             <span className="day-number">{date.getDate()}</span>
                             {trip && (
@@ -182,7 +198,7 @@ export function TripCalendar() {
                       className="list-trip"
                       aria-label={`${displayDate(date)}: ${trip.name}`}
                       aria-pressed={dateKey(date) === dateKey(selected)}
-                      onClick={() => setSelected(date)}
+                      onClick={() => selectDate(date)}
                     >
                       <span className="list-date">
                         <small>{trip.dayShort}</small>
@@ -223,7 +239,11 @@ export function TripCalendar() {
         </p>
       </div>
       <aside className="calendar-sidebar">
-        <section className="selected-trip" aria-live="polite">
+        <section
+          ref={selectedPanel}
+          className="selected-trip"
+          aria-live="polite"
+        >
           <p className="eyebrow">
             {selectedTrip ? "YOUR NEXT DANCE NIGHT" : "A LITTLE BREATHER"}
           </p>

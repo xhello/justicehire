@@ -60,7 +60,7 @@ export function Modal({
       }}
       aria-label={title}
     >
-      <div className="modal-inner">
+      <div className="modal-header">
         <button
           className="icon-button modal-close"
           onClick={onClose}
@@ -68,8 +68,8 @@ export function Modal({
         >
           <X size={22} />
         </button>
-        {children}
       </div>
+      <div className="modal-inner">{children}</div>
     </dialog>
   );
 }

@@ -31,7 +31,7 @@ npm run build
 npm run test:e2e
 ```
 
-The browser checks use local Google Chrome through Playwright and cover trip links, dialogs, recurring dates, past dates, calendar navigation, FAQs, and mobile overflow. To run on a machine without Chrome, install it or change the Playwright channel.
+The browser checks use local Google Chrome and Playwright WebKit (install with `npx playwright install webkit`). They cover desktop and touch interactions, widths from 320 to 768 pixels, 200% text enlargement, booking dialogs, calendar navigation, FAQs, and WhatsApp links. To run on a machine without Chrome, install it or change the Playwright channel. Phone calendars start in list view; visitors can switch to the month grid.
 
 ## Deployment
 

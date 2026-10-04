@@ -2159,3 +2159,307 @@ input:focus-visible {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* Keep navigation and booking controls usable with touch and enlarged text. */
+.icon-button,
+.instagram-link,
+.calendar-toolbar .icon-button,
+.today-button,
+.view-switch button {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.instagram-link {
+  align-items: center;
+  justify-content: center;
+}
+.button > svg,
+.brand-mark {
+  flex-shrink: 0;
+}
+.nav-inner {
+  min-height: 94px;
+  height: auto;
+  padding-block: 16px;
+  flex-wrap: wrap;
+}
+.hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.calendar-toolbar {
+  flex-wrap: wrap;
+}
+.view-switch button {
+  padding: 9px 12px;
+  font-size: 0.875rem;
+}
+.list-trip[aria-pressed="true"] {
+  background: #f7f3e6;
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.modal {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  background: var(--paper);
+  padding: 8px 12px 0;
+}
+.modal-close {
+  position: static;
+}
+.modal-inner {
+  padding-top: 4px;
+}
+.footer-main nav {
+  flex-wrap: wrap;
+}
+.footer-main nav a {
+  min-height: 44px;
+}
+
+@media (max-width: 900px) {
+  .nav-inner {
+    min-height: 82px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    width: calc(100% - 32px);
+  }
+  .container > *,
+  .hero-copy,
+  .trip-card,
+  .trip-card-body > *,
+  .story-copy,
+  .community-banner > *,
+  .calendar-layout > *,
+  .calendar-toolbar > *,
+  .trip-details-list > div > span {
+    min-width: 0;
+  }
+  h1,
+  h2,
+  h3,
+  .trip-art-title > span,
+  .brand > span:last-child {
+    overflow-wrap: anywhere;
+  }
+  .nav-inner {
+    min-height: 78px;
+    gap: 8px;
+    padding-block: 12px;
+  }
+  .brand {
+    font-size: clamp(1.125rem, 4.5vw, 1.4rem);
+    min-width: 0;
+  }
+  .brand > span:last-child {
+    min-width: 0;
+  }
+  .nav-actions {
+    gap: 4px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .mobile-nav {
+    max-height: 60dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 16px 20px;
+    gap: 6px;
+  }
+  .mobile-nav > a {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 10px 12px;
+  }
+  .hero,
+  .hero-content {
+    min-height: 0;
+  }
+  .hero-content {
+    padding-top: 42px;
+    padding-bottom: 32px;
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 12vw, 3.6rem);
+    letter-spacing: -0.055em;
+  }
+  .hero-copy > p {
+    font-size: 1rem;
+  }
+  .hero-buttons {
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+  .hero-buttons .button {
+    font-size: 0.875rem;
+  }
+  .hero-secondary {
+    font-size: 0.875rem;
+    padding-bottom: 0;
+  }
+  .hero-ticket {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: fit-content;
+    max-width: 100%;
+    margin: 34px 0 6px auto;
+    font-size: 0.75rem;
+    transform: rotate(-3deg);
+  }
+  .hero-ticket > span {
+    min-width: 0;
+  }
+  .value-strip > .container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .trip-grid,
+  .steps,
+  .community-story,
+  .calendar-layout,
+  .calendar-sidebar,
+  .faq-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .trip-art {
+    height: auto;
+    min-height: 180px;
+    padding: 22px 24px 25px;
+  }
+  .trip-art-title > span {
+    font-size: clamp(1.8rem, 10vw, 3.1rem);
+    letter-spacing: -0.045em;
+  }
+  .day-stamp {
+    display: none;
+  }
+  .trip-art-bottom {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    margin-top: 8px;
+  }
+  .trip-art-top {
+    gap: 12px;
+  }
+  .trip-art-top > svg {
+    flex-shrink: 0;
+  }
+  .trip-card-bottom {
+    flex-wrap: wrap;
+  }
+  .trip-card-bottom .button {
+    min-height: 48px;
+    font-size: 0.875rem;
+  }
+  .story-sticker {
+    max-width: calc(100% + 6px);
+  }
+  .story-sticker > svg {
+    flex-shrink: 0;
+  }
+  .calendar-toolbar {
+    padding: 12px;
+    gap: 10px;
+  }
+  .calendar-month {
+    width: 100%;
+    gap: 6px;
+    justify-content: space-between;
+  }
+  .calendar-month h2 {
+    min-width: 0;
+    font-size: 1.125rem;
+    text-align: center;
+  }
+  .calendar-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .today-button {
+    font-size: 0.875rem;
+    padding: 8px 12px;
+  }
+  .view-switch button {
+    font-size: 0.875rem;
+    padding: 8px 10px;
+  }
+  .calendar-list {
+    padding-inline: 12px;
+  }
+  .list-trip {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 4px 14px;
+    padding: 17px 10px;
+  }
+  .list-date {
+    grid-row: span 2;
+    align-self: center;
+  }
+  .list-date small {
+    font-size: 0.75rem;
+  }
+  .list-trip-title strong {
+    font-size: 1rem;
+  }
+  .list-trip-title small {
+    font-size: 0.875rem;
+  }
+  .list-trip > span:last-child {
+    grid-column: 2;
+    margin-left: 0;
+    font-size: 0.875rem;
+  }
+  .calendar-legend {
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    gap: 8px 16px;
+  }
+  .calendar-legend span {
+    min-width: 0;
+  }
+  .selected-trip {
+    scroll-margin-top: 20px;
+  }
+  .faq-sidebar nav {
+    gap: 8px;
+  }
+  .faq-sidebar nav a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+  }
+  .faq-item summary,
+  .faq-item > p,
+  .page-heading > p:not(.eyebrow) {
+    font-size: 1rem;
+  }
+  .modal {
+    width: calc(100% - 24px);
+    max-height: calc(100dvh - 32px);
+  }
+  .modal-inner {
+    padding: 4px 22px 24px;
+  }
+  .modal .trip-label {
+    max-width: 100%;
+    font-size: 0.75rem;
+  }
+}
