@@ -1,0 +1,15 @@
+.git
+.next
+node_modules
+.env*
+.DS_Store
+*.tsbuildinfo
+test-results
+playwright-report
+tests
+playwright.config.ts
+README.md
+AGENTS.md
+CLAUDE.md
+.claude
+.codex

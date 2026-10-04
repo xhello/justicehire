@@ -1,76 +1,52 @@
-# Company
+# BachataVan
 
-A marketplace for verified people listing their time for in-person hangouts. Coffee, hikes, concerts, dinners.
+Local website for BachataVan's Barcelona dance trips. Built with Next.js, React, and TypeScript, ready for a future Vercel deployment.
 
-<!-- deploy ping 2 -->
+## Local preview
 
-
-## Stack
-
-Next.js 14 (App Router) · TypeScript · Tailwind · Supabase · SumUp · Resend
-
-## Setup
-
-```bash
+```sh
 npm install
-cp .env.local.example .env.local   # fill in credentials
 npm run dev
 ```
 
-### Supabase
+Open http://localhost:3000. Pages: `/`, `/calendar`, `/faq`.
 
-1. Create a Supabase project.
-2. In SQL editor, run [supabase/migrations/0001_initial_schema.sql](supabase/migrations/0001_initial_schema.sql) then [0002_rls_policies.sql](supabase/migrations/0002_rls_policies.sql).
-3. Enable Email + Google providers in Auth settings. Add `http://localhost:3000/auth/callback` to redirect URLs.
-4. Paste `URL`, `anon` key, and `service_role` key into `.env.local`.
+## Edit business information
 
-### SumUp
+`src/data/site.ts` contains the trip times, SumUp payment links, pickup map, Instagram link, FAQs, and weekly schedule. Manisero Saturdays and Quechimba Sundays, and their payment URLs, were confirmed by the organizer during setup.
 
-1. Create a developer app at [developer.sumup.com](https://developer.sumup.com).
-2. Set redirect URI to `http://localhost:3000/api/sumup/oauth/callback` (for local dev).
-3. Paste `client_id` and `client_secret` into `.env.local`.
+- Put the real public `https://chat.whatsapp.com/...` invite in `site.whatsappInvite`. The supplied `your-public-whatapp-link@here.com` is a placeholder, so community buttons currently open an Instagram contact dialog.
+- Add ISO dates such as `2026-10-10` to `cancelledDates` to remove specific trips from the calendar.
+- Calendar dates use Barcelona's timezone, regardless of the visitor's timezone. Recurring entries start October 4, 2026.
+- Confirm pricing, venue admission, refunds, and cancellation terms before adding definitive policy copy. No seat availability or prices have been invented.
+- Community rules are based on the organizer's supplied community-description screenshot: payment must be received to reserve a seat; departure is at the announced time with any wait capped at 10 minutes; respect is required; the responsible passenger pays for damage; only water is allowed; passengers are responsible for their belongings; good vibes are welcome while respecting the rules. Festivals and airport pickups are offered as inquiries, without assuming schedules or pricing.
+- Payments open the confirmed hosted SumUp pages. There is no payment processing, passenger database, or live inventory in this project. A payment does not automatically update calendar availability or send a booking confirmation.
+- The supplied WhatsApp screenshot's passenger names and phone numbers are not included in the website.
 
-#### How money flows
+## Checks
 
-Each host connects their own SumUp Business account via OAuth at `/dashboard/connect`. When a guest pays, the checkout is created with **the host's** access token and `pay_to_email` set to the host's SumUp email — funds settle directly into that host's account. The platform never holds funds. There is no marketplace fee split through SumUp; if you need platform revenue later, layer a separate host subscription.
-
-#### Testing locally
-
-SumUp's webhook (and `redirect_url` after payment) needs a publicly reachable URL — `localhost` won't work. Use a tunnel:
-
-```bash
-# example with cloudflared
-cloudflared tunnel --url http://localhost:3000
-# or ngrok
-ngrok http 3000
+```sh
+npm run typecheck
+npm run build
+npm run test:e2e
 ```
 
-Then set `NEXT_PUBLIC_APP_URL` and `SUMUP_OAUTH_REDIRECT_URI` to the tunnel URL, and add the tunnel callback URL to your SumUp app's allowed redirect URIs.
+The browser checks use local Google Chrome through Playwright and cover trip links, dialogs, recurring dates, past dates, calendar navigation, FAQs, and mobile overflow. To run on a machine without Chrome, install it or change the Playwright channel.
 
-### Encryption key
+## Deployment
 
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+GitHub repository: [xhello/justicehire](https://github.com/xhello/justicehire). The Vercel project in the `justicehires-projects` workspace deploys its production site from `main`. BachataVan replaces the previous “Time, in person” application; that application remains available in Git history.
 
-Paste into `ENCRYPTION_KEY` — used to encrypt SumUp tokens at rest.
+`vercel.json` specifies Next.js, `npm ci`, `npm run build`, and the `.next` output directory. Node.js 22 is selected in `package.json`. The application lives at the repository root. No application environment variables are required. `.vercelignore` excludes local development artifacts and tests from direct CLI uploads.
 
-## Routes
+To publish later changes, run the checks above, commit the changes, and push `main`. Confirm the Vercel deployment status on the GitHub commit before considering an update live. Never commit API tokens or other credentials.
 
-| Path | Purpose |
-|------|---------|
-| `/` | Landing |
-| `/browse` | Host directory |
-| `/host/[id]` | Host profile + 7-day availability |
-| `/book/[slotId]` | Booking flow → SumUp checkout |
-| `/bookings/[id]` | Booking detail (check-in, SOS, message) |
-| `/bookings/[id]/confirm` | Post-payment landing |
-| `/dashboard` | Host dashboard |
-| `/dashboard/availability` | Availability editor (placeholder) |
-| `/dashboard/connect` | SumUp OAuth |
-| `/signup/host` | Host waitlist application |
-| `/auth/sign-in`, `/auth/sign-up` | Magic-link + Google |
+## Photography
 
-## What's built vs. stubbed
+These are illustrative stock dance photos, not images of BachataVan customers. Replace them with your own community photos when available.
 
-See [CLAUDE.md](CLAUDE.md) for the canonical "done / not done / not v1" list.
+- Hero: [Ardian Lumi on Unsplash](https://unsplash.com/photos/group-of-people-dancing-6Woj_wozqmA), [Unsplash License](https://unsplash.com/license).
+- Community section: [Erika Reyes on Pexels](https://www.pexels.com/photo/man-and-woman-dancing-14100621/), [Pexels License](https://www.pexels.com/license/).
+- Original image URLs and metadata: `public/images/credits.json`.
+
+Fonts are served locally from Fontsource. No third-party analytics or tracking scripts are installed.
