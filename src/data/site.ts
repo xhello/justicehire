@@ -1,8 +1,7 @@
 export const site = {
   name: "BachataVan",
   instagram: "https://www.instagram.com/bachatavan_official/",
-  // Add the public invite URL when supplied by the organizer.
-  whatsappInvite: "",
+  whatsappInvite: "https://chat.whatsapp.com/KkE6kn56sAh6m4tEDtL08K",
   pickup: "Sagrada Família, Barcelona",
   pickupMap: "https://maps.app.goo.gl/x6c6GEqHpAciMcgd8?g_st=ic",
   timezone: "Europe/Madrid",
@@ -161,7 +160,7 @@ export const faqs = [
     category: "The trip",
     question: "Where can I find the latest updates?",
     answer:
-      "Check the BachataVan WhatsApp community for booking messages and changes. You can also contact @bachatavan_official on Instagram for the current community invite.",
+      "Check the BachataVan WhatsApp community for booking messages and changes. Use any ‘Join the community’ button on this website to open the invite. You can also follow @bachatavan_official on Instagram for updates.",
   },
   {
     category: "Community rules",

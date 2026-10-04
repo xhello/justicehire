@@ -90,7 +90,7 @@ test("past trips cannot start the booking flow and month rollover works", async 
   ).toBeVisible();
 });
 
-test("FAQ answers expand and the community fallback links to the business", async ({
+test("FAQ answers expand and community links open the WhatsApp invite", async ({
   page,
 }) => {
   await page.goto("/faq");
@@ -100,15 +100,17 @@ test("FAQ answers expand and the community fallback links to the business", asyn
   await question.locator("summary").click();
   await expect(question).toHaveAttribute("open", "");
   await expect(question.locator("p")).toBeVisible();
-  await page
-    .getByRole("button", { name: "Join the community", exact: true })
-    .first()
-    .click();
-  await expect(
-    page
-      .getByRole("dialog")
-      .getByRole("link", { name: "Contact us on Instagram" }),
-  ).toHaveAttribute("href", "https://www.instagram.com/bachatavan_official/");
+  const communityLinks = page.getByRole("link", {
+    name: /Join the community|Talk to the community/,
+  });
+  await expect(communityLinks).toHaveCount(3);
+  for (const link of await communityLinks.all()) {
+    await expect(link).toHaveAttribute(
+      "href",
+      "https://chat.whatsapp.com/KkE6kn56sAh6m4tEDtL08K",
+    );
+    await expect(link).toHaveAttribute("target", "_blank");
+  }
 });
 
 test("mobile navigation and all routes fit narrow screens", async ({

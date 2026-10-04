@@ -1,6 +1,6 @@
 # BachataVan
 
-Local website for BachataVan's Barcelona dance trips. Built with Next.js, React, and TypeScript, ready for a future Vercel deployment.
+Website for BachataVan's Barcelona dance trips. Built with Next.js, React, and TypeScript, deployed through Vercel's GitHub integration.
 
 ## Local preview
 
@@ -15,7 +15,7 @@ Open http://localhost:3000. Pages: `/`, `/calendar`, `/faq`.
 
 `src/data/site.ts` contains the trip times, SumUp payment links, pickup map, Instagram link, FAQs, and weekly schedule. Manisero Saturdays and Quechimba Sundays, and their payment URLs, were confirmed by the organizer during setup.
 
-- Put the real public `https://chat.whatsapp.com/...` invite in `site.whatsappInvite`. The supplied `your-public-whatapp-link@here.com` is a placeholder, so community buttons currently open an Instagram contact dialog.
+- Community buttons use the owner's direct WhatsApp invite in `site.whatsappInvite`, without the Instagram redirect wrapper. Update this value if the community invite is reset. An empty value enables the Instagram contact fallback.
 - Add ISO dates such as `2026-10-10` to `cancelledDates` to remove specific trips from the calendar.
 - Calendar dates use Barcelona's timezone, regardless of the visitor's timezone. Recurring entries start October 4, 2026.
 - Confirm pricing, venue admission, refunds, and cancellation terms before adding definitive policy copy. No seat availability or prices have been invented.
